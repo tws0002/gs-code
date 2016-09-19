@@ -1,0 +1,353 @@
+// maya2MaxFBX v0.4 by henry foster
+// procedure: cache and export skins in world space to individual FBXs, then bake all objects in world space and export to a single FBX.
+//
+// for skins:
+// detect all meshes with a skin applied.
+// duplicate the skin, unlock channels, (un)parent to world space, freeze xforms, apply skinned mesh as wrap deformer.
+// create geometry cache on duplicate.
+// delete wrap
+// select duplicate, create a quick select set
+// export duplicate & set, in fbx options select set in "geo cache files"
+// the fbx exports for skins may need to be done manually in a loop because i don't know how much of this shit can be automated
+//
+// in a loop for all remaining objects:
+// create locator & parent constrain
+// exit loop, select all locators, bake simulation
+// break connections on all channels for original objects, (un)parent to world space
+// constrain objects to respective locators
+// select all objects, bake simulation
+// export selection as fbx
+// DO NOT SAVE THIS FUCKING SCENE!!! make sure the user knows it's probably a bad idea and should never do this.
+
+// fbx export functions
+// FBXExport -f puke.fbx -s (selected objects)
+// FBXExportCacheFile -v true (yes, i will export a cache)
+// FBXExportQuickSelectSetAsCache -v "setName" (define this for export)
+// FBXExportCameras -v true
+// FBXResetExport (set to default)
+
+global proc hfImportAllReferences() {
+	string $allRefs[] = `file -q -r`;
+	for($i=0;$i<size($allRefs);$i++) {
+		file -ir $allRefs[$i];
+	}
+}
+
+// this first procedure is copied over from another script i already wrote
+global proc string[] hfBakeAnimToWorldSpace(string $objectArr[]) {
+	// MAKE SHITS BAKE IN WORLD SPACE: THE SCRIPT
+	// string $objectArr[] = `ls -sl`;
+	string $locsArr[];
+	clear $locsArr;
+	string $constraintsArr[];
+	clear $constraintsArr;
+	print("\nINIT LOCATORS AND CONSTRAINTS...");
+	for($i=0;$i<size($objectArr);$i++) {
+		// create a locator, parent constrain (no offset) locator to geo, add locators to array
+		string $newLoc[] = `spaceLocator`;
+		print("\ngenerating locator " + $newLoc[0]);
+		$locsArr[size($locsArr)] = $newLoc[0];
+		string $pCn[] = `parentConstraint $objectArr[$i] $newLoc[0]`;
+		string $sCn[] = `scaleConstraint $objectArr[$i] $newLoc[0]`;
+		$constraintsArr[size($constraintsArr)] = $pCn[0];
+		$constraintsArr[size($constraintsArr)] = $sCn[0];
+	}
+	// okay now reselect those locators and bake that shit
+	select -cl;
+	select $locsArr;
+	int $minT = `playbackOptions -q -min`;
+	int $maxT = `playbackOptions -q -max`;
+	string $times = $minT + ":" + $maxT;
+	print("\nstarting locator bake...");
+	bakeResults -simulation true -smart 0 -cp false -s false -sb 1.0 -at tx -at ty -at tz -at rx -at ry -at rz -at sx -at sy -at sz -t $times $locsArr;
+	// okay now we gotta blow up those constraints
+	delete $constraintsArr;
+	select -cl;
+	// okay, now delete all keyframes on the geometry.
+    print("\ndeleting keyframes on geometry...");	
+	for($m=0;$m<size($objectArr);$m++) {
+		// we need to completely delete any incoming connections to the geometry itself.
+		string $unparented[];
+		if(!catchQuiet(`parent -w $objectArr[$m]`)) {
+			// this isn't already in world space.
+			undo;
+			$unparented = `parent -w $objectArr[$m]`;
+			print("\n" + $objectArr[$m] + " moved to world space and renamed " + $unparented[0]);
+		} else {
+			// this is already in world space and throws an error.
+			$unparented[0] = $objectArr[$m];
+		}
+		
+		//string $tx[] = `listConnections ($objectArr[$m]+".tx")`;
+		//string $ty[] = `listConnections ($objectArr[$m]+".ty")`;
+		//string $tz[] = `listConnections ($objectArr[$m]+".tz")`;
+		//string $rx[] = `listConnections ($objectArr[$m]+".rx")`;
+		//string $ry[] = `listConnections ($objectArr[$m]+".ry")`;
+		//string $rz[] = `listConnections ($objectArr[$m]+".rz")`;
+		//string $sx[] = `listConnections ($objectArr[$m]+".sx")`;
+		//string $sy[] = `listConnections ($objectArr[$m]+".sy")`;
+		//string $sz[] = `listConnections ($objectArr[$m]+".sz")`;
+		//catchQuiet(`delete $tx`);
+		//catchQuiet(`delete $ty`);
+		//catchQuiet(`delete $tz`);
+		//catchQuiet(`delete $rx`);
+		//catchQuiet(`delete $ry`);
+		//catchQuiet(`delete $rz`);
+		//catchQuiet(`delete $sx`);
+		//catchQuiet(`delete $sy`);
+		//catchQuiet(`delete $sz`);
+		// rather than deleting connections, let's try using cutKey to remove the keys instead.
+		int $startf = `playbackOptions -q -min`;
+		int $endf = `playbackOptions -q -max`;
+		string $timeRange = ($startf+":"+$endf);
+		print("\ndeletin' them keys...");
+		cutKey -cl -t $timeRange $unparented[0];
+		// unlock geo channels because i hate yates holley
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".tx");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".ty");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".tz");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".rx");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".ry");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".rz");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".sx");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".sy");
+		setAttr -lock false -keyable true -channelBox true ($unparented[0]+".sz");
+		// now for each locator in sequence, constrain the geometry back to it.
+		//print("\nconstraining geo to locators...");
+		print("\nAttempting to constrain "+$unparented[0]+" to "+$locsArr[$m]);
+		parentConstraint $locsArr[$m] $unparented[0];
+		scaleConstraint $locsArr[$m] $unparented[0];
+		// since we have to reselect this whole stinkin array later on, let's replace the $objectArr[$m] with $unparented[0].
+		$objectArr[$m] = $unparented[0];
+	}
+	// okay, final bake: select all that original geo, then bake channels.
+	select -cl;
+	select $objectArr;
+	print("\nstarting final bake...");
+	bakeResults -simulation true -smart 1 -s false -cp false -sb 1.0 -at tx -at ty -at tz -at rx -at ry -at rz -at sx -at sy -at sz -t $times $objectArr;
+	// delete them constraints
+	for($o=0;$o<size($locsArr);$o++) {	
+		delete $locsArr[$o];
+	}
+	return $objectArr;
+} // end proc hfBakeAnimToWorldSpace 
+
+
+
+global proc hfFBXExportSkins(int $exportSelect) {
+	// step one: get all them skinned objects.
+	string $allSkins[];
+	if($exportSelect==1) {
+		$allSkins = `ls -sl`;	
+	
+	} else {
+		string $skinClusters[] = `ls -type skinCluster`;
+		string $skinnedObjects[];
+		for($i=0;$i<size($skinClusters);$i++) {
+			// get the objectSet associated with the skinCluster
+			string $objectSet[] = `listConnections -t objectSet $skinClusters[$i]`;
+			for($j=0;$j<size($objectSet);$j++) {
+				string $meshes[] = `listConnections -t mesh $objectSet[$j]`;
+				$skinnedObjects = stringArrayCatenate($skinnedObjects,$meshes);
+			}
+		}
+		// okay now we should have an array of any meshes associated with a skinCluster, although they each show up twice for some reason.
+		// remove the duplicates and we have an accurate list.
+		$allSkins = stringArrayRemoveDuplicates($skinnedObjects);
+	}
+	string $dupes[];
+	clear $dupes;
+	string $sceneName = `file -q -sn -shn`;
+	int $startf = `playbackOptions -q -min`;
+	int $endf = `playbackOptions -q -max`;
+	// print($allSkins);
+	for($i=0;$i<size($allSkins);$i++) {
+		// duplicate the objects, unlock channels, unparent, freeze xforms, wrap to original.
+		string $dupe[] = `duplicate -rc -rr $allSkins[$i]`;
+		$dupes[size($dupes)] = $dupe[0]; // we'll use this later to know our duplicates
+		setAttr -lock false ($dupe[0]+".tx");
+		setAttr -lock false ($dupe[0]+".ty");
+		setAttr -lock false ($dupe[0]+".tz");
+		setAttr -lock false ($dupe[0]+".rx");
+		setAttr -lock false ($dupe[0]+".ry");
+		setAttr -lock false ($dupe[0]+".rz");
+		setAttr -lock false ($dupe[0]+".sx");
+		setAttr -lock false ($dupe[0]+".sy");
+		setAttr -lock false ($dupe[0]+".sz");
+		catchQuiet(`parent -w $dupe[0]`);
+		makeIdentity -a true $dupe[0];
+		// select dupe, then original, then deformer -type wrap dupe
+		select -r $dupe[0];
+		// exporting with Smooth Mesh Preview causes the point cache to fail in Max. so we're turning that shit off.
+		displaySmoothness -divisionsU 0 -divisionsV 0 -pointsWire 4 -pointsShaded 1 -polygonObject 1;
+
+		select -add $allSkins[$i];
+		string $newWrap[] = `doWrapArgList "5" { "1", "0", "0", "1", "1", "0" }`; // actual deformer command is shit so we're stuck with this
+		// maya has a built-in script to handle the cache creation so we'll use that.
+		select -r $dupe[0];
+		// print("\n$dupe[0] is listed as "+$dupe[0]);
+		string $cacheDir = (`workspace -q -fn`+"/data/"+`file -q -sn -shn`); 
+		print("\ncreating geometry cache for "+$dupe[0]);
+		print("\ncache directory is "+$cacheDir);
+		doCreateGeometryCache 5 { "2", "0", "0", "OneFile", "1", $cacheDir,"0","","0", "add", "1", "1", "1","0","1","mcc" } ;
+		// create a quick select set comprised of the duplicate only.
+		// the quick set has to use the xform, not the shape node, and dupe[0] is returning a shape so list the xforms and add those
+	  	select -cl;
+		string $newSetName = ($dupe[0]+"_set");
+		string $newSet = `sets -text "gCharacterSet" -n $newSetName`; // gCharacterSet defines this as a quick select set
+		print("\n$newSet is called "+$newSet);
+		sets -add $newSet $dupe[0];
+		// gotta delete those wraps so they don't show up in the FBX file.
+		delete $newWrap;
+		// okay now we have to do the fbx shits
+		FBXResetExport;
+		FBXExportCacheFile -v true;
+		FBXExportQuickSelectSetAsCache -v $newSetName;	
+		select -r $newSet;
+		select -add $dupe[0];
+		string $fileName = $cacheDir+"/"+$dupe[0];
+		FBXExport -f $fileName -s;
+		string $writePath = (`workspace -q -sn` + "/data/" + `file -q -sn -shn`);
+		print("\nFBXs for skins written to "+$writePath);
+		
+	}
+} // end hfFBXExportSkins 
+
+global proc hfFBXExportObjects(int $exportSelect) {
+	// all meshes that aren't skins need to be bumped to world space and baked.
+	// we'll use baked locators to handle this.
+	// create ordered array for all (selected) non-skinned objects.
+	// create empty array for locators.
+	// for each object: create locator, parent constraint, end loop
+	// select all locators and bake channels
+	// for each object: unparent, parent constrain to locator with same array index
+	// select all objects and bake channels, delete constraints
+	// export selection to FBX
+	string $objectsArr[];
+	clear $objectsArr;
+	// if we are exporting by selection, that's easy. otherwise we have to autodetect all meshes,
+	// then figure out which ones are skins and remove those from the array, then return an array of transforms for baking.
+	if($exportSelect==1) {
+		$objectsArr = `ls -sl`;
+	} else {
+		string $allShapes[] = `ls -type mesh`;
+		string $allCams[] = `ls -type camera`;
+        string $renderCams[];		
+		// prune down cameras so we're only dealing with renderable cams.
+		for($z=0;$z<size($allCams);$z++) {
+		    if(`getAttr($allCams[$z]+".renderable")` == true) {
+		        $renderCams[size($renderCams)] = $allCams[$z];
+		    }
+		}
+		$allShapes = stringArrayCatenate($allShapes, $renderCams);
+		string $shapeXforms[];
+		for($i=0;$i<size($allShapes);$i++) {
+		    string $xform[] = `listTransforms $allShapes[$i]`;
+		    $shapeXforms[$i] = $xform[0];
+		}
+		// get skin clusters and remove them from that array
+		string $skinClusters[] = `ls -type skinCluster`;
+		string $skinnedObjects[];
+		for($i=0;$i<size($skinClusters);$i++) {
+			// get the objectSet associated with the skinCluster
+			string $objectSet[] = `listConnections -t objectSet $skinClusters[$i]`;
+			for($j=0;$j<size($objectSet);$j++) {
+				string $meshes[] = `listConnections -t mesh $objectSet[$j]`;
+				$skinnedObjects = stringArrayCatenate($skinnedObjects,$meshes);
+			}
+		}
+		string $allSkins[] = stringArrayRemoveDuplicates($skinnedObjects);
+		$objectsArr = stringArrayRemove($allSkins, $shapeXforms);
+		//print("\n$allSkins returns: ");
+		//print $allSkins;
+		print("\n$objectsArr returns: ");
+		print $objectsArr;
+	}
+	// okay so either way we should have an $objectsArr ready to go. now for some locators and some baking.
+	string $locsArr[];
+	for($i=0;$i<size($objectsArr);$i++) {
+	    string $newLocName = $objectsArr[$i]+"_loc";
+	    string $newLoc[] = `spaceLocator -n $newLocName`;
+	    parentConstraint $objectsArr[$i] $newLoc[0];
+	    $locsArr[$i] = $newLoc[0];
+	}
+	// now we have a locator constrained to each object, so let's make some cookies.
+	print("\nABOUT TO RUN hfBakeAnimToWorldSpace.");
+	print("\n$objectsArr includes: ");
+	print $objectsArr;
+	string $newObjectsArr[] = `hfBakeAnimToWorldSpace($objectsArr)`;
+	// good thing i already wrote that shit. now we have to select these objects and do the final FBX export.
+	select -r $newObjectsArr;
+	print("\n$newObjectsArr includes: ");
+	print $newObjectsArr;
+	FBXResetExport;
+	FBXExportCacheFile -v false;
+	FBXExportCameras -v true;
+	// make a directory for the export if it doesn't exist
+	string $newDir = (`workspace -q -fn`+"/data/"+`file -q -sn -shn`);
+	if(!`filetest -d $newDir`) {
+		sysFile -md (`workspace -q -fn`+"/data/"+`file -q -sn -shn`);
+	}
+	string $fileName = (`workspace -q -fn`+"/data/"+`file -q -sn -shn`+"/"+`file -q -sn -shn`+"_NONSKINS");
+	FBXExport -f $fileName -s;
+	
+	print("\nFBX for non-skins written to "+$fileName);
+	
+}	// end proc hfFBXExportObjects
+
+global proc hfDoExportSkins() {
+    global string $hffbx_exportSelBox;
+    int $exportSel = `checkBox -q -v $hffbx_exportSelBox`;
+	setNamedPanelLayout "Single Perspective View";
+	string $perspPane[] = `getPanel -vis`;
+	scriptedPanel -e -rp $perspPane[0] graphEditor1;
+	// once this process is run we don't want the scene to be saved.
+	file -rts 1;
+	hfImportAllReferences();
+    hfFBXExportSkins($exportSel);
+}
+
+global proc hfDoExportNonSkins() {
+    global string $hffbx_exportSelBox;
+    int $exportSel = `checkBox -q -v $hffbx_exportSelBox`;
+	setNamedPanelLayout "Single Perspective View";
+	string $perspPane[] = `getPanel -vis`;
+	scriptedPanel -e -rp $perspPane[0] graphEditor1;
+	file -rts 1;
+	hfImportAllReferences();
+    hfFBXExportObjects($exportSel);
+}
+
+global proc hfMaya2MaxFBX() {
+	// load fbx plugin. windows uses .mll extension, mac uses .bundle
+	loadPlugin -qt fbxmaya;
+	if(`window -exists hfFBXExportWindow`) {
+		deleteUI hfFBXExportWindow;
+	}
+	window -title "SEND SHITS TO MAX" -wh 350 150 hfFBXExportWindow;
+	formLayout -nd 100 hfFBXForm;
+	string $helpLbl = `text -al "left" -ww true -w 250 -h 100 "export skinned or non-skinned objects to FBX. renderable cameras export with non-skins. \n\nAll file references will be imported before baking. DO NOT SAVE YOUR SCENE AFTER EXPORT."`;
+	global string $hffbx_exportSelBox;
+	$hffbx_exportSelBox = `checkBox -v false -l "export selected"`;
+	string $exportSkinsBtn = `button -l "export skins" -w 100 -h 50 -c "hfDoExportSkins"`;
+	string $exportNonSkinsBtn = `button -l "export non-skins" -w 100 -h 50 -c "hfDoExportNonSkins"`;
+	string $cancelBtn = `button -l "cancel" -w 100 -h 50 -c "deleteUI hfFBXExportWindow"`;
+	formLayout -e
+		-attachForm $helpLbl "top" 0
+		-attachForm $helpLbl "left" 10
+		-attachForm $hffbx_exportSelBox "top" 120
+		-attachForm $hffbx_exportSelBox "left" 10
+		-attachForm $exportSkinsBtn "top" 150
+		-attachForm $exportSkinsBtn "left" 10
+		-attachForm $exportNonSkinsBtn "top" 150
+		-attachForm $exportNonSkinsBtn "left" 120
+		-attachForm $cancelBtn "top" 150
+		-attachForm $cancelBtn "left" 230
+	hfFBXForm;
+
+	showWindow hfFBXExportWindow;
+	window -e -wh 350 210 hfFBXExportWindow;
+}
+
+
+

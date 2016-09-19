@@ -1,0 +1,315 @@
+mentalray:
+  name: Mental Ray
+  show: false
+  packages:
+    maya:
+      env:
+        MAYA_MODULE_PATH: '%GSROOT%/bin/mentalray/mayatomr/%ST_MAYA_MR%/win/%ST_MAYA%/modules'
+      versions:
+        '3.12.1.18':
+          env:
+            ST_MAYA_MR: '3.12.1.18'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+arnold:
+  name: Arnold
+  show: false
+  env:
+    solidangle_LICENSE: '5060@ppny-lic'
+  packages:
+    maya:
+      env:
+        MAYA_MODULE_PATH: '%GSROOT%/bin/arnold/mtoa/%ST_MTOA%/win/%ST_MAYA%'
+      versions:
+        1.0.0.RC1:
+          env:
+            ST_MTOA: '1.0.0.RC1'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+        1.1.0.4:
+          env:
+            ST_MTOA: '1.1.0.4'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+        1.1.1.0:
+          env:
+            ST_MTOA: '1.1.1.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+        1.2.0.8:
+          env:
+            ST_MTOA: '1.2.0.8'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+    softimage:
+      versions:
+        3.2.0:
+          env:
+            XSI_PLUGINS: '%GSROOT%/bin/arnold/softimage/%ST_SITOA%/%ST_SOFTIMAGE%'
+            ST_SITOA: '3.2.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+crate:
+  name: Exocortex Crate
+  show: false
+  env:
+    EXOCORTEX_LICENSE: '5063@ppny-lic'
+  packages:
+    maya:
+      versions:
+        '1.1.145':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.145/Windows/Maya%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.145'
+          versions:
+          - '2014'
+          - '2015'
+        '1.1.148':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/alembic/ExocortexCrate1.1.148/Windows7/Maya%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.148'
+          versions:
+          - '2014'
+          - '2015'
+          - '2016'
+        '1.1.150':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.150/Windows7/Maya%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.150'
+          versions:
+          - '2014'
+          - '2015'
+          - '2016'
+    softimage:
+      versions:
+        '1.1.145':
+          env:
+            XSI_PLUGINS: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.145/Windows/Softimage%ST_SOFTIMAGE%'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/alembic/ExocortexCrateSuite1.1.145'
+          versions:
+          - '2014'
+          - '2015'
+    3dsmax:
+      versions:
+        '1.1.145':
+          versions:
+          - '2013'
+          - '2014'
+          - '2015'
+vray:
+  name: VRay
+  show: false
+  env:
+    VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/vray/maya/config'
+  packages:
+    maya:
+      env:
+        MAYA_MODULE_PATH: '%GSROOT%/bin/vray/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+      versions:
+        '2.40.01':
+          env:
+            ST_MAYA_VRAY: '2.40.01'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/vray/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2014'
+        '3.30.01':
+          env:
+            ST_MAYA_VRAY: '3.30.01'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/vray/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2015'
+          - '2016'
+alShaders:
+  name: alShaders
+  show: false
+  packages:
+    maya:
+      versions:
+        '0.4.0':
+          env:
+            ARNOLD_PLUGIN_PATH: '%GSROOT%/bin/arnold/plugins/alShaders/0.4.0/win/bin'
+            MTOA_TEMPLATES_PATH: '%GSROOT%/bin/arnold/plugins/alShaders/0.4.0/win/ae'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+          - '2015'
+jfDielectric:
+  name: jfDielectric
+  show: false
+  packages:
+    maya:
+      versions:
+        '1.0.5':
+          env:
+            ARNOLD_PLUGIN_PATH: '%GSROOT%/bin/arnold/plugins/jfDielectric/1.0.5/win/bin'
+            MTOA_TEMPLATES_PATH: '%GSROOT%/bin/arnold/plugins/jfDielectric/1.0.5/win/ae'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+gmh:
+  name: gmh
+  show: false
+  packages:
+    maya:
+      versions:
+        '2.0':
+          env:
+            MAYA_SCRIPT_PATH: '%GSROOT%/bin/plugins/maya/GMH/2.0'
+            PYTHONPATH: '%GSROOT%/bin/plugins/maya/GMH/2.0'
+            XBMLANGPATH: '%GSROOT%/bin/plugins/maya/GMH/2.0/GMH2/graphic'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+          - '2015'
+ngSkinningTools:
+  name: ngSkinningTools
+  show: false
+  packages:
+    maya:
+      versions:
+        '1.0.881':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/ngSkinTools/1.0.881/win32/maya2015'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/plugins/maya/ngSkinTools/1.0.881/win32/maya2015/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+          - '2015'
+houdiniEngine:
+  name: houdiniEngine
+  show: false
+  packages:
+    maya:
+      versions:
+        '14.0.258':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/houdiniEngine/win/14.0.258/maya2015'
+            PATH: '%GSROOT%/bin/plugins/maya/houdiniEngine/win/14.0.258/maya2015/bin'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2013'
+          - '2014'
+          - '2015'
+realflowMaya:
+  name: realflowMaya
+  show: false
+  packages:
+    maya:
+      versions:
+        '14.8.012':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/realflow/win/14.8.012/Maya2015'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+rfrk:
+  name: realflowrenderkit
+  show: false
+  packages:
+    maya:
+      versions:
+        '2014':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/rfrk/win/2014/Maya2015'
+            PATH: '%GSROOT%/bin/plugins/maya/rfrk/win/2014/RFRK 2014 For Maya'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+presenz:
+  name: presenz
+  show: false
+  packages:
+    maya:
+      versions:
+        '0.1.0':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/presenz/win/0.1.0/Maya2015'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+playblastVR:
+  name: playblastVR
+  show: false
+  packages:
+    maya:
+      versions:
+        '1.2':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/plugins/maya/PlayblastVR/win/1.2'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'

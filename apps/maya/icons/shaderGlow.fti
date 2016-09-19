@@ -1,0 +1,104 @@
+
+#	Path_7
+		color(-119);
+		bgnpolygon();
+			vertex(99.20, 35.40);
+			vertex(99.20, 63.80);
+			vertex(86.60, 85.20);
+			vertex(63.00, 98.80);
+			vertex(36.20, 98.60);
+			vertex(12.60, 84.60);
+			vertex(-0.20, 62.40);
+			vertex(0.00, 35.00);
+			vertex(15.40, 8.00);
+			vertex(39.20, -0.40);
+			vertex(63.20, -0.40);
+			vertex(85.00, 11.20);
+		endpolygon();
+
+#	Path_7
+		color(-136);
+		bgnoutlinepolygon();
+			vertex(91.84, 36.75);
+			vertex(91.15, 61.13);
+			vertex(79.82, 79.12);
+			vertex(59.39, 90.85);
+			vertex(38.14, 90.48);
+			vertex(17.42, 79.56);
+			vertex(6.94, 59.09);
+			vertex(7.04, 36.36);
+			vertex(20.10, 15.72);
+			vertex(39.73, 7.04);
+			vertex(61.36, 7.64);
+			vertex(79.62, 17.59);
+		endoutlinepolygon(0);
+
+#	Path_2
+		color(-128);
+		bgnpolygon();
+			vertex(21.28, 16.80);
+			vertex(41.07, 8.60);
+			vertex(60.87, 8.83);
+			vertex(71.98, 14.39);
+			vertex(46.32, 17.69);
+			vertex(31.81, 25.50);
+			vertex(19.76, 41.79);
+			vertex(8.49, 37.07);
+		endpolygon();
+
+#	Path_3
+		bgnpolygon();
+			vertex(8.25, 58.08);
+			vertex(8.49, 37.07);
+			vertex(19.76, 41.79);
+			vertex(18.62, 78.35);
+		endpolygon();
+
+#	Path_7
+		color(-136);
+		bgnpolygon();
+			vertex(89.64, 42.51);
+			vertex(89.05, 63.36);
+			vertex(79.37, 78.75);
+			vertex(61.89, 88.78);
+			vertex(43.72, 88.46);
+			vertex(26.00, 79.12);
+			vertex(17.04, 61.62);
+			vertex(17.12, 42.17);
+			vertex(28.29, 24.53);
+			vertex(45.08, 17.11);
+			vertex(63.57, 17.61);
+			vertex(79.19, 26.12);
+		endpolygon();
+
+#	Path_7
+		bgnpolygon();
+			vertex(85.77, 48.71);
+			vertex(85.31, 65.08);
+			vertex(77.70, 77.17);
+			vertex(63.98, 85.04);
+			vertex(49.71, 84.79);
+			vertex(35.80, 77.46);
+			vertex(28.77, 63.72);
+			vertex(28.84, 48.45);
+			vertex(37.60, 34.60);
+			vertex(50.78, 28.77);
+			vertex(65.30, 29.17);
+			vertex(77.57, 35.85);
+		endpolygon();
+
+#	Path_7
+		color(-247);
+		bgnpolygon();
+			vertex(68.00, 59.40);
+			vertex(70.00, 62.40);
+			vertex(69.00, 68.00);
+			vertex(66.80, 70.40);
+			vertex(63.20, 71.40);
+			vertex(60.00, 70.00);
+			vertex(58.20, 67.20);
+			vertex(58.00, 63.40);
+			vertex(60.00, 60.00);
+			vertex(62.40, 58.40);
+			vertex(65.00, 57.50);
+		endpolygon();

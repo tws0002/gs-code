@@ -1,0 +1,186 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ help "****Abberation_v01:\t\n\nChromatically abberates the edges of the frame, using a transform masked and radial. Very quick calculation."
+ note_font Verdana
+ mapsize {0.15 0.15}
+ addUserKnob {20 User}
+ addUserKnob {26 NodeName l "" +STARTLINE T ":Abberation: by Tony Lyons\n\nChromatically Abberates the edges of the frame.\n"}
+ addUserKnob {26 ""}
+ addUserKnob {7 scale l size R 0.98 1.02}
+ scale 1.002
+ addUserKnob {41 filter T Transform2.filter}
+ addUserKnob {41 gamma l Intensity T Grade1.gamma}
+ addUserKnob {41 blursize l "Blur size" T Blur1.size}
+ addUserKnob {26 ""}
+ addUserKnob {7 Mix l mix}
+ Mix 1
+ addUserKnob {6 crop l "Crop to Format" +STARTLINE}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -371
+  ypos -796
+ }
+ AddChannels {
+  channels rgba
+  name AddChannels1
+  xpos -371
+  ypos -750
+ }
+ Dot {
+  name Dot2
+  xpos -337
+  ypos -689
+ }
+set N84cc210 [stack 0]
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle1
+  xpos -24
+  ypos -692
+ }
+ Radial {
+  area {0 0 {"\[lrange \[value root.format] 0 0]" i} {"\[lrange \[value root.format] 1 1]" i}}
+  name Radial1
+  xpos -24
+  ypos -638
+ }
+ Grade {
+  channels all
+  reverse true
+  name Grade1
+  xpos -24
+  ypos -595
+ }
+ Transform {
+  scale 1.1
+  center {960 540}
+  name Transform4
+  xpos -24
+  ypos -547
+ }
+ Invert {
+  name Invert1
+  xpos -24
+  ypos -489
+ }
+set N84cd340 [stack 0]
+ Dot {
+  name Dot1
+  xpos 10
+  ypos -246
+ }
+push $N84cd340
+push $N84cc210
+ Dot {
+  name Dot4
+  xpos -337
+  ypos -558
+ }
+set N84cda20 [stack 0]
+ TransformMasked {
+  inputs 1+1
+  scale {{parent.Transform2.scale i}}
+  center {960 540}
+  invert_matrix true
+  filter {{Transform2.filter i x21 4}}
+  black_outside false
+  name Transform3
+  xpos -181
+  ypos -311
+ }
+push $N84cd340
+push $N84cda20
+ Dot {
+  name Dot8
+  xpos -145
+  ypos -558
+ }
+ TransformMasked {
+  inputs 1+1
+  scale {{parent.scale i}}
+  center {960 540}
+  black_outside false
+  name Transform2
+  xpos -179
+  ypos -489
+ }
+push $N84cda20
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  name Copy2
+  xpos -371
+  ypos -489
+ }
+ Copy {
+  inputs 2
+  from0 rgba.blue
+  to0 rgba.blue
+  name Copy3
+  xpos -371
+  ypos -311
+ }
+ Blur {
+  inputs 1+1
+  size 1.5
+  name Blur1
+  xpos -371
+  ypos -255
+ }
+push $N84cda20
+ Dot {
+  name Dot6
+  xpos -436
+  ypos -558
+ }
+ Dot {
+  name Dot3
+  xpos -436
+  ypos -296
+ }
+ Dot {
+  name Dot7
+  xpos -436
+  ypos -141
+ }
+ Dissolve {
+  inputs 2
+  which {{parent.Mix i}}
+  name Dissolve1
+  xpos -371
+  ypos -150
+ }
+ Crop {
+  box {0 0 {"\[lrange \[value root.format] 0 0]"} {"\[lrange \[value root.format] 1 1]"}}
+  name Crop1
+  xpos -371
+  ypos -98
+  disable {{"parent.crop ? 0 : 1"}}
+ }
+set Nfe2d4e0 [stack 0]
+ Dot {
+  name Dot5
+  xpos -337
+  ypos -52
+ }
+ Output {
+  name Output1
+  xpos -371
+  ypos -9
+ }
+push $Nfe2d4e0
+ Viewer {
+  frame_increment 8
+  input_process false
+  name Viewer1
+  xpos -240
+  ypos -26
+ }
+end_group

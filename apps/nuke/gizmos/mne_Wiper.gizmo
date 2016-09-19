@@ -1,0 +1,110 @@
+#! /software/Nuke/Linux64/Nuke6.2v3/Nuke6.2 -nx
+version 6.2 v3
+Gizmo {
+ inputs 2
+ note_font "Bitstream Vera Sans"
+ mapsize {0.15 0.15}
+ addUserKnob {20 Wiper}
+ addUserKnob {41 wipe l Wipe T Ramp1.wipe}
+ addUserKnob {41 size l Soften T Blur1.size}
+}
+ Input {
+  inputs 0
+  name Input2
+  xpos -769
+  ypos -668
+  number 1
+ }
+ Dot {
+  name Dot19
+  xpos -735
+  ypos -532
+ }
+set Nceec0ce0 [stack 0]
+ Dot {
+  name Dot3
+  xpos -735
+  ypos -154
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos -641
+  ypos -668
+ }
+set Ncc50d980 [stack 0]
+ Dot {
+  name Dot2
+  xpos -481
+  ypos -603
+ }
+ Dot {
+  name Dot1
+  xpos -481
+  ypos -280
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  name Constant1
+  xpos -423
+  ypos -647
+ }
+ Ramp {
+  output {-rgba.red -rgba.green -rgba.blue rgba.alpha}
+  p0 {{root.width*(wipe/100)-4} 0}
+  p1 {{root.width+2} 0}
+  name Ramp1
+  xpos -423
+  ypos -573
+  addUserKnob {20 User}
+  addUserKnob {7 wipe l Wipe R -100 100}
+ }
+ Grade {
+  channels alpha
+  blackpoint 0.5
+  whitepoint 0.5
+  name Grade1
+  xpos -423
+  ypos -531
+ }
+ Clamp {
+  name Clamp1
+  xpos -423
+  ypos -475
+ }
+ Blur {
+  channels alpha
+  name Blur1
+  xpos -423
+  ypos -433
+ }
+push $Nceec0ce0
+push $Ncc50d980
+ Keymix {
+  inputs 3
+  bbox B
+  name Keymix1
+  xpos -641
+  ypos -433
+ }
+ Switch {
+  inputs 2
+  which {{wipe>99?1:0 i}}
+  name Switch1
+  xpos -641
+  ypos -285
+ }
+ Switch {
+  inputs 2
+  which {{wipe<-99?1:0 i}}
+  name Switch2
+  xpos -641
+  ypos -159
+ }
+ Output {
+  name Output1
+  xpos -641
+  ypos -36
+ }
+end_group

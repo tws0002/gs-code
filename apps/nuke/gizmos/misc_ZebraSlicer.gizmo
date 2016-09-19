@@ -1,0 +1,115 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ addUserKnob {20 User}
+ addUserKnob {4 output M {Overlay "Original Only" "Result Only"}}
+ addUserKnob {41 operation T Keyer1.operation}
+ addUserKnob {6 pickColor +STARTLINE}
+ addUserKnob {41 samplepoint1 T sampleimage.samplepoint1}
+ addUserKnob {26 ""}
+ addUserKnob {7 value2 l Value}
+ value2 0.5
+ addUserKnob {41 range T NoOp1.range}
+ addUserKnob {26 ""}
+ addUserKnob {41 mix T Merge1.mix}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -260
+  ypos -126
+ }
+ Dot {
+  name Dot1
+  xpos -226
+  ypos -86
+ }
+set N816d6f0 [stack 0]
+ Keyer {
+  operation "luminance key"
+  name Keyer1
+  xpos -110
+  ypos -95
+ }
+set N816da60 [stack 0]
+ Expression {
+  temp_name0 value
+  temp_expr0 NoOp1.value
+  temp_name1 range
+  temp_expr1 NoOp1.range
+  temp_name2 r
+  temp_expr2 "smoothstep(value, (value+(range*.5)), a)"
+  temp_name3 b
+  temp_expr3 "smoothstep(value, (value-(range*.5)), a)"
+  expr0 r
+  expr1 1-(r+b)
+  expr2 b
+  expr3 1
+  name Expression3
+  xpos -110
+  ypos -24
+ }
+set N816ddd0 [stack 0]
+push $N816d6f0
+ Dot {
+  name Dot2
+  xpos -345
+  ypos -86
+ }
+ Dot {
+  name Dot3
+  xpos -345
+  ypos 68
+ }
+push $N816ddd0
+push $N816d6f0
+ Merge2 {
+  inputs 2
+  mix 0.6
+  name Merge1
+  xpos -260
+  ypos -24
+ }
+ Switch {
+  inputs 3
+  which {{parent.output}}
+  name Switch1
+  xpos -260
+  ypos 65
+ }
+ Output {
+  name Output1
+  xpos -260
+  ypos 150
+ }
+push $N816da60
+ NoOp {
+  name sampleimage
+  knobChanged "\ntn = nuke.thisNode()\ngrade = nuke.toNode('getgradecolor')\ntn.knob('colorR1').setExpression('\[sample this r samplepoint1.0 samplepoint1.1]')\ntn.knob('colorG1').setExpression('\[sample this g samplepoint1.0 samplepoint1.1]')\ntn.knob('colorB1').setExpression('\[sample this b samplepoint1.0 samplepoint1.1]')\ntn.knob('colorR2').setExpression('\[sample this r samplepoint2.0 samplepoint2.1]')\ntn.knob('colorG2').setExpression('\[sample this g samplepoint2.0 samplepoint2.1]')\ntn.knob('colorB2').setExpression('\[sample this b samplepoint2.0 samplepoint2.1]')\ntn.knob('colorR1').clearAnimated()\ntn.knob('colorG1').clearAnimated()\ntn.knob('colorB1').clearAnimated()\ntn.knob('colorR2').clearAnimated()\ntn.knob('colorG2').clearAnimated()\ntn.knob('colorB2').clearAnimated()\ngrade.knob('gradecolorR1').setExpression('\[sample this r sampleimage.samplepoint1.0 sampleimage.samplepoint1.1]')\ngrade.knob('gradecolorG1').setExpression('\[sample this g sampleimage.samplepoint1.0 sampleimage.samplepoint1.1]')\ngrade.knob('gradecolorB1').setExpression('\[sample this b sampleimage.samplepoint1.0 sampleimage.samplepoint1.1]')\ngrade.knob('gradecolorR2').setExpression('\[sample this r sampleimage.samplepoint2.0 sampleimage.samplepoint2.1]')\ngrade.knob('gradecolorG2').setExpression('\[sample this g sampleimage.samplepoint2.0 sampleimage.samplepoint2.1]')\ngrade.knob('gradecolorB2').setExpression('\[sample this b sampleimage.samplepoint2.0 sampleimage.samplepoint2.1]')\ngrade.knob('gradecolorR1').clearAnimated()\ngrade.knob('gradecolorG1').clearAnimated()\ngrade.knob('gradecolorB1').clearAnimated()\ngrade.knob('gradecolorR2').clearAnimated()\ngrade.knob('gradecolorG2').clearAnimated()\ngrade.knob('gradecolorB2').clearAnimated()\ntn.knob('modified').setValue(int(nuke.frame()))"
+  xpos 169
+  ypos -89
+  addUserKnob {20 User}
+  addUserKnob {12 samplepoint1}
+  samplepoint1 {208 126}
+  addUserKnob {7 colorR1}
+  colorR1 {{"\[sample this r samplepoint1.0 samplepoint1.1]"}}
+  addUserKnob {7 colorG1}
+  colorG1 {{"\[sample this g samplepoint1.0 samplepoint1.1]"}}
+  addUserKnob {7 colorB1}
+  colorB1 {{"\[sample this b samplepoint1.0 samplepoint1.1]"}}
+  addUserKnob {7 colorA1}
+  colorA1 {{"\[sample this a samplepoint1.0 samplepoint1.1]"}}
+ }
+ NoOp {
+  inputs 0
+  name NoOp1
+  selected true
+  xpos 44
+  ypos -27
+  addUserKnob {20 User}
+  addUserKnob {7 value t range}
+  value {{"parent.pickColor == 1 ? sampleimage.colorA1: parent.value2"}}
+  addUserKnob {7 range R 0 2}
+  range 0.2
+ }
+end_group

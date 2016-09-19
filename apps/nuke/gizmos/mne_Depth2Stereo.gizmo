@@ -1,0 +1,150 @@
+#! /Applications/Nuke6.1v2/NukeX6.1v2.app/../Nuke6.1v2.app/Contents/MacOS/Nuke6.1v2 -nx
+version 6.1 v2
+Gizmo {
+ inputs 2
+ addUserKnob {20 User l Depth2Stereo}
+ addUserKnob {7 imageOffset l "Overall depth" t "To set the whole image back in stereo space, increase this value. A value of 0 would mean any 'black' pixels in the depth matte would sit at the zero point in stereo space, level with the screen." R 0 30}
+ imageOffset 15
+ addUserKnob {7 overscan l Overscan t "When the image is pushed to the left and right, the edges will appear. Increase this value to scale the image up inside the format size." R 0 0.1}
+ addUserKnob {7 amount l Indent/Extrude t "Positive values will extrude the image pattern defined in the depth matte, negative values will indent it." R -30 30}
+ amount 15
+}
+ Input {
+  inputs 0
+  name depth
+  xpos -202
+  ypos -669
+ }
+ Dot {
+  name Dot2
+  xpos -172
+  ypos -245
+ }
+set N366f400 [stack 0]
+ Dot {
+  name Dot3
+  xpos -290
+  ypos -287
+ }
+ Input {
+  inputs 0
+  name B
+  xpos -579
+  ypos -667
+  number 1
+ }
+ NoOp {
+  name NoOp1
+  xpos -579
+  ypos -422
+ }
+set N35e3000 [stack 0]
+ OneView {
+  view right
+  name OneView4
+  label right
+  xpos -502
+  ypos -359
+ }
+ Copy {
+  inputs 2
+  from0 depth.Z
+  to0 forward.u
+  name Copy2
+  xpos -502
+  ypos -295
+ }
+ IDistort {
+  channels rgb
+  uv {forward.u -forward.v}
+  uv_scale {{parent.amount.right i}}
+  name IDistort2
+  xpos -502
+  ypos -182
+ }
+push $N366f400
+push $N35e3000
+ OneView {
+  name OneView3
+  label left
+  xpos -668
+  ypos -361
+ }
+ Copy {
+  inputs 2
+  from0 depth.Z
+  to0 forward.u
+  name Copy1
+  xpos -668
+  ypos -253
+ }
+ IDistort {
+  channels rgb
+  uv {forward.u -forward.v}
+  uv_scale {{-parent.amount.right i}}
+  name IDistort1
+  xpos -668
+  ypos -183
+ }
+ JoinViews {
+  inputs 2
+  name JoinViews2
+  xpos -565
+  ypos -118
+  viewassoc "left\nright"
+ }
+ Transform {
+  scale {{1+parent.overscan.left i}}
+  center {1024 578}
+  name overscan
+  xpos -565
+  ypos 37
+ }
+set N3712000 [stack 0]
+ OneView {
+  view right
+  name OneView2
+  label right
+  xpos -518
+  ypos 104
+ }
+ Transform {
+  translate {{parent.imageOffset.left i} 0}
+  center {1024 578}
+  name Transform1
+  xpos -518
+  ypos 160
+ }
+push $N3712000
+ OneView {
+  name OneView1
+  label left
+  xpos -618
+  ypos 105
+ }
+ Transform {
+  translate {{-parent.imageOffset.left i} 0}
+  center {1024 578}
+  name Transform2
+  xpos -618
+  ypos 160
+ }
+ JoinViews {
+  inputs 2
+  name JoinViews1
+  xpos -565
+  ypos 227
+  viewassoc "left\nright"
+ }
+ Crop {
+  box {0 0 {format.w i} {format.h i}}
+  name Crop1
+  xpos -565
+  ypos 270
+ }
+ Output {
+  name Output1
+  xpos -565
+  ypos 477
+ }
+end_group

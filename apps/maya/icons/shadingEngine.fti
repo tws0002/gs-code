@@ -1,0 +1,94 @@
+
+#	Path_7
+		color(-51);
+		bgnoutlinepolygon();
+			vertex(99.28, 35.84);
+			vertex(98.48, 63.94);
+			vertex(85.43, 84.70);
+			vertex(61.87, 98.22);
+			vertex(37.36, 97.80);
+			vertex(13.47, 85.20);
+			vertex(1.40, 61.61);
+			vertex(0.73, 34.12);
+			vertex(16.56, 11.60);
+			vertex(39.20, 1.58);
+			vertex(64.13, 2.27);
+			vertex(85.20, 13.74);
+		endoutlinepolygon(0);
+
+#	Path_1
+		color(-16);
+		bgnoutlinepolygon();
+			vertex(58.30, 71.91);
+			vertex(30.89, 79.60);
+			vertex(32.01, 46.94);
+			vertex(59.71, 34.36);
+		endoutlinepolygon(outlinecolor);
+
+#	Path_2
+		color(-17);
+		bgnoutlinepolygon();
+			vertex(58.30, 71.91);
+			vertex(83.64, 80.36);
+			vertex(83.83, 46.75);
+			vertex(59.71, 34.36);
+		endoutlinepolygon(outlinecolor);
+
+#	Path_3
+		bgnoutlinepolygon();
+			vertex(56.61, 86.55);
+			vertex(83.64, 80.36);
+			vertex(58.30, 71.91);
+			vertex(30.89, 79.60);
+		endoutlinepolygon(outlinecolor);
+
+#	Path_7
+		color(-130);
+		bgnoutlinepolygon();
+			vertex(54.59, 27.30);
+			vertex(54.27, 38.51);
+			vertex(49.07, 46.79);
+			vertex(39.67, 52.18);
+			vertex(29.89, 52.01);
+			vertex(20.37, 46.98);
+			vertex(15.55, 37.57);
+			vertex(15.28, 26.61);
+			vertex(21.60, 17.63);
+			vertex(30.63, 13.63);
+			vertex(40.57, 13.91);
+			vertex(48.97, 18.48);
+		endoutlinepolygon(0);
+
+#	Path_7
+		color(-34);
+		bgnpolygon();
+			vertex(49.74, 37.31);
+			vertex(49.65, 40.51);
+			vertex(48.16, 42.87);
+			vertex(45.48, 44.41);
+			vertex(42.70, 44.36);
+			vertex(39.98, 42.92);
+			vertex(38.61, 40.24);
+			vertex(38.53, 37.12);
+			vertex(40.33, 34.56);
+			vertex(42.90, 33.42);
+			vertex(45.74, 33.49);
+			vertex(48.13, 34.80);
+		endpolygon();
+
+#	Path_6
+		color(-32);
+		bgnpolygon();
+			vertex(22.09, 18.26);
+			vertex(30.75, 14.43);
+			vertex(40.27, 14.70);
+			vertex(48.33, 19.08);
+			vertex(53.98, 27.29);
+			vertex(43.84, 23.53);
+			vertex(34.08, 24.28);
+			vertex(24.51, 29.73);
+			vertex(21.88, 37.80);
+			vertex(20.91, 46.39);
+			vertex(16.30, 37.38);
+			vertex(16.04, 26.87);
+		endpolygon();

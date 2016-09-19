@@ -1,0 +1,102 @@
+#! C:/Program Files/Nuke6.3v8/Nuke6.3.exe -nx
+version 6.3 v8
+Gizmo {
+ lock_connections true
+ addUserKnob {20 User}
+ addUserKnob {26 controller1 l "Outer Edge Controller"}
+ addUserKnob {41 OuterErodeDetailedSize l "Outer Erode (Inverse)" T OuterEdgeDetailed.size}
+ addUserKnob {41 channels_4 l "Outer Channel" T OuterEdgeDetailed.channels}
+ addUserKnob {41 OuterErodeBlur l "Outer Blur Size" T OuterBlur.size}
+ addUserKnob {41 channels_3 l "Outer Blur Channel" T OuterBlur.channels}
+ addUserKnob {41 filter l "Out Filter" T OuterBlur.filter}
+ addUserKnob {41 quality l "" -STARTLINE T OuterBlur.quality}
+ addUserKnob {41 mix l "Erode Mix" T OuterEdge.mix}
+ addUserKnob {26 DIVIDERLINE l "Inner Edge Controller"}
+ addUserKnob {41 InnerErodeDetailedSize l "Inner Erode (Inverse)" T InnerEdgeDetailed.size}
+ addUserKnob {41 channels_1 l "Inner Channel" T InnerEdgeDetailed.channels}
+ addUserKnob {41 size l "Inner Blur Size" T InnerBlur.size}
+ addUserKnob {41 channels_2 l "Inner Blur Channel" T InnerBlur.channels}
+ addUserKnob {41 filter_1 l "In Filter" T InnerBlur.filter}
+ addUserKnob {41 quality_1 l "" -STARTLINE T InnerBlur.quality}
+ addUserKnob {41 mix_1 l "Erode Mix" T InnerEdge.mix}
+ addUserKnob {26 ""}
+ addUserKnob {41 which l "Master Mix" T MasterMix.which}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -35
+  ypos -349
+ }
+ Dot {
+  name Dot1
+  xpos -1
+  ypos -293
+ }
+set N4772b370 [stack 0]
+ Dot {
+  name Dot4
+  xpos 120
+  ypos -293
+ }
+ FilterErode {
+  channels all
+  size 0
+  name InnerEdgeDetailed
+  xpos 86
+  ypos -245
+ }
+ Invert {
+  name Invert1
+  xpos 86
+  ypos -200
+ }
+ Blur {
+  name InnerBlur
+  xpos 86
+  ypos -128
+ }
+push $N4772b370
+ FilterErode {
+  channels all
+  size 0
+  name OuterEdgeDetailed
+  xpos -35
+  ypos -248
+ }
+ Blur {
+  name OuterBlur
+  xpos -35
+  ypos -198
+ }
+ Merge2 {
+  inputs 2
+  operation in
+  name In
+  xpos -35
+  ypos -121
+ }
+push $N4772b370
+ Dot {
+  name Dot2
+  xpos -169
+  ypos -293
+ }
+ Dot {
+  name Dot3
+  xpos -169
+  ypos -3
+ }
+ Dissolve {
+  inputs 2
+  which 1
+  name MasterMix
+  xpos -35
+  ypos -15
+ }
+ Output {
+  name Output1
+  xpos -35
+  ypos 66
+ }
+end_group

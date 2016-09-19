@@ -1,0 +1,134 @@
+// DON'T FUCKING TOUCH ANYTHING: THE SCRIPT
+// toggle lockdown for all xforms that are not immediate parents of NURBS curves. 
+// should prevent manual fuckery of channels that aren't meant to be keyed or modified.
+//'
+global proc hfLockChannels(string $object, int $lock) {
+     // lock all xform channels. might also want to lock pivots.
+        if($lock==0) {
+            //print("\nUNLOCKING");
+        } else {
+            //print("\nLOCKING");
+        }
+        string $attr[] = `listAttr -k $object`;
+        for($k=0;$k<size($attr);$k++) {
+            catchQuiet(`setAttr -e -lock $lock ($object+"."+$attr[$k])`);
+        }
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotX")`);
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotY")`);
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotZ")`);
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotTranslateX")`);
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotTranslateY")`);
+        catchQuiet(`setAttr -e -lock $lock ($object+".rotatePivotTranslateZ")`);
+		catchQuiet(`setAttr -e -lock $lock ($object+".scalePivotX")`);
+		catchQuiet(`setAttr -e -lock $lock ($object+".scalePivotY")`);
+		catchQuiet(`setAttr -e -lock $lock ($object+".scalePivotZ")`);
+}
+
+global proc string[] hfGetExcludeList() {
+    string $excludeList[];
+    clear $excludeList;
+    string $nurbs[] = `ls -type nurbsCurve -type camera`;
+    for($i=0;$i<size($nurbs);$i++) {
+        string $xforms[] = `listTransforms $nurbs[$i]`;
+        $excludeList[size($excludeList)] = $xforms[0];
+    }
+    return $excludeList;
+}
+
+global proc hfInitLockdown(string $excludeList[], int $lock) {
+	if(!`objExists("hfLockdownInfo")`) {
+        createNode -n "hfLockdownInfo" lambert;
+        addAttr -ln "sceneLocked" -at bool hfLockdownInfo;
+	lockNode -lock true hfLockdownInfo;
+    }
+    // lockdown all xforms that aren't selected. should probably offer a button to select all NURBS curves and cameras (don't want to lock those.)    
+    string $xforms[] = `ls -type transform`;
+    // loop through xforms. if an xform is a member of the $sel array, ignore it. otherwise, lockdown.
+    for($i=0;$i<size($xforms);$i++) {
+        // print("\nLooking for xform "+ $xforms[$i]);
+        int $isCtrl = stringArrayContains($xforms[$i], $excludeList);
+        if($isCtrl==0) {
+            // print("\nDidn't find xform " + $xforms[$i] + " in control list. Setting lock to "+$lock);
+            hfLockChannels($xforms[$i], $lock);
+        }
+    }
+    
+    setAttr hfLockdownInfo.sceneLocked $lock;
+    if($lock==0) {
+        print("\nScene is now UNLOCKED. Please don't screw this up.");
+    } else {
+        print("\nScene is now LOCKED. Don't try too hard to break it.");
+    }
+}
+
+global proc hfCloseLockdownUI() {
+    deleteUI hfLockdownUIWindow;
+}
+
+global proc hfLockdown(int $lock) {
+    string $excludeList[] = hfGetExcludeList();
+    // hfCloseLockdownUI;
+    hfInitLockdown($excludeList, $lock);
+    
+}
+
+global proc hfUnlockBtn(int $btn) {
+    global string $hfUnlockBtn2;
+    global string $hfUnlockBtn3;
+    if($btn==1) {
+        button -e -en true $hfUnlockBtn2;
+    }
+    if($btn==2) {
+        button -e -en true $hfUnlockBtn3;
+    }
+    if($btn==3) {
+        hfLockdown(0);
+    }
+}
+    
+global proc hfLockdown_UI() {
+    int $isLocked=0;    
+    if(!`objExists("hfLockdownInfo")`) {
+        createNode -n "hfLockdownInfo" lambert;
+        addAttr -ln "sceneLocked" -at bool hfLockdownInfo;
+	lockNode -lock true hfLockdownInfo;
+    }
+    // determine if the scene is already locked. then start building UI.
+    if(getAttr("hfLockdownInfo.sceneLocked") == 1) {
+        print("\nscene is currently locked.");
+        $isLocked=1;
+    }
+    if(`window -exists hfLockdownUIWindow`) {
+        deleteUI hfLockdownUIWindow;
+    }
+    window -wh 270 180 -title "SCENE LOCKDOWN" hfLockdownUIWindow;
+    $lockdownForm = `formLayout -nd 100 lockdownForm`;
+    if($isLocked==0) {    
+        string $topMessage = `text -ww true -w 250 -h 100 "Scene is currently UNLOCKED. Press the LOCK button to prevent changes to non-rig transforms."`;
+        string $lockBtn = `button -w 100 -h 50 -l "LOCK" -c "hfLockdown(1)"`;
+        string $cancelBtn = `button -w 100 -h 50 -l "Cancel" -c "hfCloseLockdownUI"`;
+        formLayout -e
+            -attachForm $topMessage "top" -20 -attachForm $topMessage "left" 10
+            -attachForm $lockBtn "top" 65 -attachForm $lockBtn "left" 20
+            -attachForm $cancelBtn "top" 65 -attachForm $cancelBtn "left" 150
+        $lockdownForm;
+    } else {
+        string $topMessage = `text -ww true -w 250 -h 100 "Scene is currently LOCKED. Press the UNLOCK buttons in sequence to unlock non-rig transforms."`;
+        global string $hfUnlockBtn2;
+        global string $hfUnlockBtn3;        
+        string $unlockBtn1 = `button -w 75 -h 75 -l "UNLOCK 1" -c "hfUnlockBtn(1)"`;
+        $hfUnlockBtn2 = `button -w 75 -h 75 -en false -l "UNLOCK 2" -c "hfUnlockBtn(2)"`;
+        $hfUnlockBtn3 = `button -w 75 -h 75 -en false -l "UNLOCK 3" -c "hfUnlockBtn(3)"`;
+        string $cancelBtn = `button -w 240 -h 30 -l "Cancel" -c "hfCloseLockdownUI"`;
+        formLayout -e
+            -attachForm $topMessage "top" -20 -attachForm $topMessage "left" 10
+            -attachForm $unlockBtn1 "top" 65 -attachForm $unlockBtn1 "left" 10
+            -attachForm $hfUnlockBtn2 "top" 65 -attachForm $hfUnlockBtn2 "left" 100
+            -attachForm $hfUnlockBtn3 "top" 65 -attachForm $hfUnlockBtn3 "left" 190
+            -attachForm $cancelBtn "top" 150 -attachForm $cancelBtn "left" 18
+        $lockdownForm;
+    }
+ showWindow hfLockdownUIWindow;
+ window -e -wh 270 180 hfLockdownUIWindow;   
+}
+    

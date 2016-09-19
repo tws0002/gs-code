@@ -1,0 +1,124 @@
+proc vrayGlobalsBase() {
+	//lets stop using this expression cause it throws an error in muster when we reference files in.
+	//catchQuiet(`expression -s "vraySettings.dmcs_adaptiveThreshold = vraySettings.dmcThreshold"  -o vraySettings -ae 1 -uc all`);
+	connectAttr -f vraySettings.dmcThreshold vraySettings.dmcs_adaptiveThreshold;
+	setAttr "vraySettings.vfbOn" 1;
+	setAttr "vraySettings.hideRVOn" 0;
+	setAttr vraySettings.samplerType 1;
+	setAttr "vraySettings.dmcThreshold" 0.05;
+	setAttr "vraySettings.cmap_gamma" 2.2;
+	setAttr "vraySettings.cmap_adaptationOnly" 1;
+	setAttr "vraySettings.cmap_linearworkflow" 1;
+	setAttr "vraySettings.cmap_affectSwatches" 1;
+	setAttr "vraySettings.vfbOn" 1;
+	setAttr "vraySettings.sRGBOn" 1;
+	//yates added
+	setAttr "vraySettings.hideRVOn" 1;
+	setAttr -type "string" vraySettings.fileNamePrefix "<Scene>/<Scene>_<Layer>";
+	setAttr "defaultRenderGlobals.animation" 1;
+	setAttr "vraySettings.animBatchOnly" 1;
+	setAttr -type "string" vraySettings.imageFormatStr "exr";
+	setAttr "vraySettings.ddisplac_edgeLength" 2;
+	setAttr "vraySettings.ddisplac_maxSubdivs" 4;
+	setAttr "vraySettings.sys_regsgen_xc" 32;
+	setAttr "vraySettings.sys_rayc_dynMemLimit" 5120;
+	print "Basic V-Ray renderGlobals config is set. Rejoice!\n";
+	float $st = `playbackOptions -q -ast`;
+	playbackOptions -ast `ceil($st)`;
+}
+
+proc loadPluginVr4M() {
+	if (!`pluginInfo -q -l "vrayformaya"`)
+	{
+		loadPlugin "vrayformaya";
+	}
+
+}
+
+proc qualityPreview() {
+	setAttr "vraySettings.dmcThreshold" 0.1;
+	setAttr "vraySettings.globopt_geom_displacement" 0;
+	setAttr "vraySettings.dmcs_subdivsMult" 0.5;
+	setAttr "vraySettings.dmcMaxSubdivs" 4;
+}
+
+proc qualityMedium() {
+	setAttr "vraySettings.dmcThreshold" 0.05;
+	setAttr "vraySettings.globopt_geom_displacement" 1;
+	setAttr "vraySettings.dmcs_subdivsMult" 1;
+	setAttr "vraySettings.dmcMaxSubdivs" 4;
+}
+
+proc qualityHigh() {
+	setAttr "vraySettings.dmcThreshold" 0.01;
+	setAttr "vraySettings.globopt_geom_displacement" 1;
+	setAttr "vraySettings.dmcs_subdivsMult" 1;
+	setAttr "vraySettings.dmcMaxSubdivs" 4;
+}
+
+proc matchMrBlur() {
+	setAttr "vraySettings.cam_mbOn" 1;
+	setAttr "vraySettings.cam_mbIntervalCenter" -0.100;
+	setAttr "vraySettings.cam_mbDuration" 0.20;
+}
+
+global proc vrayGlobalsMiscSwitcher(string $mode) {
+	if ($mode == "base") { vrayGlobalsBase;}
+	else if ($mode == "loadPlugin") { loadPluginVr4M;}
+	else if ($mode == "preview") { qualityPreview;}
+	else if ($mode == "medium") { qualityMedium;}
+	else if ($mode == "high") { qualityHigh;}
+	else if ($mode == "matchMrBlur") { matchMrBlur;}
+}
+
+
+/*  ---------===============-------------
+    Scholar ASSET BUILDER MAIN
+*/
+
+
+global proc vrayGlobalsMisc() {
+	if (`window -q -ex "vrayGlobalsMiscUI"`){ deleteUI "vrayGlobalsMiscUI"; }
+	if ( `windowPref -ex "vrayGlobalsMiscUI"`){ windowPref -r "vrayGlobalsMiscUI"; }
+	string $tab_window = `window -rtf 1 "Scholar Vray Utils"`;
+	columnLayout -adj true  ;
+		frameLayout -lv false -mw 10;
+		columnLayout -adj true;
+		
+			text -l "" -h 5;
+			frameLayout -lv false;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"loadPlugin\")" -l "Load vray plugin";
+			setParent..;
+			
+			text -l "" -h 5;
+			frameLayout -lv false ;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"base\")" -l "Basic vray setup";
+			setParent..;
+			
+			text -l "" -h 5;
+			frameLayout -lv false ;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"matchMrBlur\")" -l "Match defalut MR moBlur";
+			setParent..;
+			
+			text -l "" -h 5;
+			frameLayout -lv false ;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"preview\")" -l "Preview quality (no disp)";
+			setParent..;
+			
+			text -l "" -h 5;
+			frameLayout -lv false ;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"medium\")" -l "Medium quality";
+			setParent..;
+			
+			text -l "" -h 5;
+			frameLayout -lv false ;
+				button -h 25 -c "vrayGlobalsMiscSwitcher(\"high\")" -l "High quality";
+			setParent..;
+			
+			
+			text -l "" -h 5;
+			
+		setParent..;
+	showWindow;
+
+}

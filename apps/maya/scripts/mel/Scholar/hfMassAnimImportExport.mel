@@ -1,0 +1,176 @@
+// animImportExport script required. thanks whoever made this...
+source "//scholar/assets/SCHOLARPREFS/MAYA2011/PC/scripts/Pipeline/mass_animImportExport.mel";
+
+global proc string[] getAllNamespaces() {
+	// return all non-default namespaces to a string array.
+	namespace -set ":";
+    string $namespaceList[] = `namespaceInfo -lon`;
+	string $crapNamespaces[] = { "UI", "shared" };
+	string $finalList[] = stringArrayRemoveExact($crapNamespaces,$namespaceList);
+	return $finalList;
+}
+
+global proc string[] getControlsUnderNamespace(string $namespace) {
+	string $returnCurves[];
+	string $allCurves[] = `lsType("nurbsCurve")`;
+	// select all the nurbs controllers in the selected namespace.
+    for($k=0;$k<size($allCurves);$k++) {
+       // print("\niteration: ");
+       // print $k;
+       // progressBar -e -pr $k hfProgBar;
+        // for every curve, is it in the namespace $selected[0]?
+        string $curveNameBuffer[];
+        int $numTokens = `tokenize $allCurves[$k] ":" $curveNameBuffer`;
+        if($curveNameBuffer[0] == $namespace) {
+            // this guy is in the right namespace, but if the overrideDisplayType is not zero, it's not selectable.
+            if(`getAttr($allCurves[$k]+".overrideDisplayType")` == 0) {
+                string $curveXforms[] = `listTransforms $allCurves[$k]`;
+                $returnCurves[size($returnCurves)] = $curveXforms[0];
+            }
+        }
+      //  print("\nend iteration");
+    } // end for
+	return $returnCurves;
+}
+
+global proc hfMassExportAnimation() {
+	// for each namespace in the namespaces array, get all controls.
+	// build an array separated by RENRY and then the namespace, followed by all controls under each namespace.
+	// turn off viewports, bake all channels of control objects, then export all controls under each namespace.
+	// RENRY, namespace1, control1, control2, RENRY, namespace2, control1, control2, control3
+	//
+	// need to delete unknown nodes in order to allow conversion to ASCII.
+	string $unknown[] = `ls -type "unknown"`;
+	for($dumbshit in $unknown) {
+	    delete $dumbshit;
+	}
+	string $namespaces[] = getAllNamespaces();
+	string $everythingArray[];
+	string $controlsArray[];
+	for($namespace in $namespaces) {
+		$everythingArray[size($everythingArray)] = "/";
+		$everythingArray[size($everythingArray)] = $namespace;
+		string $controls[] = getControlsUnderNamespace($namespace);
+		$everythingArray = stringArrayCatenate($everythingArray, $controls);
+		$controlsArray = stringArrayCatenate($controlsArray, $controls);
+	} // end for $namespace
+	// print $everythingArray;
+	// okay now let's bake that shit
+	select -cl;
+	select $controlsArray;
+	setNamedPanelLayout "Single Perspective View";
+	string $perspPane[] = `getPanel -vis`;
+	scriptedPanel -e -rp $perspPane[0] graphEditor1;
+	// once this process is run we don't want the scene to be saved.
+	file -rts 1;
+	int $minTime = `playbackOptions -q -min`;
+	int $maxTime = `playbackOptions -q -max`;
+	string $timeRange = $minTime + ":" + $maxTime;
+	bakeResults -simulation true -smart 0 -cp false -s false -sb 1.0 -t $timeRange $controlsArray;
+	
+	// now that these poops are all baked out, we have to export controls for each namespace individually.
+	select -cl;
+	string $everythingString = `stringArrayToString $everythingArray " "`;
+	string $everythingParsed[];
+	tokenize $everythingString "/" $everythingParsed;
+	print $everythingParsed;
+	// now we have to parse each index of $everythingParsed. index 0 is the namespace, the rest are controls.
+	string $filesWritten[];
+	clear $filesWritten;
+	for($i in $everythingParsed) {
+	    string $ctrlsArray[];
+	    tokenize $i " " $ctrlsArray;
+	    string $objectName = $ctrlsArray[0];
+	    string $sceneNameFull = `file -q -sn`;
+	    string $sceneName = `file -q -sn -shn`;
+	    // //scholar/projects/henrytest/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/test/animScene_v01.mb
+	    string $pathArr[];
+	    tokenize $sceneNameFull "/" $pathArr;
+	    string $projectName = $pathArr[2];
+	    string $testDir = ("//scholar/projects/"+$projectName+"/03_production/01_cg/01_MAYA/data/animExport/"+$sceneName);
+	    if(!`filetest -d $testDir`) {
+	        sysFile -md $testDir;
+	    }
+	    string $savePath = ($testDir+"/"+$objectName+".ma");
+	    stringArrayRemoveAtIndex(0, $ctrlsArray);
+	    select $ctrlsArray;
+	    // run the exporter.
+	    assignSGEsaveSelAnimCallBack($savePath, "mayaAscii");
+	    $filesWritten[size($filesWritten)] = $savePath;
+	} // end for
+	// generate a popup showing all written file paths.
+	if(`window -exists hfAnimExportPopup`) {
+	    deleteUI hfAnimExportPopup;
+	}
+	window -wh 900 500 -title "MASS ANIMATION EXPORT RESULTS" hfAnimExportPopup;
+	formLayout -nd 100 hfAnimExportForm;
+	string $filesWrittenStr = stringArrayToString($filesWritten, "\n");
+	string $textBox = `scrollField -ed false -w 880 -h 480 -tx $filesWrittenStr`;
+	formLayout -e
+	    -attachForm $textBox "top" 10 
+	    -attachForm $textBox "left" 10
+	hfAnimExportForm;
+	showWindow hfAnimExportPopup;
+	window -e -wh 900 500 hfAnimExportPopup;
+} // end hfMassExportAnimation
+
+global proc hfMassImportAnimation() {
+    // point to a directory full of .MA files. then loop through each file and import the animation. no big deal.
+    string $scenePath = `file -q -sn`;
+    string $scenePathArr[];
+    tokenize $scenePath "/" $scenePathArr;
+    string $projPath = ("//scholar/projects/"+$scenePathArr[2]+"/03_production/01_cg/01_MAYA/data/animExport/");
+    string $resultPath[] = `fileDialog2 -fm 3 -ds 1 -dir $projPath`;
+    // print $resultPath[0];
+	if(size($resultPath) < 1) {
+		error("no folder chosen, exiting");
+	}
+    // so let's list all .MA files in folder $resultPath[0] and then start importing that shit
+    string $allFiles[] = `getFileList -folder ($resultPath[0]+"/")`;
+    print $allFiles;
+    string $errorsList[];
+    clear $errorsList;
+    for($file in $allFiles) {
+        // run import script. it will run repeatedly unless stopped... how do we force this to happen one at a time?
+       // mass_assignSGEloadSelCallBack(($resultPath[0]+"/"+$file), "mayaAscii");
+       string $animFile = `file -i (($resultPath[0]+"/"+$file))`;
+       string $error = mass_pasteSelAnim($animFile);
+       if($error != "") {
+           // $error will return the name of the object we couldn't paste to.
+           //print("\nERRORS FOUND IN IMPORT");
+           //print $error;
+           $errorsList[size($errorsList)] = $error;
+       }
+       
+    }
+    if(`window -exists hfAnimExportPopup`) {
+	    deleteUI hfAnimExportPopup;
+	}
+	window -wh 400 500 -title "MASS ANIMATION IMPORT RESULTS" hfAnimExportPopup;
+	formLayout -nd 100 hfAnimExportForm;
+	string $errorsStr = stringArrayToString($errorsList, "\n");
+	string $prefixStr;
+	if($errorsStr == "") {
+	    $prefixStr = "Import completed without errors!";
+	} else {
+	    $prefixStr = "The following namespaces did not import correctly:\n\n";
+	}
+	 
+	string $textBox = `scrollField -ed false -w 380 -h 480 -tx ($prefixStr+$errorsStr)`;
+	formLayout -e
+	    -attachForm $textBox "top" 10 
+	    -attachForm $textBox "left" 10
+	hfAnimExportForm;
+	showWindow hfAnimExportPopup;
+	window -e -wh 400 500 hfAnimExportPopup;
+    print("\nAnimation mass import complete!");
+} // end hfMassImportAnimation
+
+global proc hfMassExportDamonCheck() {
+	string $confirm = `confirmDialog -t "MASS ANIMATION EXPORT" -message "ready to break your scene?" -icn "question" -button "yes" -button "not yes" -cancelButton "not yes" -dismissString "false"`;
+	if($confirm=="yes") {
+		hfMassExportAnimation;
+	}
+}
+    
+    

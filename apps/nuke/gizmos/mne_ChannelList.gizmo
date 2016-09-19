@@ -1,0 +1,27 @@
+#! /software/Nuke/Linux64/Nuke6.2v3/Nuke6.2 -nx
+version 6.2 v3
+Gizmo {
+ addUserKnob {20 Channel_List l "Channel List"}
+ addUserKnob {22 refreshButton l "Refresh Channels" T "import string\ntheList = \"\"\nlayerStore = \"\"\ncounter = 0\n\nfor c in nuke.thisNode().channels():\n\tlayerBits = string.split(c, \".\")\n\tlayerName = layerBits\[0]\n\tchannelName = layerBits\[1]\n\t\n\tif not(layerName==layerStore) and counter > 0:\n\t\ttheList = theList + '\\n--------------\\n' + c\n\telse:\n\t\ttheList = theList + '\\n' + c\n\n\tlayerStore = layerName\n\tcounter = counter + 1\n\t\nnuke.thisNode().knob('channelsList').setValue(theList)" +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {20 Channels_Group l Channels n 1}
+ addUserKnob {26 channelsList l " " -STARTLINE T ""}
+ addUserKnob {20 endGroup n -1}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -620
+  ypos -585
+ }
+ NoOp {
+  name NoOp1
+  xpos -620
+  ypos -521
+ }
+ Output {
+  name Output1
+  xpos -620
+  ypos -445
+ }
+end_group

@@ -1,0 +1,156 @@
+generalist:
+  title: 'Generalist'
+  packages:
+    mayaOld:
+      version: '2015'
+      modules:
+        arnold: '1.1.0.4'
+        crate: '1.1.148'
+        jfDielectric: '1.0.5'
+        vray: '3.30.01'
+    maya:
+      version: '2015'
+    3dsmax:
+      version: '2016'
+    cinema4d:
+      version: 'R17'
+    modo:
+      version: '901_SP2'
+    zbrush:
+      version: '4R7'
+    mudbox:
+      version: '2016'
+    mari:
+      version: '2.6v5'
+    nuke:
+      version: '9.0v7'
+    aftereffects:
+      version: 'CC 2015'
+    premiere:
+      version: 'CC 2015'
+    photoshop:
+      version: 'CC 2015'
+    softimage:
+      version: '2014'
+  order:
+  - maya
+  - cinema4d
+  - modo
+  - 3dsmax
+  - zbrush
+  - mudbox
+  - mari
+  - nuke
+  - aftereffects
+  - photoshop
+  - premiere
+  - maya2017
+
+default:
+  title: 'Default'
+  packages:
+    maya:
+      version: '2015'
+      modules:
+        arnold: '1.1.0.4'
+        crate: '1.1.148'
+        jfDielectric: '1.0.5'
+        vray: '3.30.01'
+    nuke:
+      version: '9.0v7'
+    aftereffects:
+      version: 'CC 2015'
+    premiere:
+      version: 'CC 2015'
+    photoshop:
+      version: 'CC 2015'
+    zbrush:
+      version: '4R7'
+  order:
+  - maya
+  - nuke
+  - aftereffects
+  - premiere
+  - photoshop
+  - zbrush
+
+compositor:
+  title: 'Compositor'
+  packages:
+    nuke:
+      version: '9.0v7'
+    nukex:
+      version: '9.0v7'
+    nukestudio:
+      version: '9.0v7'
+    aftereffects:
+      version: 'CC 2015'
+    premiere:
+      version: 'CC 2015'
+    photoshop:
+      version: 'CC 2015'
+  order:
+  - nuke
+  - nukex
+  - nukestudio
+  - aftereffects
+  - premiere
+  - photoshop
+
+2dartist:
+  title: '2D Artist'
+  packages:
+    aftereffects:
+      version: 'CC 2015'
+    premiere:
+      version: 'CC 2015'
+    photoshop:
+      version: 'CC 2015'
+  order:
+  - aftereffects
+  - premiere
+  - photoshop
+design:
+  title: 'Designer'
+  packages:
+    cinema4d:
+      version: 'R17'
+    modo:
+      version: '901_SP2'
+    aftereffects:
+      version: 'CC 2015'
+    photoshop:
+      version: 'CC 2015'
+  order:
+  - photoshop
+  - cinema4d
+  - modo
+  - aftereffects
+
+3dartist:
+  title: '3D Artist'
+  packages:
+    maya:
+      version: '2015'
+      modules:
+        arnold: '1.1.0.4'
+        crate: '1.1.148'
+        jfDielectric: '1.0.5'
+        vray: '3.30.01'
+    zbrush:
+      version: '4R7'
+    mudbox:
+      version: '2016'
+    mari:
+      version: '2.6v5'
+    nuke:
+      version: '9.0v7'
+    photoshop:
+      version: 'CC 2015'
+  order:
+  - maya
+  - zbrush
+  - mudbox
+  - mari
+  - nuke
+  - photoshop

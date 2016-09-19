@@ -1,0 +1,578 @@
+studiotools:
+  name: Studio Tools
+  show: false
+  env:
+    MODE: pub
+    GSCODEBASE: 'C:/code_ab/'
+    PYTHONPATH: '%GSBRANCH%/gs/python'
+    PATH: '%GSBRANCH%/gs/python'
+  versions:
+    '1.0':
+      path:
+        linux: /
+        mac: /
+        win32: /
+aftereffects:
+  show: true
+  tasks:
+  - edit
+  - grade
+  - conform
+  - mix
+  versions:
+    'CC':
+      name: After Effects CC
+      env:
+        ST_AE: 'CC'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC\Support Files'
+    'CC 2014':
+      name: After Effects CC 2014
+      env:
+        ST_AE: 'CC 2014'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2014\Support Files'
+    'CC 2015':
+      name: After Effects CC 2015
+      env:
+        ST_AE: 'CC 2015'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015\Support Files'
+maya:
+  env:
+    LM_LICENSE_FILE: '27001@scholar-lic01'
+    AUTODESK_ADLM_THINCLIENT_ENV: '//scholar/apps/Autodesk/adlm/AdlmThinClientCustomEnv.xml'
+    MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
+    MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
+    MAYA_MODULE_PATH: '%MAYA_STTOOLS%/modules/%ST_MAYA%'
+    MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%'
+    MAYA_PRESET_PATH: '%MAYA_STTOOLS%/presets'
+    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar'
+    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%'
+    XBMLANGPATH: '%MAYA_STTOOLS%/icons'
+    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python'
+  show: true
+  versions:
+    '2015':
+      name: Autodesk Maya
+      env:
+        ST_MAYA: '2015'
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.5
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+        render:
+          linux: /
+          mac: /
+          win32: render.exe
+        cli:
+          linux: /
+          mac: /
+          win32: mayabatch.exe -prompt
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Autodesk/Maya/2015.0.5/bin
+    '2016':
+      name: Autodesk Maya
+      env:
+        MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
+        ST_MAYA: '2016'
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.4
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+        render:
+          linux: /
+          mac: /
+          win32: render.exe
+        cli:
+          linux: /
+          mac: /
+          win32: mayabatch.exe -prompt
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Autodesk/Maya/2016.0.4/bin
+    '2017':
+      name: Autodesk Maya
+      env:
+        MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
+        ST_MAYA: '2017'
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.0
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+        render:
+          linux: /
+          mac: /
+          win32: render.exe
+        cli:
+          linux: /
+          mac: /
+          win32: mayabatch.exe -prompt
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Autodesk/Maya/2017.0.0/bin
+  tasks:
+  - model
+  - shade
+  - rig
+  - anim
+  - effects
+  - cloth
+  - hair
+  - muscle
+  - light
+softimage:
+  env:
+    ST_XSI_WORKGRP: '%GSBRANCH%/apps/softimage/common'
+    XSI_HOME: '%SI_HOME%'
+    XSI_BINDIR: '%XSI_HOME%/Application/bin'
+    XSI_PLUGINS: '%GSBRANCH%/apps/softimage/common'
+  show: true
+  versions:
+    '2014':
+      name: Autodesk Softimage XSI
+      env:
+        ST_SOFTIMAGE: '2012SP2'
+        XSI_PLUGINS: '%GSBRANCH%/apps/softimage/si_2014__sitoa350;%GSBRANCH%/apps/softimage/si_2014__alembic'
+        SI_HOME: 'C:/Program Files/Autodesk/Softimage 2014 SP2/Application/bin'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32:  'xsi.exe'
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Autodesk/Softimage 2014 SP2/Application/bin
+    '2015':
+      name:  Autodesk Softimage XSI
+      env:
+        ST_SOFTIMAGE: '2015'
+        SI_HOME: 'C:/Program Files/Autodesk/Softimage 2015/Application/bin'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: 'xsi.exe'
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Autodesk/Softimage 2015/Application/bin
+  tasks:
+  - model
+  - shade
+  - rig
+  - anim
+  - effects
+  - cloth
+  - hair
+  - muscle
+  - light
+nuke:
+  env:
+    RLM_LICENSE: '4101@laxlic01'
+    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
+    NUKE_DISK_CACHE: 'C:/Nuke'
+    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
+    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
+  show: true
+  tasks:
+  - comp
+  - light
+  - grade
+  - track
+  - roto
+  versions:
+    '9.0v7':
+      name: Nuke
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe
+        cmd:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Foundry/Nuke/9.0v7
+nukex:
+  env:
+    RLM_LICENSE: '4101@laxlic01'
+    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
+    NUKE_DISK_CACHE: 'C:/Nuke'
+    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
+    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
+  show: true
+  tasks:
+  - comp
+  - light
+  - grade
+  - track
+  - roto
+  versions:
+    '9.0v7':
+      name: Nuke
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe --nukex
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Foundry/Nuke/9.0v7
+nukestudio:
+  env:
+    RLM_LICENSE: '4101@laxlic01'
+    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
+    NUKE_DISK_CACHE: 'C:/Nuke'
+    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
+    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
+  show: true
+  tasks:
+  - comp
+  - light
+  - grade
+  - track
+  - roto
+  versions:
+    '9.0v7':
+      name: Nuke
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe --studio
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Foundry/Nuke/9.0v7
+premiere:
+  show: true
+  tasks:
+  - edit
+  - grade
+  - conform
+  - mix
+  versions:
+    'CC':
+      name: Premiere
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Adobe Premiere Pro.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC
+    'CC 2015':
+      name: Premiere
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Adobe Premiere Pro.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2015
+hiero:
+  name: Hiero
+  show: true
+  env:
+    HIERO_PLUGIN_PATH: '%GSBRANCH%/apps/hiero'
+  tasks:
+  - edit
+  - grade
+  - conform
+  versions:
+    '1.7v2':
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hiero.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/The Foundry/Hiero1.7v2
+    '1.8v2':
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hiero.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/The Foundry/Hiero1.8v2
+photoshop:
+  show: true
+  tasks:
+  - design
+  - shade
+  - light
+  - comp
+  versions:
+    'CC':
+      name: Photoshop CC
+      env:
+        ST_PS: 'CC'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: ae_pipeline_init.bat
+      path:
+        linux: /
+        mac: /
+        win32: '%GSBRANCH%/apps/aftereffects'
+    'CC 2015':
+      name: Photoshop CC 2015
+      env:
+        ST_PS: 'CC 2015'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Photoshop.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2015'
+illustrator:
+  show: true
+  tasks:
+  - design
+  - light
+  versions:
+    'CC 2015':
+      name: Illustrator CC 2015
+      env:
+        ST_PS: 'CC 2015'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: illustrator.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2015'
+indesign:
+  show: true
+  tasks:
+  - design
+  - light
+  versions:
+    'CC 2015':
+      name: InDesign CC 2015
+      env:
+        ST_PS: 'CC 2015'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: indesign.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe In Design CC 2015'
+zbrush:
+  show: true
+  tasks:
+  - design
+  - model
+  versions:
+    '4R7':
+      name: ZBrush 4R6
+      env:
+        ST_ZB: '4R7'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: ZBrush.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Pixologic/ZBrush 4R7'
+cinema4d:
+  show: true
+  tasks:
+  - design
+  - model
+  versions:
+    'R17':
+      name: Cinema 4D
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: 'CINEMA 4D.exe'
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Maxon\Cinema4D\R17.032'
+modo:
+  show: true
+  tasks:
+  - design
+  - model
+  env:
+    RLM_LICENSE: '4101@laxlic01'
+  versions:
+    '901_SP2':
+      name: Modo
+      env:
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_contnent/901/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: modo.exe
+        cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Modo\901_SP2'
+mari:
+  show: true
+  tasks:
+  - design
+  - texture
+  versions:
+    '2.6v5':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari2.6v5.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\2.6v5\Bundle\bin'
+mudbox:
+  show: true
+  env:
+    AUTODESK_ADLM_THINCLIENT_ENV: '//scholar/apps/Autodesk/adlm/AdlmThinClientCustomEnv.xml'
+    LM_LICENSE_FILE: 'laxlic01'
+  tasks:
+  - design
+  - texture
+  versions:
+    '2016':
+      name: Mudbox
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: mudbox.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Autodesk\Mudbox\2016.0.0'
+3dsmax:
+  show: true
+  env:
+    PYTHONPATH: '%GSBRANCH%/apps/3dsmax/scripts;%GSBRANCH%/apps/3dsmax/scripts/python;%GSBRANCH%/gs/python'
+    AUTODESK_ADLM_THINCLIENT_ENV: '//scholar/apps/Autodesk/adlm/AdlmThinClientCustomEnv.xml'
+    LM_LICENSE_FILE: 'laxlic01'
+  tasks:
+  - design
+  - texture
+  versions:
+    '2016':
+      name: 3D Studio
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: 3dsmax.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Autodesk\3dsMax\2016.0.0'
+houdini:
+  env:
+    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
+    JOB: "//scholar/projects/%GSPROJECT%/03_production/01_cg/04_houdini"
+  show: true
+  tasks:
+  - fx
+  - light
+  - anim
+  versions:
+    '15.5.523':
+      name: Houdini
+      env:
+        ST_HOU: '15.5.523'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        indie:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        apprentice:
+          linux: /
+          mac: /
+          win32: happrentice.exe.exe
+        fx:
+          linux: /
+          mac: /
+          win32: houdinifx.exe
+        escape:
+          linux: /
+          mac: /
+          win32: hescape.exe
+        cli:
+          linux: /
+          mac: /
+          win32: hbatch.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.523/bin'

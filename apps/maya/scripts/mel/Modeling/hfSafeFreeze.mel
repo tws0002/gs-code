@@ -1,0 +1,35 @@
+global proc hfSafeFreeze() {
+	string $objsArr[] = `ls -sl`;
+	select -cl;
+	string $flipped[];
+	for($i=0;$i<size($objsArr);$i++) {
+		float $sx = `getAttr ($objsArr[$i]+".scaleX")`;
+		float $sy = `getAttr ($objsArr[$i]+".scaleY")`;
+		float $sz = `getAttr ($objsArr[$i]+".scaleZ")`;
+		select -r $objsArr[$i];
+		makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+		if($sx < 0 || $sy < 0 || $sz < 0) {
+			// opposite set, need to flip normals and uncheck that.
+			// get shape node from xform;
+			string $shapeN[] = `listRelatives -s $objsArr[$i]`;
+			// set shape node's "opposite" to 0;
+			setAttr ($shapeN[0]+".opposite") 0;
+			// flip normals
+			polyNormal -normalMode 4 -userNormalMode 0 -ch 1 $objsArr[$i];
+			select -cl;
+			$flipped[size($flipped)] = $objsArr[$i];
+		}
+	}
+	print("\n");
+	select -cl;
+	if(size($flipped) > 0) {
+		warning("normals for " + size($flipped) + " objects were flipped.");
+		for($j=0;$j<size($flipped);$j++) {
+			select -add $flipped[$j];
+		}
+	} else {
+		for($j=0;$j<size($objsArr);$j++) {
+			select -add $objsArr[$j];
+		}
+	}
+}

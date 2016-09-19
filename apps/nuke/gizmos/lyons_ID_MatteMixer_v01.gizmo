@@ -1,0 +1,353 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ inputs 2
+ help "****ID_Matte_Mixer_v01\n\nQuickly combines the rgba channels of 2 input. user can chose which channels from each input.\nUser can also change the merge operation (plus, minus, mask, etc)"
+ note_font Verdana
+ mapsize {0.15 0.15}
+ addUserKnob {20 User}
+ addUserKnob {26 Description l "" +STARTLINE T ":ID Matte Mixer: by Tony Lyons\n\nFor combining multiple ID mattes"}
+ addUserKnob {26 ""}
+ addUserKnob {26 Aside l "A side" -STARTLINE}
+ addUserKnob {6 Ared l Red -STARTLINE}
+ addUserKnob {6 Agreen l Green -STARTLINE}
+ addUserKnob {6 Ablue l Blue -STARTLINE}
+ addUserKnob {6 Aalpha l Alpha -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {26 Bside l "B side"}
+ addUserKnob {6 Bred l Red -STARTLINE}
+ addUserKnob {6 Bgreen l Green -STARTLINE}
+ addUserKnob {6 Bblue l Blue -STARTLINE}
+ addUserKnob {6 Balpha l Alpha -STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {41 operation T Merge13.operation}
+ addUserKnob {7 mix}
+ mix 1
+}
+ Input {
+  inputs 0
+  name InputA
+  xpos 274
+  ypos 338
+  number 1
+ }
+ Dot {
+  name Dot24
+  xpos 308
+  ypos 415
+ }
+set Nedfc960 [stack 0]
+ Dot {
+  name Dot25
+  xpos 418
+  ypos 415
+ }
+set Nedfccd0 [stack 0]
+ Dot {
+  name Dot26
+  xpos 528
+  ypos 415
+ }
+ Shuffle {
+  red alpha
+  green alpha
+  blue alpha
+  name Shuffle10
+  label "\[value in] to \[value out]\nalpha"
+  xpos 494
+  ypos 489
+ }
+ Dot {
+  name Dot27
+  xpos 528
+  ypos 819
+ }
+push $Nedfccd0
+ Shuffle {
+  red blue
+  green blue
+  alpha blue
+  name Shuffle11
+  label "\[value in] to \[value out]\nblue"
+  xpos 384
+  ypos 489
+ }
+ Dot {
+  name Dot28
+  xpos 418
+  ypos 739
+ }
+push $Nedfc960
+ Shuffle {
+  red green
+  blue green
+  alpha green
+  name Shuffle12
+  label "\[value in] to \[value out]\ngreen"
+  xpos 274
+  ypos 487
+ }
+set Nedfe170 [stack 0]
+ Dot {
+  name Dot29
+  xpos 308
+  ypos 673
+ }
+push $Nedfc960
+ Dot {
+  name Dot30
+  xpos 198
+  ypos 415
+ }
+set Nedfe850 [stack 0]
+ Shuffle {
+  green red
+  blue red
+  alpha red
+  name Shuffle13
+  label "\[value in] to \[value out]\nred"
+  xpos 164
+  ypos 492
+ }
+ Dot {
+  name Dot31
+  xpos 198
+  ypos 586
+ }
+push $Nedfe850
+ Dot {
+  name Dot32
+  xpos 88
+  ypos 415
+ }
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle14
+  label "\[value in] to \[value out]\nblack"
+  xpos 54
+  ypos 492
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge7
+  label red
+  xpos 54
+  ypos 577
+  disable {{!parent.Ared i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge5
+  label green
+  xpos 54
+  ypos 664
+  disable {{!parent.Agreen i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge6
+  label blue
+  xpos 54
+  ypos 730
+  disable {{!parent.Ablue i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge8
+  label alpha
+  xpos 54
+  ypos 810
+  disable {{!parent.Aalpha i}}
+ }
+ Clamp {
+  name Clamp2
+  xpos 54
+  ypos 901
+ }
+ Dot {
+  name Dot33
+  xpos 88
+  ypos 975
+ }
+ Input {
+  inputs 0
+  name InputB
+  xpos -371
+  ypos 325
+ }
+ Dot {
+  name Dot15
+  xpos -337
+  ypos 419
+ }
+set Nfe79830 [stack 0]
+ Dot {
+  name Dot17
+  xpos -227
+  ypos 419
+ }
+set Nfe79ba0 [stack 0]
+ Dot {
+  name Dot18
+  xpos -117
+  ypos 419
+ }
+ Shuffle {
+  red alpha
+  green alpha
+  blue alpha
+  name Shuffle8
+  label "\[value in] to \[value out]\nalpha"
+  xpos -151
+  ypos 493
+ }
+ Dot {
+  name Dot23
+  xpos -117
+  ypos 823
+ }
+push $Nfe79ba0
+ Shuffle {
+  red blue
+  green blue
+  alpha blue
+  name Shuffle7
+  label "\[value in] to \[value out]\nblue"
+  xpos -261
+  ypos 493
+ }
+ Dot {
+  name Dot22
+  xpos -227
+  ypos 743
+ }
+push $Nfe79830
+ Shuffle {
+  red green
+  blue green
+  alpha green
+  name Shuffle6
+  label "\[value in] to \[value out]\ngreen"
+  xpos -371
+  ypos 493
+ }
+ Dot {
+  name Dot21
+  xpos -337
+  ypos 677
+ }
+push $Nfe79830
+ Dot {
+  name Dot16
+  xpos -447
+  ypos 419
+ }
+set Nfe7b720 [stack 0]
+ Shuffle {
+  green red
+  blue red
+  alpha red
+  name Shuffle4
+  label "\[value in] to \[value out]\nred"
+  xpos -481
+  ypos 496
+ }
+ Dot {
+  name Dot20
+  xpos -447
+  ypos 590
+ }
+push $Nfe7b720
+ Dot {
+  name Dot19
+  xpos -557
+  ypos 419
+ }
+ Shuffle {
+  red black
+  green black
+  blue black
+  alpha black
+  name Shuffle9
+  label "\[value in] to \[value out]\nblack"
+  xpos -591
+  ypos 497
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge9
+  label red
+  xpos -591
+  ypos 581
+  disable {{!parent.Bred i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge10
+  label green
+  xpos -591
+  ypos 668
+  disable {{!parent.Bgreen i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge11
+  label blue
+  xpos -591
+  ypos 734
+  disable {{!parent.Bblue i}}
+ }
+ Merge2 {
+  inputs 2
+  operation plus
+  name Merge12
+  label alpha
+  xpos -591
+  ypos 814
+  disable {{!parent.Balpha i}}
+ }
+ Clamp {
+  name Clamp1
+  xpos -591
+  ypos 892
+ }
+set Nff55170 [stack 0]
+ Merge2 {
+  inputs 2
+  operation plus
+  mix {{parent.mix i}}
+  name Merge13
+  xpos -591
+  ypos 972
+ }
+ Clamp {
+  name Clamp3
+  selected true
+  xpos -591
+  ypos 1047
+ }
+ Output {
+  name Output2
+  xpos -591
+  ypos 1157
+ }
+push $Nedfe170
+push $Nff55170
+ Viewer {
+  inputs 2
+  gl_buffer_depth half-float
+  name Viewer1
+  xpos -406
+  ypos 1218
+ }
+end_group

@@ -1,0 +1,102 @@
+// hfNukeRefEdits v0.1 by henry foster, henry@toadstorm.com
+//
+// this script is meant to be used in a file referencing pipeline. if you are having problems with render layers breaking in a scene that uses shared
+// referenced render layers, this script will probably fix it. (unless your references have component shading, in which case you have bigger problems.)
+// run hfNukeRefEdits, select the references you want to clean up, check out the edits that are going to be destroyed, then click the button. 
+// this script only removes dagSet-related connections such as shading groups, render layer assignments and VROPs. do these assignments in your references, please.
+
+global proc string[] listDagRefEdits(string $ref) {
+	// search for *dagSet* and return edits.
+	string $allEdits[] = `referenceQuery -es $ref`;
+	string $dagEdits[] = {};
+	for($i=0;$i<size($allEdits);$i++) {
+		// iterate through $allEdits and find dag-related shits
+		if(`gmatch $allEdits[$i] "*dagSet*"`) {
+			// this edit probably sucks
+			$dagEdits[size($dagEdits)] = $allEdits[$i];
+		}
+	}
+	return $dagEdits;
+}
+
+// removing edits through the reference editor outputs the following...
+// referenceEdit -failedEdits true -successfulEdits true -editCommand disconnectAttr -removeEdits "marble_MASTER:VRayMtl1SG.dagSetMembers";
+// when trying to remove this reference edit:
+// disconnectAttr -na "|marble_MASTER:hero_GEO|marble_MASTER:hero_marble|marble_MASTER:hero_marbleShape.instObjGroups" "marble_MASTER:VRayMtl1SG.dagSetMembers"
+// so for each edit we need to find the second entry (tokenize by quotes?) and refer to that when nuking it.
+// shitArray[] = bullshit "plugSource" "plugDestination"
+// shitArray[3] should be right
+
+global proc nukeDagRefEdits(string $edits[]) {
+	// first, unload the reference. actually let's handle this in the other procedure.
+	// file -ur $ref;
+	// now we have to cycle through $edits[] and tokenize each entry, then nuke that shit.
+	for($i=0;$i<size($edits);$i++) {
+		string $editBuffer[] = {};
+		tokenize $edits[$i] "\"" $editBuffer;
+		print("\nATTEMPTING TO REMOVE PLUG: "+$editBuffer[3]);
+		referenceEdit -failedEdits true -successfulEdits true -removeEdits $editBuffer[3];
+	}
+	// file -lr $ref;
+}
+
+global proc string[] hfListDagEditsForSelected() {
+	string $selRefs[] = `textScrollList -q -si hfMultiListControl`;
+	string $editsList[] = {};
+	for($ref in $selRefs) {
+		// get all the reference edits for each selection.
+		string $singleEditsList[] = listDagRefEdits($ref);
+		for($i=0;$i<size($singleEditsList);$i++) {
+			$editsList[size($editsList)] = $singleEditsList[$i];
+		}
+	}
+	string $editsListString = stringArrayToString($editsList, "\n");
+	scrollField -e -tx $editsListString hfRefEditsListCtrl;
+	return $editsList;
+}
+
+global proc hfDoNukeSelected() {
+	// get selected refs, get edits list, unload refs, run nuke, reload refs.
+	string $refs[] = `textScrollList -q -si hfMultiListControl`;
+	string $editsList[] = hfListDagEditsForSelected();
+	for($n=0;$n<size($refs);$n++) {
+		file -ur $refs[$n];
+	}
+	nukeDagRefEdits($editsList);
+	for($n=0;$n<size($refs);$n++) {
+		file -lr $refs[$n];
+	}
+}
+
+global proc hfNukeRefEdits() {
+	// build UI.
+	if(`window -exists hfNukeRefEditsWindow`) {
+		deleteUI hfNukeRefEditsWindow;
+	}
+	// build an array of all reference nodes.
+	string $allRefs[] = `ls -type reference`;
+	// remove sharedReferenceNodes
+	string $horseShit[] = {};
+	for($i=0;$i<size($allRefs);$i++) {
+		if(`gmatch $allRefs[$i] "*sharedReferenceNode*"`) {
+			$horseShit[size($horseShit)] = $allRefs[$i];
+		}
+	}
+	string $refs[] = stringArrayRemove($horseShit,$allRefs);
+	// make a multiselect full of these nodes.
+	string $buildMultiList = "";
+	for($i=0;$i<size($refs);$i++) {
+        $buildMultiList = $buildMultiList + "-append \"" + $refs[$i] + "\"";
+    }
+	string $multiListCmd = ("textScrollList -ams true -sc hfListDagEditsForSelected " + $buildMultiList + " hfMultiListControl");
+	window -wh 750 800 -t "REFERENCE SHADING EDITS DEATH PANEL" hfNukeRefEditsWindow;
+	paneLayout -cn "horizontal4" -ps 1 100 40 -ps 2 100 50 -ps 3 100 5 -ps 4 100 5;
+	eval($multiListCmd);
+	scrollField -w 650 -h 300 -ww false -ed false hfRefEditsListCtrl;
+	//rowLayout;
+		button -label "NUKE SELECTION" -c hfDoNukeSelected;
+		button -label "PEACE OUT" -c "deleteUI hfNukeRefEditsWindow";
+	showWindow hfNukeRefEditsWindow;
+	window -e -wh 750 800 hfNukeRefEditsWindow;
+}
+	

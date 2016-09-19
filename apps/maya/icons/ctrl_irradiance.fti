@@ -1,0 +1,340 @@
+# Path
+	color(1.00, 0.00, 0.00);
+	bgnpolygon();
+		vertex(18.3, 85.5);
+		vertex(26.2, 91.2);
+		vertex(14.5, 81.7);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(14.5, 81.7);
+		vertex(26.2, 91.2);
+		vertex(8.8, 73.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(26.2, 91.2);
+		vertex(34.1, 94.8);
+		vertex(8.8, 73.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(8.8, 73.8);
+		vertex(34.1, 94.8);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(34.1, 94.8);
+		vertex(42.1, 96.9);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(42.1, 96.9);
+		vertex(50.0, 97.6);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(50.0, 97.6);
+		vertex(58.0, 96.9);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(58.0, 96.9);
+		vertex(65.9, 94.8);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(65.9, 94.8);
+		vertex(73.8, 91.2);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(73.8, 91.2);
+		vertex(81.8, 85.5);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(81.8, 85.5);
+		vertex(69.0, 74.5);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(69.0, 74.5);
+		vertex(64.1, 72.6);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(69.0, 74.5);
+		vertex(81.8, 85.5);
+		vertex(73.9, 72.7);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(64.1, 72.6);
+		vertex(62.3, 67.8);
+		vertex(5.2, 65.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(81.8, 85.5);
+		vertex(89.7, 76.3);
+		vertex(73.9, 72.7);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(73.9, 72.7);
+		vertex(89.7, 76.3);
+		vertex(75.7, 67.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(89.7, 76.3);
+		vertex(94.9, 65.9);
+		vertex(75.7, 67.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(75.7, 67.8);
+		vertex(94.9, 65.9);
+		vertex(73.9, 62.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(94.9, 65.9);
+		vertex(97.0, 57.9);
+		vertex(73.9, 62.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(5.2, 65.9);
+		vertex(62.3, 67.8);
+		vertex(3.1, 57.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(62.3, 67.8);
+		vertex(64.2, 62.9);
+		vertex(3.1, 57.9);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(3.1, 57.9);
+		vertex(64.2, 62.9);
+		vertex(2.4, 50.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(2.4, 50.0);
+		vertex(64.2, 62.9);
+		vertex(3.1, 42.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(3.1, 42.0);
+		vertex(64.2, 62.9);
+		vertex(5.2, 34.1);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(5.2, 34.1);
+		vertex(64.2, 62.9);
+		vertex(8.8, 26.2);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(8.8, 26.2);
+		vertex(64.2, 62.9);
+		vertex(14.5, 18.2);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(14.5, 18.2);
+		vertex(64.2, 62.9);
+		vertex(18.3, 14.5);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(18.3, 14.5);
+		vertex(64.2, 62.9);
+		vertex(26.2, 8.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(26.2, 8.8);
+		vertex(64.2, 62.9);
+		vertex(34.1, 5.1);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(34.1, 5.1);
+		vertex(64.2, 62.9);
+		vertex(42.1, 3.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(42.1, 3.0);
+		vertex(64.2, 62.9);
+		vertex(52.0, 2.4);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(52.0, 2.4);
+		vertex(64.2, 62.9);
+		vertex(58.0, 3.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(58.0, 3.0);
+		vertex(64.2, 62.9);
+		vertex(65.9, 5.1);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(65.9, 5.1);
+		vertex(64.2, 62.9);
+		vertex(76.3, 10.3);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(64.2, 62.9);
+		vertex(69.0, 61.0);
+		vertex(76.3, 10.3);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(76.3, 10.3);
+		vertex(69.0, 61.0);
+		vertex(85.5, 18.2);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(85.5, 18.2);
+		vertex(69.0, 61.0);
+		vertex(91.2, 26.2);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(91.2, 26.2);
+		vertex(69.0, 61.0);
+		vertex(94.9, 34.1);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(94.9, 34.1);
+		vertex(69.0, 61.0);
+		vertex(97.0, 42.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(69.0, 61.0);
+		vertex(73.9, 62.9);
+		vertex(97.0, 42.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(97.0, 42.0);
+		vertex(73.9, 62.9);
+		vertex(97.6, 52.0);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(73.9, 62.9);
+		vertex(97.0, 57.9);
+		vertex(97.6, 52.0);
+	endpolygon();
+# Path
+	color(0);
+	bgnclosedline();
+		vertex(18.3, 85.5);
+		vertex(26.2, 91.2);
+		vertex(34.1, 94.8);
+		vertex(42.1, 96.9);
+		vertex(50.0, 97.6);
+		vertex(58.0, 96.9);
+		vertex(65.9, 94.8);
+		vertex(73.8, 91.2);
+		vertex(81.8, 85.5);
+		vertex(89.7, 76.3);
+		vertex(94.9, 65.9);
+		vertex(97.0, 57.9);
+		vertex(97.6, 52.0);
+		vertex(97.0, 42.0);
+		vertex(94.9, 34.1);
+		vertex(91.2, 26.2);
+		vertex(85.5, 18.2);
+		vertex(76.3, 10.3);
+		vertex(65.9, 5.1);
+		vertex(58.0, 3.0);
+		vertex(52.0, 2.4);
+		vertex(42.1, 3.0);
+		vertex(34.1, 5.1);
+		vertex(26.2, 8.8);
+		vertex(18.3, 14.5);
+		vertex(14.5, 18.2);
+		vertex(8.8, 26.2);
+		vertex(5.2, 34.1);
+		vertex(3.1, 42.0);
+		vertex(2.4, 50.0);
+		vertex(3.1, 57.9);
+		vertex(5.2, 65.9);
+		vertex(8.8, 73.8);
+		vertex(14.5, 81.7);
+	endclosedline();
+# Path
+	color(0.74, 0.72, 0.65);
+	bgnpolygon();
+		vertex(73.9, 62.9);
+		vertex(69.0, 61.0);
+		vertex(75.8, 67.8);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(75.8, 67.8);
+		vertex(69.0, 61.0);
+		vertex(73.9, 72.6);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(73.9, 72.6);
+		vertex(69.0, 61.0);
+		vertex(69.0, 74.5);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(69.0, 61.0);
+		vertex(64.1, 62.9);
+		vertex(69.0, 74.5);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(64.1, 62.9);
+		vertex(62.2, 67.8);
+		vertex(69.0, 74.5);
+	endpolygon();
+# Path
+	bgnpolygon();
+		vertex(62.2, 67.8);
+		vertex(64.1, 72.6);
+		vertex(69.0, 74.5);
+	endpolygon();
+# Path
+	color(0);
+	bgnclosedline();
+		vertex(75.8, 67.8);
+		vertex(73.9, 62.9);
+		vertex(69.0, 61.0);
+		vertex(64.1, 62.9);
+		vertex(62.2, 67.8);
+		vertex(64.1, 72.6);
+		vertex(69.0, 74.5);
+		vertex(73.9, 72.6);
+	endclosedline();

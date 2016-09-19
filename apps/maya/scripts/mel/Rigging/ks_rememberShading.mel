@@ -1,0 +1,834 @@
+/* This file downloaded from Highend3d.com
+''  
+''  Highend3d.com File Information:
+''  
+''    Script Name: ks_rememberShading
+''    Author:  
+''    Last Updated: Aug 09, 2008
+''    Update/Change this file at:
+''    http://Highend3d.com/maya/downloads/mel_scripts/rendering/misc/4966.html
+''  
+''  Please do not alter any information above this line
+''  it is generated dynamically by Highend3d.com and will
+''  be changed automatically on any updates.
+*/
+
+//ks_rememberShading.mel by Katrin Schmid 2007, http://www.lo-motion.de
+//
+// Bugs and feature suggestions: info@lo-motion.de
+// See my tutorial at http://www.lo-motion.de/scripts.html for more details.
+//
+//Features:
+// Lets you store your shading information (button "Re/write shading information") 
+// by creating object sets (on a per face base).
+// This lets you restore your stored beauty shading in 1 click (button "Re-apply beauty shading"). 
+// Useful  if you you want to temporarily apply (i.e. for ligthing or diangnostic purpose, defining 
+// shading as "default shading" ) different shaders to the scene. 
+// "Assign grey lambert" does just assign a new grey lambert shader.
+// If you select the checkbox it works on selected objects only.
+// Note that you have to rebuild sets to save changes in shader assignment.
+// 
+// Install: Put ks_rememberShading.mel in you script directory.
+// Start the GUI by typing "ks_rememberShading" in the script editor.
+// 
+
+
+cycleCheck -e off;
+////////////////////////////////////////////////////////////////////
+global proc ks_rememberShading()
+{	
+	if (`window -q -exists wd_rememberShading`)
+ 	deleteUI wd_rememberShading;
+   global string $title = "ks_rememberShading ::BUCK CUSTOM::";
+   string $sh = "system(\"load http://www.lo-motion.de/scripts.html\")";
+
+ //UI-Window
+  window -wh 340 220 -menuBar true 
+   -title $title
+   -s 1 
+   wd_rememberShading;
+
+
+// Help menue
+	menu -label "Help" -helpMenu true;
+ 	  menuItem -label "About" -c $sh;
+
+// Layout
+			string $form = `formLayout`;
+			string $child1 = `columnLayout -adjustableColumn true`;	
+			frameLayout -label "Count" -lv 0 -borderStyle "out" -li 7 -marginHeight 7 -marginWidth 10 -labelAlign "bottom";		
+				rowLayout  -nc 2 -cw2 200 150;
+			columnLayout -rowSpacing 3;		
+////////////////////////
+            frameLayout -w 350 -label ""  -borderStyle "etchedOut";
+                columnLayout -w 350;
+                  		button -align "left" -bgc .5 .7 .7  -w 165 -l "Re/write shading information" -c "createSetsFromAssignedShaders(\"_myset_\")";
+                setParent ..;
+             setParent ..;
+               
+////////////////////////
+			          frameLayout -label ""  -borderStyle "etchedOut";
+			          rowLayout -nc 2 -columnWidth2 200 150;
+	                columnLayout ;
+	                	button -align "left" -w 165 -l "Assign lambert1" -c "makeAllgrayDefault()"; 
+										button -align "left" -w 165 -l "Assign new gray lambert" -c "makeAllgray()"; 
+								setParent ..;
+									columnLayout -rowSpacing 8;	
+										checkBox -w 150 -label "Selected objects only"  -align "left" ch_selectedOnly;
+								setParent ..;
+						
+								setParent ..;
+							 setParent ..;
+		 
+////////////////////////
+     	 					frameLayout -label ""  -borderStyle "etchedOut";
+      			    rowLayout -nc 2 -columnWidth2 200 150;
+		                columnLayout;
+													button -align "left" -bgc .5 .7 .7  -w 165 -l "Re-apply beauty shading" -c "applyBeautyAll(\"_myset_\")"; 
+										setParent ..;
+									  columnLayout -w 350;
+												checkBox  -w 150 -label "ignore namespaces"  -value 1 -align "left" ch_ignNmspce;
+										setParent ..;								
+								 setParent ..;
+                setParent ..;
+           
+////////////////////////              	   
+  	 					frameLayout -label ""  -borderStyle "etchedOut";
+	                columnLayout ;
+											button -align "left" -w 165 -l "Export shaders used by sets" -c "exportShaders(\"_myset_\")";  
+									text  -w 350 -l"";
+								 setParent ..;
+						setParent ..;
+////////////////////////
+				setParent ..;								
+				setParent ..;
+				setParent ..;								
+				setParent ..;
+		showWindow wd_rememberShading;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+global proc makeAllgrayDefault()
+{
+		int $selAll= `checkBox -q -value ch_selectedOnly`;
+		
+		string $tmpObjName[];
+			string $objNames[]; 
+		if ($selAll == 0)
+			$tmpObjName=`ls -l -geometry`;
+		else
+			$tmpObjName=`ls -l -sl`;
+
+	 $objNames= `filterExpand -ex true -sm 12 -sm 10 -sm 34 -sm 38 $tmpObjName`;
+
+		if (`size($objNames)` > 0)
+		{
+			catch(`sets -edit -forceElement "initialShadingGroup" $objNames`);		
+		}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+global proc makeAllgray()
+{
+		int $selAll= `checkBox -q -value ch_selectedOnly`;
+		
+		string $tmpObjName[];
+			string $objNames[]; 
+		if ($selAll == 0)
+			$tmpObjName=`ls -l -geometry`;
+		else
+			$tmpObjName=`ls -l -sl`;
+	 $objNames= `filterExpand -ex true -sm 12 -sm 10 -sm 34 -sm 38 $tmpObjName`;
+
+		if (`size($objNames)` > 0)
+		{
+			string $grayLambert =`shadingNode -asShader lambert`;
+			sets -renderable true -noSurfaceShader true -empty -name ($grayLambert +"SG");
+			connectAttr -f ($grayLambert + ".outColor") ($grayLambert +"SG" + ".surfaceShader");
+			string $crRenderShaders =`rename ($grayLambert) ("GrayLambert")`;
+			string $SGShader = `rename($grayLambert +"SG") "GrayLambertSG"`;
+			
+			catch(`sets -edit -forceElement $SGShader $objNames`);		
+		}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////break connection of given dest attribute
+global proc breakConnection(string $destName)
+{
+	if (`connectionInfo -isDestination $destName`)
+ 	{
+		  string $destination = `connectionInfo -getExactDestination $destName`;
+		 	string $srcConn[] = `listConnections -s 1 -d 0 -type character $destination`;
+		  if (size($srcConn)) 
+		  {
+		   	string $warnMsg = ("Removed \'"+ $destination +"\' from character \'"+$srcConn[0]+"\'.");
+		   	warning($warnMsg);
+		   	character -e -rm $srcConn[0] $destination;
+		  }
+		  
+		  	string $sArr[1] = `ls -l -ro $destination`;	  	
+			  if (size($sArr)) 
+			  {
+			   	string $src = `connectionInfo -sourceFromDestination $destination`;
+			   	disconnectAttr $src $destination;
+			  } 
+			  else 
+			  {
+			   	delete -icn $destination;
+			  }
+		 }
+} 
+
+
+	
+//////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//////// remove Namespaces, do not use long object names here!
+global proc removeNamespaces()
+{		
+	select (`ls`); 
+	string $sel[] = `ls -sl`;
+	
+	waitCursor -state on; 		
+	progressWindow  -title "Remove namespace" -isInterruptable true;
+			
+	int $max=(`size($sel)`);
+	catch(`progressWindow -e -min 0 -max $max`); 
+				
+	for ($cur in $sel)
+ 	{
+ 		catch(`progressWindow -e -step 1`); 
+//	print ("$cur: "+ $cur +"\n");
+		string $bufferG[];
+		tokenize $cur ":" $bufferG;	
+		int $sizeP =`size($bufferG)`;
+	
+		if ($sizeP > 1)
+	 	{
+			if (`objExists $cur` && `referenceQuery -isNodeReferenced $cur` == 0)
+	 		{
+		 			catchQuiet(`rename $cur $bufferG[($sizeP-1)]`);
+		 	//	print ("New name: "+ $bufferG[($sizeP-1)]+"\n");
+			}
+		}
+ 	}
+ 			select -cl;
+ 			progressWindow -endProgress; 		
+			waitCursor -state off;  	
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+///////////////// find SG node of given shader
+global proc string getSGFromShader(string $oldShaderName)
+{
+	global int $debug;
+	if ($debug ) 
+	{   
+	//print ("\n function: br_sk_getSGFromShader(string $oldShaderName)"); 
+	}
+	
+	global string $shaderPfx;
+   string $sg[] = `listConnections -d 1 -type "shadingEngine" $oldShaderName`;   
+   if (size($sg) == 0)
+   {  
+   		addSG($oldShaderName);
+   		string $sg[] = `listConnections -d 1 -type "shadingEngine" $oldShaderName`;  
+   }
+	  if (size($sg) > 1)
+   {  
+	    if (stringArrayContains("initialShadingGroup", $sg))
+	    {
+	   	   // check for initial shading group
+	      return "initialShadingGroup";
+	    }
+	    else
+	    {
+	    	//!!!!!!!!
+        print("more than 1 SG group connection: " + $oldShaderName +" SG: " + $sg[0] +"\n");
+        return $sg[0];
+	    }
+   }
+   else
+   {
+    	return $sg[0];
+   } 
+}
+
+////////////////////////////////////// SHADER ALT	
+/////////////// create sets from shaders in scene
+global proc createSetsFromAssignedShaders(string $setPrefix)
+{
+		global int $debug;
+		if ($debug) 
+		{   
+			print ("\n function: createSetsFromAssignedShaders(string $setPrefix)"); 
+		}	
+
+
+		waitCursor -state on;      
+		progressWindow  -title "Creating sets" -isInterruptable true;
+		string $sceneShaders[];
+// 		$sceneShaders = `ls -l -mat`;
+		
+		int $selAll= `checkBox -q -value ch_selectedOnly`;
+		string $currSelect[] = `ls -sl`; // get current selection
+		if ($selAll == 0)
+			$sceneShaders = `ls -l -mat`;  // box is unchecked, get all the shaders in the scene
+		else
+		{
+			hyperShade -smn;
+			$sceneShaders = `ls -sl -mat`;
+		}
+		select $currSelect;  // restore current selection
+		
+		if (`size($sceneShaders)` >0)
+		{
+		
+	  string  $setsWithPrefix[] = `ls -l -et objectSet`;	
+		  for ($i = 0; $i < size($setsWithPrefix); $i++)
+		  {  
+				if(startsWith($setsWithPrefix[$i], $setPrefix))
+				{
+					delete $setsWithPrefix[$i];
+				}
+			}
+	
+				string $sceneShadersSG[];
+				string $materialSetName = "";
+			
+				for ($p = 0; $p < size($sceneShadersSG); $p++)
+				{				
+						if (`nodeType $sceneShadersSG[$p]`=="shadingEngine")
+						{
+							string $temp[] =`listConnections -source true -destination false $sceneShadersSG[$p]`;
+							$sceneShaders[size($sceneShaders)]=$temp[0];
+						}
+				}
+		/*
+				print ("$sceneShaders[]" +"\n");
+				print ($sceneShaders);
+				print ("$sceneShaders[]" + "\n");
+			*/	 						
+				//removeNamespaces();
+				addSetAttShaders($setPrefix);	
+					
+				 /////////////////
+				int $max=(`size($sceneShaders)`);
+				catch(`progressWindow -e -min 0 -max $max`); 
+			 	string $shadedBaseObjects[];				
+				string $allAssignedObjects[]; 
+							 	
+				for ($i = 0; $i < size($sceneShaders); $i++)
+				{			
+								clear $shadedBaseObjects;
+								catch(`progressWindow -e -step 1`); 
+								string $curShader = $sceneShaders[$i];
+								string $attrValue;
+					
+									if (`attributeExists "setName" $sceneShaders[$i]` && startsWith($sceneShaders[$i], "groupId")==0)
+									{			
+											$attrValue = `getAttr($curShader + ".setName")`;
+									}
+										string $curShaderSG = `getSGFromShader($curShader)`;
+										
+										
+										if ($curShaderSG == "" &&  startsWith($sceneShaders[$i], "groupId")==0)  
+										{
+												addSG($curShader);
+										//	print ("\n !!! New SHADING GROUP created for: " + $curShader);	
+										}
+												
+														hyperShade -objects $curShader;
+														$allAssignedObjects=`ls -sl`;														
+													
+																	// check if set already exists	 							 
+														   	//make set 
+															   	//	print ("$attrValue" + $attrValue+"\n");
+															if (`size($allAssignedObjects)` >0)
+															{
+															   		if (`objExists($attrValue)` && `nodeType ($attrValue)` == "objectSet") 
+															   		{
+																    	catch(`sets -edit -add $attrValue $allAssignedObjects`);
+																		}
+																    else
+																    {
+																    	catch(`sets -n $attrValue $allAssignedObjects`);    
+																    }
+																}
+																else if (`objExists($attrValue)` && `nodeType ($attrValue)` == "objectSet")
+																{
+																	delete $attrValue;
+																}
+								 					select -cl;
+				}
+	
+						
+					progressWindow -endProgress; 		
+					waitCursor -state off;  
+		}
+}
+
+////////////////////////////////////////////////////////////////////////////
+/////////////////// add custom shader set attr to shaders
+// selectd or all shaders $selAll 0: selected, 1:  all
+global proc addSetAttShaders(string $prefix)
+{
+		global int $debug;
+		if ($debug) 
+		{   
+			print ("\n function: addSetAttShaders(string $prefix)"); 
+		}	
+	string $sceneShaders[];
+		//removeNamespaces();	
+// 			catch(`select -d`);  doug comment out
+// 			$sceneShaders = `ls -l -mat`;  doug comment out
+
+		int $selAll= `checkBox -q -value ch_selectedOnly`;
+		string $currSelect[] = `ls -sl`; // get current selection
+		if ($selAll == 0)
+			$sceneShaders = `ls -l -mat`;  // box is unchecked, get all the shaders in the scene
+		else
+		{
+			hyperShade -smn;
+			$sceneShaders = `ls -sl -mat`;
+		}
+		select $currSelect;  // restore current selection
+
+
+	waitCursor -state on;      
+	progressWindow -title "Tagging all shaders"  -isInterruptable true;
+			
+	int $max =(`size($sceneShaders)`);
+	catch(`progressWindow -e -min 0 -max $max`); 
+				
+	for ($i = 0; $i < size($sceneShaders); $i++)
+	{			 	
+			progressWindow -e -step 1; 
+				
+			string $buffer[];
+			int $numTokens = `tokenize $sceneShaders[$i] ":" $buffer`;
+			string $custSetAttr = ($sceneShaders[$i]+".setName");
+		
+			if (`attributeExists "setName" $sceneShaders[$i]`== 0)
+			{
+				addAttr -ln setName -dt "string"  $sceneShaders[$i];		
+				setAttr -e -keyable true  $custSetAttr;
+				if($numTokens > 1)
+				{
+						setAttr -type "string"  $custSetAttr ($prefix + $buffer[$numTokens - 2]+ "_" + $buffer[$numTokens - 1]);			
+				}
+				else
+				{
+					setAttr -type "string"  $custSetAttr ($prefix+ $buffer[$numTokens - 1]);
+				}
+					if (`referenceQuery -isNodeReferenced $sceneShaders[$i]`==0)
+					{
+				 		catch(`setAttr -l true -keyable false  $custSetAttr`);
+					}
+			}
+			else
+			{
+					// change only when empty
+					string  $attrValue = `getAttr $custSetAttr`;
+					if (`size($attrValue)` == 0)
+					{
+					  setAttr -type "string"  $custSetAttr ($prefix + $buffer[$numTokens - 1]);
+					}
+					if (`referenceQuery -isNodeReferenced $sceneShaders[$i]`==0)
+					{
+				 		catch(`setAttr -l true -keyable false $custSetAttr`);
+					}
+		}
+	}	
+					progressWindow -endProgress; 		
+					waitCursor -state off;  
+}
+
+
+
+
+
+
+
+///////////////// get Objects from Sets
+global proc string[] listObjectsFromSets(string $setName)
+{
+	global int $debug;
+	if ($debug ) 
+	{  
+	 print ("\n function: listObjectsFromSets "+$setName+"\n");
+	 }	
+  string $setObjects[];
+  if (`size($setName)` > 0)
+  {
+  	$setObjects = `sets -q $setName`;
+	}
+   return $setObjects;    
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+global proc addSnapsToSet(string $setPrefix)
+{
+	string $setMembers[];
+	string $shaderSG;
+	
+  string  $setsWithPrefix[] = `ls -l -et objectSet`;
+	
+		int $selAll= 0;//`checkBox -q -value ch_selectedOnly`;
+		string $tmpObjName[], $spreadObjects[];
+		if ($selAll == 1)
+		{	
+			$tmpObjName=`ls -l -geometry`;
+	 	}
+		else
+		{
+				$tmpObjName=`ls -l -sl`;
+		}
+		string $spreadObjects[]=`filterExpand -ex true -sm 12 -sm 10 -sm 34 -sm 38$tmpObjName`;
+		
+/*
+	print ("$spreadObjects	:");
+	print ($spreadObjects);	
+	print ("$spreadObjects:");		
+	*/
+	int $ignNmspce =`checkBox -q -value ch_ignNmspce`;
+	string $sceneShaders[]=`ls -l -material`;						
+  for ($i = 0; $i < size($setsWithPrefix); $i++)
+  { 
+  		 string $setNameNoNmspc;
+			if ($ignNmspce==1)
+			{
+						string $bufferG[];
+						tokenize $setsWithPrefix[$i] ":" $bufferG;	
+						int $sizeP =`size($bufferG)`;
+						$setNameNoNmspc=$bufferG[$sizeP-1];
+				}
+				else
+				{
+					$setNameNoNmspc=$setsWithPrefix[$i];
+				}
+		print("$setPrefix: " + $setPrefix +"\n"); 								
+		print("1$setNameNoNmspc: " + $setNameNoNmspc +"\n"); 	
+		 
+		if(startsWith($setNameNoNmspc, $setPrefix))
+		{
+					 $setMembers = `listObjectsFromSets($setsWithPrefix[$i])`;			
+					 for ($j = 0; $j < size($sceneShaders); $j++)
+					 {	
+								if (`attributeExists "setName" $sceneShaders[$j]`)
+								{
+										string $attrValue = `getAttr($sceneShaders[$j]+".setName")`;
+										if ($attrValue == $setsWithPrefix[$i])
+										{
+									  	  $shaderSG = getSGFromShader($sceneShaders[$j]);
+											  		
+											 for ($p = 0; $p < size($spreadObjects); $p++)
+										   {
+										    	 	 for ($q = 0; $q < size($setMembers); $q++)
+														 {
+																		  if(startsWith($setMembers[$q], "transform")== 0)
+																			{
+																						string $buffer[];
+																						int $numTokens = `tokenize $setMembers[$q] "[" $buffer`;
+																						if ($numTokens > 1)
+																						{
+																								catch(`select -add ($spreadObjects[$p] + ".f[" + $buffer[$numTokens-1])`);
+																								//print("AddedFace: " + $spreadObjects[$p] + ".f[" + $buffer[$numTokens-1]+"\n");																		
+																								catch(`sets -e -add $attrValue ($spreadObjects[$p] + ".f[" + $buffer[1])`);
+																						}
+																						else
+																						{
+																								//print("AddedObject: " + $spreadObjects[$p]+"\n")	;	
+																								catch(`select -add $spreadObjects[$p]`);
+																								catch(`sets -e -add $attrValue $spreadObjects[$p]`);	
+																						}
+																		}
+															}
+											}		
+									}
+								}									
+					
+					}
+			}
+	}									
+}									
+																		
+											
+											
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// re/apply beauty shaders by set name 
+global proc applyBeautyAll(string $setPrefix) 
+{ 
+	global int $debug; 
+	if ($debug)
+{ 
+	print ("\n function: applyBeautyAll \n"); 
+} 
+
+	string $spreadObjects[];		
+	string $ftmpObjName[];
+ 	select -d; 	
+ 	string $sceneShaders[] =  `ls -l -mat`;
+  string  $setsWithPrefix[] = `ls -l -et objectSet`;
+	int $ignNmspce =`checkBox -q -value ch_ignNmspce`;
+	
+// 	int $selAll= 0;  doug comment and replace below
+
+	int $selAll= `checkBox -q -value ch_selectedOnly`;
+
+		
+		string $tmpObjName[];
+		if ($selAll==0)  // doug change polarity to better reflect the checkbox in the interface
+		{	
+			$ftmpObjName=`ls -l -geometry`;
+	 	}
+		else
+		{
+				$ftmpObjName=`ls -l -sl`;
+		}
+	 	$spreadObjects = `filterExpand -ex true -sm 12 -sm 10 -sm 34 -sm 38 $ftmpObjName`;
+		
+			for ($j = 0; $j < size($spreadObjects); $j++)
+				{
+// 					print ("$spreadObjects[$j]: "+$spreadObjects[$j]+"\n");
+					if (`nodeType $spreadObjects[$j]`== "transform")
+					{
+						string $shape[]=`listRelatives -s $spreadObjects[$j]`;
+				 		$tmpObjName[`size($tmpObjName)`]=$shape[0];
+				 	}
+				 	else
+				 	{
+				 		$tmpObjName[`size($tmpObjName)`]=$spreadObjects[$j];
+				 	}
+				}		
+
+
+  string $oldShaderName; 
+  for ($i = 0; $i < size($setsWithPrefix); $i++)
+  {  
+  	 string $setNameNoNmspc;
+			if ($ignNmspce==1)
+			{
+						string $bufferG[];
+						tokenize $setsWithPrefix[$i] ":" $bufferG;	
+						int $sizeP =`size($bufferG)`;
+						$setNameNoNmspc=$bufferG[$sizeP-1];
+				}
+				else
+				{
+					$setNameNoNmspc=$setsWithPrefix[$i];
+				}								
+
+		if(startsWith($setNameNoNmspc, $setPrefix))
+		{
+				 // assign shader to set members
+		    string $setMembers[];
+		    $setMembers = `listObjectsFromSets($setsWithPrefix[$i])`;			
+		   	string $shaderSG;
+											    		
+				 for ($j = 0; $j < size($sceneShaders); $j++)
+				 {
+								if (`attributeExists "setName" $sceneShaders[$j]`)
+								{
+
+										//clear $snapSetMembers;
+										string $attrValue = `getAttr($sceneShaders[$j]+".setName")`;
+									print("1$setNameNoNmspc: " + $setNameNoNmspc +"\n"); 						
+										if ($attrValue == $setNameNoNmspc)
+										{
+										  	print ("match found --> sh:" + $attrValue + " set:" + $setsWithPrefix[$i] +"\n");	
+									  	  $shaderSG = `getSGFromShader($sceneShaders[$j])`;
+											//  print("$shaderSGBeauty: " + $shaderSG +"\n"); 
+											  			
+											    if (`size($shaderSG)` > 0)
+											    { 
+			   												$setMembers = `listObjectsFromSets($setsWithPrefix[$i])`;							
+																if ($selAll==0)  // doug change polarity to reflect checkbox in interface
+																{
+																 for ($k = 0; $k < size($setMembers); $k++)
+				 													{
+																		int $found = stringArrayContains($setMembers[$k], $tmpObjName);			
+																		print ("$diff: "+ $setMembers[$k]+"\n");
+																		print ($tmpObjName); 
+																		print ("$/diff: "+ $setMembers[$k]+"\n");
+														   			if ($found==1)
+														   			{
+														   				int $error = catch(`sets -edit -forceElement $shaderSG $setMembers[$k]`);
+													   				}
+													   			}
+													   		}
+													   		else
+													   		{
+													   			int $error = catch(`sets -edit -forceElement $shaderSG $setMembers`);		   		
+													   		}
+											  	}
+					  				}
+								}
+				 }		
+		}
+	}  
+		//   	
+  select -clear;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////
+///////////////// create missing SGs
+global proc addSG(string $curShader)
+{
+		global int $debug;
+		if ($debug) 
+		{   
+			print ("\n function: addSG(string $curShader)"); 
+		}	
+		
+		string $tmpSG;
+			//mr shader
+				if(`attributeExists "outValue" $curShader`)
+				{	
+							if(`connectionInfo -isSource ($curShader + ".outValue")`)
+									print "Connected mr sh"; 			
+							else
+							{
+								print ("$curShader"+ $curShader+"\n");
+								$tmpSG = `createNode shadingEngine -n ($curShader +"SG")`;				   	
+								connectAttr -f ($curShader + ".outValue") ($tmpSG +".surfaceShader");
+								connectAttr -f ($curShader + ".message") ($tmpSG +".miMaterialShader");
+							}
+				}
+				// mia shader in maya 8.0: sg is connected to out color				
+				//maya shader
+				else if(`attributeExists "outColor" $curShader`)
+				{
+						if(`connectionInfo  -isSource ($curShader + ".outColor")`)
+						{
+							//	print "Connected maya sh"; 
+						}
+						else
+						{
+							//	print ("$curShader"+$curShader+"\n");
+							 	$tmpSG = `createNode shadingEngine -n ($curShader +"SG")`;		
+								connectAttr -f ($curShader + ".outColor") ($tmpSG +".surfaceShader");
+						//	connectAttr -f ($curShader + ".message") ($tmpSG +".miMaterialShader");
+						}
+				}
+
+}
+
+	
+	
+
+////////////////////
+global proc exportShaders(string $prefix)
+{
+  string  $setsWithPrefix[] = `ls -l -et objectSet`;
+// 	string $sceneShaders[] = `ls -l -mat`;  doug comment
+
+		int $selAll= `checkBox -q -value ch_selectedOnly`;
+		string $currSelect[] = `ls -sl`; // get current selection
+		if ($selAll == 0)
+			$sceneShaders = `ls -l -mat`;  // box is unchecked, get all the shaders in the scene
+		else
+		{
+			hyperShade -smn;
+			$sceneShaders = `ls -sl -mat`;
+		}
+// 		select $currSelect;  // restore current selection
+
+
+  string $oldShaderName; 
+  select -cl;
+  
+	for ($i= 0; $i < size($setsWithPrefix); $i++)
+	{		
+			if (startsWith($setsWithPrefix[$i], $prefix))
+			{
+				 // assign shader to set members
+		    string $setMembers[];
+		  //  $setMembers = `br_sk_listObjectsFromSets($setsWithPrefix[$i])`;			
+		   	string $shaderSG;
+		   	
+				 for ($j = 0; $j < size($sceneShaders); $j++)
+				  {
+							if (`attributeExists "setName" $sceneShaders[$j]`)
+							{
+								string  $attrValue = `getAttr($sceneShaders[$j]+".setName")`;
+								if ($attrValue == $setsWithPrefix[$i])
+								{
+							  	  $shaderSG = `br_sk_getSGFromShader($sceneShaders[$j])`;
+								    if (`size($shaderSG)` > 0)
+								    {    
+								    	//string $shNetwork[]=`listConnections -s 1 -d 1 $sceneShaders[$j]`;
+											$shNetwork= `select -add $sceneShaders[$j]`;
+											$shNetwork=	`select -add -ne $shaderSG`;
+										  // remove sets and objects
+								  	}
+			  					}
+							}
+				  }	  
+			}
+	}
+		
+	
+	//hyperShadePanelMenuCommand("hyperShadePanel1", "exportSelectedNetwork");
+		global string		$gv_operationMode;
+		string				$filetype = "mayaBinary";
+		string				$ws = `workspace -q -fn`;
+
+		// Old projects saved their shaders in a directory called "lights".
+		// New projects save both lights and shaders in a directory called
+		// "shaders". We have to continue to specify that the shading network
+		// be stored in whatever directory is used to store lights, just in
+		// case this is an old project.
+		setWorkingDirectory $ws "image" "lights";
+		$gv_operationMode = "ExportActive";
+		
+		// Open the file browser to export the selection
+		string $exportSelection = (uiRes("m_hyperShadePanel.kExportSelection"));
+		fileBrowser "pv_performAction" $exportSelection $filetype 1;
+		select $currSelect;  // restore current selection
+
+}
+
+
+
+///////////////// find SG node of given shader
+global proc string br_sk_getSGFromShader(string $oldShaderName)
+{
+	global int $gl_debug;
+	if ($gl_debug ) 
+	{   
+	//print ("\n function: br_sk_getSGFromShader(string $oldShaderName)"); 
+	}
+	
+	global string $shaderPfx;
+   string $sg[] = `listConnections -d 1 -type "shadingEngine" $oldShaderName`;   
+   if (size($sg) == 0)
+   {  
+   		addSG($oldShaderName);
+   		string $sg[] = `listConnections -d 1 -type "shadingEngine" $oldShaderName`;  
+   }
+	  if (size($sg) > 1)
+   {  
+	    if (stringArrayContains("initialShadingGroup", $sg))
+	    {
+	   	   // check for initial shading group
+	      return "initialShadingGroup";
+	    }
+	    else
+	    {
+	    	//!!!!!!!!
+        print("more than 1 SG group connection: " + $oldShaderName +" SG: " + $sg[0] +"\n");
+        return $sg[0];
+	    }
+   }
+   else
+   {
+    	return $sg[0];
+   } 
+}

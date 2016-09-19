@@ -1,0 +1,57 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ help "****LightingMatch_v03\n\nAnalyses an area of the plate and enables a user to match the lighting with a grade node.  great for flickering lights\nor randomly changing patterns.  works best to analyse an small and smooth area.  great for cleanplates, paint, \nand matching CG to the plates colors."
+ note_font "Bitstream Vera Sans"
+ mapsize {0.15 0.15}
+ addUserKnob {20 LightingMatch}
+ addUserKnob {26 Description l "" +STARTLINE T ":LightingMatch: by Tony Lyons\n\nenables user to match changing lighting senarios\n*see instructions"}
+ addUserKnob {26 ""}
+ addUserKnob {41 go l Go! T CurveTool1.go}
+ addUserKnob {26 ""}
+ addUserKnob {41 intensitydata t "This will map out a curve for the avg values of a frame throughout a range.  When using this on a plate, you want to first stablize the plate in the specific area you wish to sample.  Then crop that area to a small box of 15x15 pixels or so.  Click the reformat button within the crop node.  Add a 10 pixel blur to this cropped box to get rid of any grain." T CurveTool1.intensitydata}
+ addUserKnob {26 ""}
+ addUserKnob {3 RStartFrame l "R Start Frame" t "Type in your Start Point frame number. This will usually be the frame that your cleanplate lighting is based off of.  This frame will ALWAYS match the original."}
+ RStartFrame 1
+ addUserKnob {3 GStartFrame l "G Start Frame" t "Type in your Start Point frame number. This will usually be the frame that your cleanplate lighting is based off of.  This frame will ALWAYS match the original. Default to the same as RStartFrame"}
+ GStartFrame {{RStartFrame}}
+ addUserKnob {3 BStartFrame l "B Start Frame"}
+ BStartFrame {{RStartFrame}}
+ addUserKnob {26 ""}
+ addUserKnob {7 Rmult l "R Curve Multiplier" t "Adjust this number to match the whitepoint or other cc of your cleanplate to the original plate.  \n\n**Side note: this will work best if you use a frame that is the most different from your start frame.  if you started on the brightest frame, use the extreme of the darkest frame to do your matching." R -4 4}
+ Rmult 1
+ addUserKnob {7 Gmult l "G Curve Multiplier" t "Adjust this number to match the whitepoint or other cc of your cleanplate to the original plate.  \n\n**Side note: this will work best if you use a frame that is the most different from your start frame.  if you started on the brightest frame, use the extreme of the darkest frame to do your matching." R -4 4}
+ Gmult 1
+ addUserKnob {7 Bmult l "B Curve Multiplier" t "Adjust this number to match the whitepoint or other cc of your cleanplate to the original plate.  \n\n**Side note: this will work best if you use a frame that is the most different from your start frame.  if you started on the brightest frame, use the extreme of the darkest frame to do your matching." R -4 4}
+ Bmult 1
+ addUserKnob {26 ""}
+ addUserKnob {7 RCurve t "crtl drag and/or expression link THIS curve with the R value within a grade or CC node.  The  grade will then be using this curve to drive the animation.  Remember the start frame will look the same, so move around the timeline to check."}
+ RCurve {{1+Rmult*(intensitydata.r(RStartFrame)-intensitydata.r)}}
+ addUserKnob {7 GCurve t "crtl drag and/or expression link THIS curve with the G value within a grade or CC node.  The  grade will then be using this curve to drive the animation.  Remember the start frame will look the same, so move around the timeline to check."}
+ GCurve {{1+Gmult*(intensitydata.g(GStartFrame)-intensitydata.g)}}
+ addUserKnob {7 BCurve t "crtl drag and/or expression link THIS curve with the B value within a grade or CC node.  The  grade will then be using this curve to drive the animation.  Remember the start frame will look the same, so move around the timeline to check."}
+ BCurve {{1+Bmult*(intensitydata.b(BStartFrame)-intensitydata.b)}}
+ addUserKnob {20 Instructions -STARTLINE}
+ addUserKnob {26 txt_instructions l Instructions T "1.) Stablize a section of the plate\n2.) Crop a very small area and blur, click the reformat\n     button in the crop node\n3.) Plug in LightingMatch Gizmo\n4.) Click Go! and set frame range\n5.) Set your start frame\n6.) Create a grade and expression link R,G,B curve values\n7.) Click \"reverse\" button on the grade node\n8.) Go to a different frame with the most drastic changes\n     in lighting from your start frame\n9.) Adjust R G B curve multiplier until the plate and clean\n     plate match "}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -316
+  ypos -530
+ }
+ CurveTool {
+  ROI {-22 -20 2172 1848}
+  autocropdata {-44 -20 2170 1840}
+  intensitydata {0 0 0 0}
+  name CurveTool1
+  selected true
+  xpos -316
+  ypos -490
+ }
+ Output {
+  name Output1
+  xpos -316
+  ypos -390
+ }
+end_group

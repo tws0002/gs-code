@@ -1,0 +1,705 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ inputs 2
+ label "(\[value Compare])"
+ addUserKnob {20 User}
+ addUserKnob {4 Compare l Output M {Luminance Saturation Red Green Blue "RGB Match" "First Image" "Second Image" "" "" "" "" ""}}
+ addUserKnob {6 useSampled l "Use Sampled Color Instead of Second Input" +STARTLINE}
+ addUserKnob {7 Range R 0 0.1}
+ Range 0.009
+ addUserKnob {26 ""}
+ addUserKnob {19 SampledColor}
+ SampledColor {0 0 0 0}
+ addUserKnob {26 ""}
+ addUserKnob {26 info l info: T "Red    = 2nd Image > 1st Image\nGreen = 2nd Image within Range of 1st Image\nBlue   = 2nd Image < 1st Image\n"}
+}
+ Input {
+  inputs 0
+  name InputSecondImage
+  xpos -911
+  ypos -1330
+  number 1
+ }
+ Dot {
+  name Dot25
+  xpos -877
+  ypos -1249
+ }
+set N87ba4a0 [stack 0]
+ Input {
+  inputs 0
+  name InputFirstImage
+  xpos -1387
+  ypos -1275
+ }
+ Dot {
+  name Dot24
+  xpos -1353
+  ypos -1166
+ }
+set N87bab80 [stack 0]
+ Constant {
+  inputs 0
+  channels rgb
+  color {{parent.SampledColor} {parent.SampledColor} {parent.SampledColor} {parent.SampledColor}}
+  name Constant1
+  xpos -1066
+  ypos -1146
+ }
+ Crop {
+  box {{parent.Crop1.box} {parent.Crop1.box} {parent.Crop1.box} {parent.Crop1.box}}
+  name Crop2
+  xpos -1066
+  ypos -1028
+ }
+push $N87ba4a0
+ Switch {
+  inputs 2
+  which {{parent.useSampled}}
+  name Switch2
+  xpos -911
+  ypos -1028
+ }
+ Dot {
+  name Dot4
+  xpos -877
+  ypos -746
+ }
+set N87bb5d0 [stack 0]
+ Dot {
+  name Dot20
+  xpos -390
+  ypos -746
+ }
+set N87bb940 [stack 0]
+ Dot {
+  name Dot7
+  xpos 180
+  ypos -746
+ }
+set N87bbcb0 [stack 0]
+ Dot {
+  name Dot9
+  xpos 738
+  ypos -746
+ }
+set N87bc020 [stack 0]
+ Dot {
+  name Dot12
+  xpos 1277
+  ypos -746
+ }
+ Keyer {
+  operation "blue keyer"
+  name Keyer7
+  xpos 1243
+  ypos -549
+ }
+push $N87bab80
+ Dot {
+  name Dot1
+  xpos -1353
+  ypos -846
+ }
+set N87bca70 [stack 0]
+ Dot {
+  name Dot3
+  xpos -1071
+  ypos -846
+ }
+set N10018610 [stack 0]
+ Dot {
+  name Dot21
+  xpos -584
+  ypos -841
+ }
+set N10018980 [stack 0]
+ Dot {
+  name Dot6
+  xpos -14
+  ypos -846
+ }
+set N10018cf0 [stack 0]
+ Dot {
+  name Dot10
+  xpos 544
+  ypos -846
+ }
+set N10019060 [stack 0]
+ Dot {
+  name Dot13
+  xpos 1083
+  ypos -846
+ }
+ Keyer {
+  operation "blue keyer"
+  name Keyer8
+  xpos 1049
+  ypos -653
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  name Merge7
+  xpos 1049
+  ypos -543
+ }
+ Expression {
+  temp_name0 range
+  temp_expr0 NoOp2.range
+  temp_expr2 a>(0+range)
+  temp_expr3 a<(0-range)
+  expr0 a>(0+range)
+  expr2 a<(0-range)
+  name Expression7
+  xpos 1049
+  ypos -409
+ }
+set N10019e20 [stack 0]
+push $N10019e20
+ Expression {
+  inputs 0
+  expr0 0
+  expr1 1
+  expr2 0
+  name Expression8
+  xpos 925
+  ypos -405
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.red
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge7
+  xpos 925
+  ypos -343
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.blue
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge8
+  xpos 925
+  ypos -273
+ }
+push $N10019e20
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name Copy3
+  xpos 1049
+  ypos -267
+ }
+ Shuffle {
+  alpha white
+  name Shuffle4
+  xpos 1049
+  ypos -178
+ }
+ Dot {
+  name Dot14
+  label blue
+  note_font_size 61
+  xpos 1083
+  ypos -63
+ }
+set N1001b2c0 [stack 0]
+push 0
+push $N87bbcb0
+ Keyer {
+  operation "red keyer"
+  name Keyer3
+  xpos 146
+  ypos -549
+ }
+push $N10018cf0
+ Keyer {
+  operation "red keyer"
+  name Keyer4
+  xpos -48
+  ypos -651
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  name Merge2
+  xpos -48
+  ypos -543
+ }
+ Expression {
+  temp_name0 range
+  temp_expr0 NoOp2.range
+  temp_expr2 a>(0+range)
+  temp_expr3 a<(0-range)
+  expr0 a>(0+range)
+  expr2 a<(0-range)
+  name Expression4
+  xpos -48
+  ypos -409
+ }
+set N1001c080 [stack 0]
+push $N1001c080
+ Expression {
+  inputs 0
+  expr0 0
+  expr1 1
+  expr2 0
+  name Expression5
+  xpos -172
+  ypos -405
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.red
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge3
+  xpos -172
+  ypos -343
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.blue
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge4
+  xpos -172
+  ypos -273
+ }
+push $N1001c080
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name Copy1
+  xpos -48
+  ypos -267
+ }
+ Shuffle {
+  alpha white
+  name Shuffle1
+  xpos -48
+  ypos -178
+ }
+ Dot {
+  name Dot2
+  label "red\n"
+  note_font_size 61
+  xpos -14
+  ypos -58
+ }
+set N100f7740 [stack 0]
+push $N87bc020
+ Keyer {
+  operation "green keyer"
+  name Keyer5
+  xpos 704
+  ypos -549
+ }
+push $N10019060
+ Keyer {
+  operation "green keyer"
+  name Keyer6
+  xpos 510
+  ypos -651
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  name Merge5
+  xpos 510
+  ypos -543
+ }
+ Expression {
+  temp_name0 range
+  temp_expr0 NoOp2.range
+  temp_expr2 a>(0+range)
+  temp_expr3 a<(0-range)
+  expr0 a>(0+range)
+  expr2 a<(0-range)
+  name Expression1
+  xpos 510
+  ypos -409
+ }
+set N100f8500 [stack 0]
+push $N100f8500
+ Expression {
+  inputs 0
+  expr0 0
+  expr1 1
+  expr2 0
+  name Expression6
+  xpos 386
+  ypos -405
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.red
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge5
+  xpos 386
+  ypos -343
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.blue
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge6
+  xpos 386
+  ypos -273
+ }
+push $N100f8500
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name Copy2
+  xpos 510
+  ypos -267
+ }
+ Shuffle {
+  alpha white
+  name Shuffle3
+  xpos 510
+  ypos -178
+ }
+ Dot {
+  name Dot11
+  label green
+  note_font_size 61
+  xpos 544
+  ypos -64
+ }
+set N100f99a0 [stack 0]
+ Merge2 {
+  inputs 3+1
+  operation plus
+  name Merge9
+  xpos 1395
+  ypos 528
+ }
+ Grade {
+  add -2
+  name Grade3
+  xpos 1395
+  ypos 579
+ }
+ Shuffle {
+  red black
+  blue black
+  alpha green
+  name Shuffle5
+  xpos 1395
+  ypos 665
+ }
+ Dot {
+  name Dot18
+  label "RGB \nMATCHED"
+  note_font_size 61
+  xpos 1429
+  ypos 1039
+ }
+push $N87bca70
+ Dot {
+  name Dot22
+  xpos -1353
+  ypos -62
+ }
+set N101e9a30 [stack 0]
+ Dot {
+  name Dot8
+  xpos -1353
+  ypos 169
+ }
+set N101ea110 [stack 0]
+ Dot {
+  name Dot17
+  xpos -1353
+  ypos 457
+ }
+ Dot {
+  name Dot15
+  xpos -1353
+  ypos 683
+ }
+set N101ea480 [stack 0]
+ Dot {
+  name Dot16
+  xpos -1353
+  ypos 911
+ }
+set N101ea7f0 [stack 0]
+ Dot {
+  name Dot19
+  xpos -1353
+  ypos 1332
+ }
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge10
+  xpos 1395
+  ypos 1329
+ }
+push $N1001b2c0
+push $N101ea7f0
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge8
+  xpos 1049
+  ypos 908
+ }
+push $N100f99a0
+push $N101ea480
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge6
+  xpos 510
+  ypos 680
+ }
+push $N100f7740
+push $N101ea110
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge3
+  xpos -48
+  ypos 166
+ }
+push $N87bb940
+ Keyer {
+  operation "saturation key"
+  name Keyer9
+  xpos -424
+  ypos -533
+ }
+push $N10018980
+ Keyer {
+  operation "saturation key"
+  name Keyer10
+  xpos -618
+  ypos -637
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  name Merge11
+  xpos -618
+  ypos -527
+ }
+ Expression {
+  temp_name0 range
+  temp_expr0 NoOp2.range
+  temp_expr2 a>(0+range)
+  temp_expr3 a<(0-range)
+  expr0 a>(0+range)
+  expr2 a<(0-range)
+  name Expression9
+  xpos -618
+  ypos -394
+ }
+set N101ec6e0 [stack 0]
+push $N101ec6e0
+ Expression {
+  inputs 0
+  expr0 0
+  expr1 1
+  expr2 0
+  name Expression10
+  xpos -742
+  ypos -389
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.red
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge9
+  xpos -742
+  ypos -327
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.blue
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge10
+  xpos -742
+  ypos -257
+ }
+push $N101ec6e0
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name Copy4
+  xpos -618
+  ypos -251
+ }
+ Shuffle {
+  alpha white
+  name Shuffle6
+  xpos -618
+  ypos -162
+ }
+ Dot {
+  name Dot23
+  label saturation
+  note_font_size 61
+  xpos -584
+  ypos -79
+ }
+push $N101ea110
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge12
+  xpos -618
+  ypos 305
+ }
+push $N87bb5d0
+ Keyer {
+  operation "luminance key"
+  name Keyer2
+  xpos -911
+  ypos -627
+ }
+push $N10018610
+ Keyer {
+  operation "luminance key"
+  name Keyer1
+  xpos -1105
+  ypos -728
+ }
+ Merge2 {
+  inputs 2
+  operation from
+  name Merge1
+  xpos -1105
+  ypos -621
+ }
+ Expression {
+  temp_name0 range
+  temp_expr0 NoOp2.range
+  temp_expr2 a>(0+range)
+  temp_expr3 a<(0-range)
+  expr0 a>(0+range)
+  expr2 a<(0-range)
+  name Expression2
+  xpos -1105
+  ypos -483
+ }
+set N1029f7d0 [stack 0]
+push $N1029f7d0
+ Expression {
+  inputs 0
+  expr0 0
+  expr1 1
+  expr2 0
+  name Expression3
+  xpos -1229
+  ypos -467
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.red
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge1
+  xpos -1229
+  ypos -421
+ }
+ ChannelMerge {
+  inputs 2
+  A rgba.blue
+  operation stencil
+  B rgba.green
+  output rgba.green
+  name ChannelMerge2
+  xpos -1229
+  ypos -351
+ }
+push $N1029f7d0
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.green
+  name Copy9
+  xpos -1105
+  ypos -345
+ }
+ Shuffle {
+  alpha white
+  name Shuffle2
+  xpos -1105
+  ypos -256
+ }
+ Dot {
+  name Dot5
+  label Luminance
+  note_font_size 61
+  xpos -1071
+  ypos -169
+ }
+push $N101e9a30
+ Merge2 {
+  inputs 2
+  mix 0.5
+  name Merge4
+  xpos -1105
+  ypos -65
+ }
+ Switch {
+  inputs 8
+  which {{parent.Compare}}
+  name Switch1
+  selected true
+  xpos -567
+  ypos 2234
+ }
+ Output {
+  name Output1
+  xpos -567
+  ypos 2322
+ }
+ NoOp {
+  inputs 0
+  name NoOp2
+  xpos -407
+  ypos -429
+  addUserKnob {20 User}
+  addUserKnob {7 range R 0 0.1}
+  range {{parent.Range}}
+ }
+push $N87bab80
+ Crop {
+  box {0 0 {input.width} {input.height}}
+  name Crop1
+  xpos -1216
+  ypos -1169
+ }
+push $N87ba4a0
+ Viewer {
+  input_process false
+  name Viewer1
+  xpos -1128
+  ypos -931
+ }
+end_group

@@ -1,0 +1,66 @@
+#! /software/Nuke/Linux64/Nuke6.2v3/Nuke6.2 -nx
+version 6.2 v3
+Gizmo {
+ help "Takes the width of the input and calculates the height based on the ratio you enter."
+ addUserKnob {20 AspectCrop}
+ addUserKnob {1 aspect l "Aspect Ratio" t "Enter the required aspect ratio here as a decimal."}
+ aspect 2.39
+ addUserKnob {26 Ratios l "" +STARTLINE T "Enter a decimal aspect ratio. \n\nFor example:\n2.39   ( \"Cinemascope\" or \"2:35\" )\n1.85   ( \"3-perf\" )\n1.778   ( \"16:9\" )\n1.33   ( \"4:3\" )\n"}
+ addUserKnob {6 cropReformat l REFORMAT t "Toggle this to reformat to the new size, or maintain the format of the input." +STARTLINE}
+ addUserKnob {26 ""}
+ addUserKnob {26 help_1 l "" +STARTLINE T "List of common aspect ratios:"}
+ addUserKnob {1 url l URL: t "Copy this link into your browser"}
+ url http://en.wikipedia.org/wiki/Aspect_ratio_(image)#Previous_and_presently_used_aspect_ratios
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 96
+  ypos -394
+ }
+ Reformat {
+  type "to box"
+  box_width {{input.width i}}
+  box_height {{ceil(input.width*(1/aspect)) i}}
+  box_fixed true
+  resize none
+  name Reformat1
+  xpos 96
+  ypos -332
+ }
+set Nd1fdff0 [stack 0]
+ Dot {
+  name Dot2
+  xpos 266
+  ypos -327
+ }
+ Dot {
+  name Dot1
+  xpos 266
+  ypos -154
+ }
+push $Nd1fdff0
+ Reformat {
+  type "to box"
+  box_width {{parent.input.width i}}
+  box_height {{parent.input.height i}}
+  box_fixed true
+  resize none
+  black_outside true
+  name Reformat2
+  xpos 96
+  ypos -244
+ }
+ Switch {
+  inputs 2
+  which {{parent.cropReformat x1 0.34}}
+  name Switch1
+  xpos 96
+  ypos -159
+ }
+ Output {
+  name Output1
+  xpos 96
+  ypos -62
+ }
+end_group

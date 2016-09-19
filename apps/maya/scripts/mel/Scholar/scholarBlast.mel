@@ -1,0 +1,118 @@
+// playblast script.
+// 1.) run hfPreviewCam or equivalent (show polys only)
+// 2.) set playblast prefs (render size = render settings)
+// 3.) enable HUD display, set to display scene name and frame #
+// 4.) save playblast as movie to correct directory based on timestamp.
+// \\scholar\projects\ikes_kream\02_references\02_dailies\20100721
+
+// USAGE: make sure the modelPanel you want to blast from is highlighted. then push the button.
+
+global proc int hfGetFrame() {
+    int $theFrame = `currentTime -q`;
+    return $theFrame;
+}
+
+global proc string hfGetScene() {
+    string $sceneName = `file -q -shn -sn`;
+    return $sceneName;
+}
+    
+
+global proc scholarBlast(int $outputPercent) {
+	string $execStr = `system("date /t")`;
+	string $execBuffer[];
+	int $execTokens = `tokenize $execStr "." $execBuffer`;
+	string $timestamp = `strip($execBuffer[$execTokens-1])`;
+	// Result: Wed 07/21/2010 //
+	// reorganize this into a better format.
+
+	string $dateBuffer[];
+	int $dateTokens = `tokenize $timestamp "/" $dateBuffer`;
+	string $year = `strip($dateBuffer[$dateTokens-1])`;
+	string $day = `strip($dateBuffer[$dateTokens-2])`;
+	string $month = `strip($dateBuffer[$dateTokens-3])`;
+		// this includes a named day, separate by space
+	string $monthBuffer[];
+	int $monthTokens = `tokenize $month " " $monthBuffer`;
+	string $month2 = `strip($monthBuffer[1])`;
+	string $sceneName = `file -q -sn`;
+	string $sceneNameBuffer[];
+	int $sceneTokens = `tokenize $sceneName "/" $sceneNameBuffer`;
+	string $projName = $sceneNameBuffer[2];
+	string $fileNameExt = $sceneNameBuffer[$sceneTokens-1];
+	string $fileNameBuffer[];
+	tokenize $fileNameExt "." $fileNameBuffer;
+	string $fileName = $fileNameBuffer[0];
+	string $writeDir = ("/\/scholar/projects/"+$projName+"/05_dailies/"+$year+$month2+$day);
+	print $writeDir;
+	// does path exist?
+
+	if(!`filetest -d $writeDir`) {
+		sysFile -md $writeDir;
+	}
+
+	// okay we have a write path and a file name. now configure the camera and write a playblast.
+
+	string $renderPanel = `getPanel -withFocus`;
+	string $renderCam = `modelPanel -q -camera $renderPanel`;
+	int $dispRes = `camera -q -displayResolution $renderCam`;
+	float $overScan = `camera -q -overscan $renderCam`;
+	int $xRes = `getAttr defaultResolution.width`;
+	int $yRes = `getAttr defaultResolution.height`;
+	camera -e -overscan 1.00 $renderCam;
+	camera -e -displayResolution 0 $renderCam;
+	int $polyCount = `optionVar -q polyCountVisibility`;
+
+	// set up the HUD to display scene name and frame.
+
+	select -cl  ;
+	setCurrentFrameVisibility 1;
+	setCameraNamesVisibility 0;
+	setPolyCountVisibility 0;
+	headsUpDisplay -removePosition 0 1;
+		
+			headsUpDisplay
+				-section 0
+				-block 1
+				-blockSize "small"
+				-label "Scene:"
+				-labelFontSize "small"
+				-ba "left"
+				-command "hfGetScene"
+				-attachToRefresh
+			hf_HUD_scene;
+		
+	// okay i'm sorry i'm stealing a lot of this from doug, hope he doesn't mind cause i'm under all kinds of pressure
+
+	// workspace -rt images $writeDir; // this should be set back after the file is written
+	// this doesn't work. what the hell?
+	
+	//Check for sound in timeline - yates
+		global string $gPlayBackSlider;
+		string $soundFlags;
+		int $isSound = `timeControl -q -ds $gPlayBackSlider`;
+		string $sound = `timeControl -q -s $gPlayBackSlider`;
+
+		switch ($isSound){
+			case 1:
+			$soundFlags = ($sound);
+			break;
+			case 0:
+			$soundFlags = "none";
+			break;
+		}
+		
+	string $blastOutput = `playblast -format qt -compression "PNG" -fo -filename ($writeDir+"/"+$fileName) -clearCache 1 -viewer 1 -showOrnaments 1 -fp 4 -percent $outputPercent -widthHeight $xRes $yRes -s $soundFlags`;
+
+	// workspace -rt images images;
+	setCurrentFrameVisibility 0;
+	setCameraNamesVisibility 1;
+	headsUpDisplay -rem hf_HUD_scene;
+	camera -e -overscan $overScan $renderCam;
+	camera -e -displayResolution $dispRes $renderCam;
+	setPolyCountVisibility $polyCount;
+
+	// now display the blast file.
+
+	print("PLAYBLAST output to "+$blastOutput);
+}

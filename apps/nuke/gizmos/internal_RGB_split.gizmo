@@ -1,0 +1,263 @@
+#! C:/Program Files/Nuke6.3v8/Nuke6.3.exe -nx
+version 6.3 v8
+Gizmo {
+ addUserKnob {20 User l RGB_Split}
+ addUserKnob {41 mode T INPUT_RGB_SPLIT.mode}
+ addUserKnob {41 factor T INPUT_RGB_SPLIT.factor}
+ addUserKnob {41 translationOffset T INPUT_RGB_SPLIT.translationOffset}
+ addUserKnob {41 protectBorders l "protect borders" T INPUT_RGB_SPLIT.protectBorders}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -452
+  ypos 25
+ }
+ NoOp {
+  name INPUT_RGB_SPLIT
+  xpos -452
+  ypos 65
+  addUserKnob {20 RGB_Split}
+  addUserKnob {4 mode M {"Centered Rotation" "Centered Translation" PerpDistortion ""}}
+  addUserKnob {7 factor R -3 3}
+  factor 0.05
+  addUserKnob {7 translationOffset R 0 6.28319}
+  addUserKnob {6 protectBorders l "protect borders" +STARTLINE}
+  protectBorders true
+ }
+set N256634d0 [stack 0]
+ Dot {
+  name Dot1
+  xpos 323
+  ypos 68
+ }
+ Dot {
+  name Dot2
+  xpos 323
+  ypos 573
+ }
+push $N256634d0
+ Multiply {
+  value 0
+  name _mkBlack
+  xpos 184
+  ypos 178
+ }
+ Dot {
+  name Dot12
+  xpos 218
+  ypos 240
+ }
+set N25663b30 [stack 0]
+ Dot {
+  name Dot11
+  xpos 108
+  ypos 240
+ }
+ Add {
+  value 1
+  name _mkWhite
+  xpos 74
+  ypos 258
+ }
+ Clamp {
+  name _vignetteClamp
+  xpos 74
+  ypos 301
+ }
+ Crop {
+  box {{INPUT_RGB_SPLIT.width-((INPUT_RGB_SPLIT.width/2)+(((1-((abs((INPUT_RGB_SPLIT.factor))*(sqrt(pow2(INPUT_RGB_SPLIT.width/2)+pow2(INPUT_RGB_SPLIT.height/2))))/5)/(width+height))/2+0.5))*(INPUT_RGB_SPLIT.width/2)) i} {INPUT_RGB_SPLIT.height-((INPUT_RGB_SPLIT.width/2)+(((1-((abs((INPUT_RGB_SPLIT.factor))*(sqrt(pow2(INPUT_RGB_SPLIT.width/2)+pow2(INPUT_RGB_SPLIT.height/2))))/5)/(width+height))/2+0.5))*(INPUT_RGB_SPLIT.width/2)-(INPUT_RGB_SPLIT.width-INPUT_RGB_SPLIT.height)) i} {(INPUT_RGB_SPLIT.width/2)+(((1-((abs((INPUT_RGB_SPLIT.factor))*(sqrt(pow2(INPUT_RGB_SPLIT.width/2)+pow2(INPUT_RGB_SPLIT.height/2))))/5)/(width+height))/2+0.5))*(INPUT_RGB_SPLIT.width/2) i} {(INPUT_RGB_SPLIT.width/2)+(((1-((abs((INPUT_RGB_SPLIT.factor))*(sqrt(pow2(INPUT_RGB_SPLIT.width/2)+pow2(INPUT_RGB_SPLIT.height/2))))/5)/(width+height))/2+0.5))*(INPUT_RGB_SPLIT.width/2)-(INPUT_RGB_SPLIT.width-INPUT_RGB_SPLIT.height) i}}
+  name _cropVignette
+  xpos 74
+  ypos 344
+ }
+push $N25663b30
+ Merge2 {
+  inputs 2
+  name _compVignette
+  xpos 184
+  ypos 344
+ }
+ Blur {
+  size {{_cropVignette.box.x*0.8 i}}
+  name Blur2
+  xpos 184
+  ypos 368
+ }
+ Invert {
+  name Invert1
+  xpos 184
+  ypos 416
+ }
+push $N256634d0
+ ShuffleCopy {
+  inputs 2
+  alpha red
+  name ShuffleCopy_RECOMP
+  xpos -159
+  ypos 423
+ }
+ Premult {
+  name Premult1
+  xpos -159
+  ypos 511
+ }
+push $N256634d0
+ Shuffle {
+  green red
+  blue red
+  name Shuffle_get_R
+  xpos -550
+  ypos 147
+ }
+set N25665b10 [stack 0]
+ PerspDistort {
+  channels rgba
+  fov {{10*INPUT_RGB_SPLIT.factor i}}
+  reverse true
+  name PerspDistort_R
+  xpos -253
+  ypos 255
+ }
+push $N25665b10
+ Transform {
+  translate {{INPUT_RGB_SPLIT.factor*cos(INPUT_RGB_SPLIT.translationOffset) i} {INPUT_RGB_SPLIT.factor*sin(INPUT_RGB_SPLIT.translationOffset) i}}
+  center {{width/2 i} {height/2 i}}
+  name Transform_Trans_R
+  xpos -550
+  ypos 254
+ }
+push $N25665b10
+ Transform {
+  rotate {{INPUT_RGB_SPLIT.factor i}}
+  center {{width/2 i} {height/2 i}}
+  name Transform_Rot_R
+  xpos -855
+  ypos 247
+ }
+ Switch {
+  inputs 3
+  which {{INPUT_RGB_SPLIT.mode i}}
+  name Switch_get_R
+  xpos -550
+  ypos 350
+ }
+push $N256634d0
+ Shuffle {
+  red green
+  blue green
+  name Shuffle_get_G
+  xpos -452
+  ypos 146
+ }
+set N256667d0 [stack 0]
+ NoOp {
+  name NO_PerspDistort_G
+  xpos -145
+  ypos 256
+ }
+push $N256667d0
+ Transform {
+  translate {{INPUT_RGB_SPLIT.factor*cos(INPUT_RGB_SPLIT.translationOffset+2*pi/3) i} {INPUT_RGB_SPLIT.factor*sin(INPUT_RGB_SPLIT.translationOffset+2*pi/3) i}}
+  center {{width/2 i} {height/2 i}}
+  name Transform_Trans_G
+  xpos -452
+  ypos 254
+ }
+push $N256667d0
+ Transform {
+  center {{width/2 i} {height/2 i}}
+  name Transform_Rot_G
+  xpos -749
+  ypos 251
+ }
+ Switch {
+  inputs 3
+  which {{INPUT_RGB_SPLIT.mode i}}
+  name Switch_get_G
+  xpos -452
+  ypos 346
+ }
+ ShuffleCopy {
+  inputs 2
+  red red
+  blue green2
+  name ShuffleCopy_get_RG
+  xpos -452
+  ypos 394
+ }
+push $N256634d0
+ Shuffle {
+  red blue
+  green blue
+  name Shuffle_get_B
+  xpos -353
+  ypos 146
+ }
+set N256677c0 [stack 0]
+ PerspDistort {
+  channels rgba
+  fov {{5*INPUT_RGB_SPLIT.factor}}
+  reverse true
+  name PerspDistort_B
+  xpos -30
+  ypos 255
+ }
+push $N256677c0
+ Transform {
+  translate {{INPUT_RGB_SPLIT.factor*cos(INPUT_RGB_SPLIT.translationOffset-2*pi/3) i} {INPUT_RGB_SPLIT.factor*sin(INPUT_RGB_SPLIT.translationOffset-2*pi/3) i}}
+  center {{width/2 i} {height/2 i}}
+  name Transform_Trans_B
+  xpos -353
+  ypos 254
+ }
+push $N256677c0
+ Transform {
+  rotate {{-INPUT_RGB_SPLIT.factor i}}
+  center {{width/2 i} {height/2 i}}
+  name Transform_Rot_B
+  xpos -644
+  ypos 255
+ }
+ Switch {
+  inputs 3
+  which {{INPUT_RGB_SPLIT.mode i}}
+  name Switch_get_B
+  xpos -353
+  ypos 350
+ }
+ ShuffleCopy {
+  inputs 2
+  red red
+  green green
+  alpha alpha2
+  name ShuffleCopy_get_BA
+  xpos -353
+  ypos 394
+ }
+ Merge2 {
+  inputs 2
+  name Merge_protectBorders
+  xpos -353
+  ypos 511
+  disable {{1-INPUT_RGB_SPLIT.protectBorders i}}
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy1
+  xpos -353
+  ypos 564
+ }
+ NoOp {
+  name OUTPUT_RGB_SPLIT
+  xpos -353
+  ypos 666
+ }
+ Output {
+  name Output1
+  xpos -353
+  ypos 766
+ }
+end_group

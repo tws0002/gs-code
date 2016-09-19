@@ -1,0 +1,476 @@
+#! C:/Program Files/Nuke6.3v2/Nuke6.3.exe -nx
+version 6.3 v2
+Gizmo {
+ addUserKnob {20 magicCarpet}
+ addUserKnob {41 to1 T CornerPin2D1.to1}
+ addUserKnob {41 to2 T CornerPin2D1.to2}
+ addUserKnob {41 to3 T CornerPin2D1.to3}
+ addUserKnob {41 to4 T CornerPin2D1.to4}
+ addUserKnob {26 ""}
+ addUserKnob {41 Erode T Dilate1.size}
+ addUserKnob {41 Blur T Blur1.size}
+ addUserKnob {26 ""}
+ addUserKnob {4 RenderSwitch l Render M {Setup Final ""}}
+}
+ BackdropNode {
+  inputs 0
+  name final_result
+  tile_color 0x8e3737ff
+  gl_color 0xcc2c1cff
+  note_font_size 42
+  xpos -577
+  ypos 162
+  bdwidth 197
+  bdheight 161
+ }
+ BackdropNode {
+  inputs 0
+  name preview_pipe
+  tile_color 0x8e8e3800
+  note_font_size 42
+  xpos -117
+  ypos 10
+  bdwidth 254
+  bdheight 103
+ }
+ BackdropNode {
+  inputs 0
+  name matte_pipe
+  tile_color 0x7171c600
+  note_font_size 42
+  xpos -314
+  ypos 11
+  bdwidth 156
+  bdheight 212
+ }
+ BackdropNode {
+  inputs 0
+  name lower_ramp_X_axis
+  xpos -878
+  ypos -397
+  bdwidth 575
+  bdheight 320
+ }
+ BackdropNode {
+  inputs 0
+  name combining_ramp_Y_axis
+  tile_color 0x8e8e3800
+  note_font_size 42
+  xpos -967
+  ypos -7
+  bdwidth 279
+  bdheight 172
+ }
+ BackdropNode {
+  inputs 0
+  name upper_ramp_X_axis
+  xpos -944
+  ypos -765
+  bdwidth 637
+  bdheight 340
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  name Constant1
+  xpos -433
+  ypos -320
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat6
+  xpos -433
+  ypos -248
+ }
+set N97225f0 [stack 0]
+ Dot {
+  name Dot12
+  xpos -340
+  ypos -245
+ }
+ Dot {
+  name Dot11
+  xpos -340
+  ypos 29
+ }
+ Ramp {
+  p0 {{(parent.CornerPin2D1.to2.x+parent.CornerPin2D1.to1.x)/2 i} {(parent.CornerPin2D1.to2.y+parent.CornerPin2D1.to1.y)/2 i}}
+  p1 {{(parent.CornerPin2D1.to3.x+parent.CornerPin2D1.to4.x)/2 i} {(parent.CornerPin2D1.to3.y+parent.CornerPin2D1.to4.y)/2 i}}
+  name Ramp3
+  xpos -879
+  ypos 26
+ }
+ Blur {
+  size {{0.05*parent.IMG_IN.format.width i} {0.05*parent.IMG_IN.format.height i}}
+  name Blur3
+  xpos -879
+  ypos 50
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {{"\[sample Crop3 red 10 10 8 8]" i} {"\[sample Crop3 green 10 10 8 8]" i} {"\[sample Crop3 blue 10 10 8 8]" i} 0}
+  name Constant8
+  xpos -508
+  ypos -714
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat2
+  xpos -508
+  ypos -642
+ }
+set N9e7d1a0 [stack 0]
+ Ramp {
+  p0 {{parent.CornerPin2D1.to3.x i} {parent.CornerPin2D1.to3.y i}}
+  p1 {{parent.CornerPin2D1.to4.x i} {parent.CornerPin2D1.to4.y i}}
+  type smooth0
+  name Ramp2
+  xpos -508
+  ypos -618
+ }
+ Blur {
+  size {{0.05*parent.IMG_IN.format.width i} {0.05*parent.IMG_IN.format.height i}}
+  name Blur4
+  xpos -508
+  ypos -574
+ }
+ Invert {
+  name Invert1
+  xpos -508
+  ypos -526
+ }
+push $N9e7d1a0
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy2
+  xpos -661
+  ypos -520
+ }
+ Premult {
+  name Premult2
+  xpos -661
+  ypos -494
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {{"\[sample Crop4 red 10 10 8 8]" i} {"\[sample Crop4 green 10 10 8 8]" i} {"\[sample Crop4 blue 10 10 8 8]" i} 0}
+  name Constant9
+  xpos -771
+  ypos -674
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat3
+  xpos -771
+  ypos -602
+ }
+ Merge2 {
+  inputs 2
+  name Merge2
+  xpos -771
+  ypos -493
+ }
+ Dot {
+  name Dot5
+  xpos -924
+  ypos -490
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy3
+  xpos -958
+  ypos 81
+ }
+ Premult {
+  name Premult3
+  xpos -958
+  ypos 105
+ }
+ Dot {
+  name Dot2
+  xpos -924
+  ypos 133
+ }
+push $N97225f0
+ Ramp {
+  p0 {{parent.CornerPin2D1.to1.x} {parent.CornerPin2D1.to1.y}}
+  p1 {{parent.CornerPin2D1.to2.x} {parent.CornerPin2D1.to2.y}}
+  name Ramp1
+  xpos -433
+  ypos -224
+ }
+ Blur {
+  size {{0.05*parent.IMG_IN.format.width i} {0.05*parent.IMG_IN.format.height i}}
+  name Blur2
+  xpos -433
+  ypos -162
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {{"\[sample Crop2 red 10 10 8 8]" i} {"\[sample Crop2 green 10 10 8 8]" i} {"\[sample Crop2 blue 10 10 8 8]" i} 0}
+  name Constant7
+  xpos -543
+  ypos -313
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat5
+  xpos -543
+  ypos -241
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  xpos -543
+  ypos -156
+ }
+ Premult {
+  name Premult1
+  xpos -543
+  ypos -130
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {{"\[sample Crop1 red 10 10 8 8]" i} {"\[sample Crop1 green 10 10 8 8]" i} {"\[sample Crop1 blue 10 10 8 8]" i} 0}
+  name Constant6
+  xpos -818
+  ypos -284
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat4
+  xpos -818
+  ypos -190
+ }
+ Merge2 {
+  inputs 2
+  name Merge1
+  xpos -818
+  ypos -130
+ }
+ Merge2 {
+  inputs 2
+  name Merge3
+  xpos -818
+  ypos 129
+ }
+ Constant {
+  inputs 0
+  channels {rgba.red rgba.green rgba.blue rgba.alpha}
+  color {0.224999994 0.224999994 0.224999994 1}
+  name Constant5
+  xpos -167
+  ypos -719
+ }
+ Reformat {
+  type "to box"
+  box_width {{parent.IMG_IN.format.width i}}
+  box_height {{parent.IMG_IN.format.height i}}
+  box_fixed true
+  resize distort
+  filter Impulse
+  black_outside true
+  name Reformat1
+  xpos -167
+  ypos -626
+ }
+ CornerPin2D {
+  to1 {100 50}
+  to2 {500 50}
+  to3 {500 300}
+  to4 {100 300}
+  invert false
+  from1 {0 0}
+  from2 {{parent.IMG_IN.format.width i} 0}
+  from3 {{parent.IMG_IN.format.width i} {parent.IMG_IN.format.height i}}
+  from4 {0 {parent.IMG_IN.format.height i}}
+  name CornerPin2D1
+  xpos -167
+  ypos -544
+ }
+set N8096880 [stack 0]
+ Dilate {
+  channels alpha
+  name Dilate1
+  xpos -275
+  ypos 39
+ }
+ Blur {
+  channels alpha
+  name Blur1
+  xpos -275
+  ypos 75
+ }
+ ShuffleCopy {
+  inputs 2
+  red red
+  green green
+  blue blue
+  alpha alpha2
+  name ShuffleCopy4
+  xpos -275
+  ypos 129
+ }
+ Premult {
+  name Premult4
+  xpos -275
+  ypos 155
+ }
+ Dot {
+  name Dot10
+  xpos -241
+  ypos 188
+ }
+ Input {
+  inputs 0
+  name IMG_IN
+  label "\[value number]"
+  xpos -1119
+  ypos -880
+ }
+ Dot {
+  name Dot3
+  xpos -1085
+  ypos -804
+ }
+set N9973520 [stack 0]
+ Dot {
+  name Dot6
+  xpos -1085
+  ypos -374
+ }
+set N9973850 [stack 0]
+ Dot {
+  name Dot7
+  xpos -1085
+  ypos 188
+ }
+ Merge2 {
+  inputs 2
+  name mergeCarpet
+  xpos -567
+  ypos 185
+ }
+ Crop {
+  box {0 0 {parent.IMG_IN.format.width i} {parent.IMG_IN.format.height i}}
+  reformat true
+  crop false
+  name clean_size
+  xpos -567
+  ypos 280
+ }
+push $N8096880
+push $N9973520
+ Dot {
+  name Dot1
+  xpos -734
+  ypos -804
+ }
+set N9745ae0 [stack 0]
+ Dot {
+  name Dot9
+  xpos -476
+  ypos -804
+ }
+set N97457b0 [stack 0]
+ Dot {
+  name Dot8
+  xpos 15
+  ypos -804
+ }
+ Merge2 {
+  inputs 2
+  operation screen
+  name Merge4
+  xpos -19
+  ypos 57
+ }
+ Switch {
+  inputs 2
+  which {{RenderSwitch i}}
+  name Switch1
+  xpos -19
+  ypos 280
+ }
+ Output {
+  name Output2
+  xpos -19
+  ypos 326
+ }
+push $N9973850
+ Dot {
+  name Dot4
+  xpos -784
+  ypos -374
+ }
+set N97467a0 [stack 0]
+ Crop {
+  box {{parent.CornerPin2D1.to2.x+10 i x1 329.0499878 x80 706.4000244} {parent.CornerPin2D1.to2.y-10 i x1 1268.050049 x80 501.7999878} {parent.CornerPin2D1.to2.x-10 i x1 339.0499878 x80 716} {parent.CornerPin2D1.to2.y+10 i x1 1278.050049 x80 513}}
+  reformat true
+  crop false
+  name Crop2
+  xpos -544
+  ypos -377
+ }
+push $N97467a0
+ Crop {
+  box {{parent.CornerPin2D1.to1.x-10 i x1 329.0499878 x80 706.4000244} {parent.CornerPin2D1.to1.y-10 i x1 1268.050049 x80 501.7999878} {parent.CornerPin2D1.to1.x+10 i x1 339.0499878 x80 716} {parent.CornerPin2D1.to1.y+10 i x1 1278.050049 x80 513}}
+  reformat true
+  crop false
+  name Crop1
+  xpos -818
+  ypos -332
+ }
+push $N97457b0
+ Crop {
+  box {{parent.CornerPin2D1.to3.x+10 i x1 329.0499878 x80 706.4000244} {parent.CornerPin2D1.to3.y+10 i x1 1268.050049 x80 501.7999878} {parent.CornerPin2D1.to3.x-10 i x1 339.0499878 x80 716} {parent.CornerPin2D1.to3.y-10 i x1 1278.050049 x80 513}}
+  reformat true
+  crop false
+  name Crop3
+  xpos -510
+  ypos -740
+ }
+push $N9745ae0
+ Crop {
+  box {{parent.CornerPin2D1.to4.x-10 i x1 329.0499878 x80 706.4000244} {parent.CornerPin2D1.to4.y+10 i x1 1268.050049 x80 501.7999878} {parent.CornerPin2D1.to4.x+10 i x1 339.0499878 x80 716} {parent.CornerPin2D1.to4.y-10 i x1 1278.050049 x80 513}}
+  reformat true
+  crop false
+  name Crop4
+  xpos -768
+  ypos -734
+ }
+end_group

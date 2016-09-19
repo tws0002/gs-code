@@ -1,0 +1,434 @@
+//====================================================================
+//====================================================================
+//
+// k_connectionList.mel
+// 
+//
+// Creation date: 27.12.2004
+// Autor:	    Konodyuk Eugene
+// E-mail:	    konodyuk@mail.ru
+//		    konodyuk@yandex.ru
+//
+// Procedure name: 
+//	k_connectionList
+//
+// Description:
+// This script allow to connect  / disconnect any attributes.
+// This script allow to determine connection between objects.
+// Script works with one by one objects and array objects.
+// 
+// Use:
+// Move this script on the shelf or script directory.
+// Read the dialog window.
+//
+// Input Attribute:
+//	in the dialog window.
+//	
+//
+//====================================================================
+//====================================================================
+
+//====================================================================
+// Loads
+
+//____________________________________
+// Load object
+//
+global proc LOADOBJ_CONNECTLIST ()
+{
+string $lsObj[] = `ls -sl`;
+textField -e -tx $lsObj[0] OBJ_CONNECTLIST;
+}
+
+//____________________________________
+// Load objects
+//
+global proc LOADOBJECTS_CONNECTLIST ()
+{
+string $lsObj[] = `ls -sl`;
+string $arr_lsObj;
+
+int $i;
+for ($i=0; $i<=size($lsObj)-1; $i++)
+   {
+   $arr_lsObj += $lsObj[$i] + " ";
+   }
+textField -e -tx $arr_lsObj OBJECTS_CONNECTLIST;
+}
+
+//____________________________________
+// Load object in Connect Info by object
+//
+global proc LOADOBJ_INFO_OBJ_CONNECTLIST ()
+{
+string $lsObj[] = `ls -sl`;
+textField -e -tx $lsObj[0] OBJNAME_INFO_OBJ_CONNECTLIST;
+}
+
+//____________________________________
+// Load object in Connect Info by object / attribute
+//
+global proc LOADOBJ_INFO_OBJATTR_CONNECTLIST ()
+{
+string $lsObj[] = `ls -sl`;
+textField -e -tx $lsObj[0] OBJNAME_INFO_OBJATTR_CONNECTLIST;
+}
+
+//====================================================================
+// Connect / disconnect
+
+//____________________________________
+// Connection
+//
+global proc CONNECT_CONNECTLIST ()
+{
+	// obj
+string $objField = `textField -q -tx OBJ_CONNECTLIST`;
+string $bufferObj[]; //clear $buffer;
+string $num_tokenObj;
+$num_tokenObj = `tokenize $objField "\n " $bufferObj`;
+
+	// source list
+string $listSourceAttr = `scrollField -q -tx LIST_SOURCE_ATTR_CONNECTLIST`;
+string $bufferSource[]; //clear $buffer;
+string $num_tokenSource;
+$num_tokenSource = `tokenize $listSourceAttr "\n " $bufferSource`;
+
+	// objects
+string $objctsField = `textField -q -tx OBJECTS_CONNECTLIST`;
+string $bufferObjcts[]; //clear $buffer;
+string $num_tokenObjcts;
+$num_tokenObjcts = `tokenize $objctsField "\n " $bufferObjcts`;
+
+	// destination list
+string $listDestinAttr = `scrollField -q -tx LIST_DEST_ATTR_CONNECTLIST`;
+string $bufferDest[]; //clear $buffer;
+string $num_tokenDest;
+$num_tokenDest = `tokenize $listDestinAttr "\n " $bufferDest`;
+
+	// 1 attr -> array atr
+if ($num_tokenSource == 1)
+{
+string $connect_attr = "";
+int $f;
+for ($f=0; $f<size($bufferObjcts); $f++)
+ {
+int $i;
+for ($i=0; $i<size($bufferDest); $i++)
+   {
+$connect_attr = $bufferObj[0] + "." + $bufferSource[0] + " " +
+	$bufferObjcts[$f] + "." + $bufferDest[$i];
+string $connect_by_1attr = "connectAttr -f " + $connect_attr;
+eval $connect_by_1attr;
+   }
+ }
+}
+
+	// array -> array attr
+else if ($num_tokenSource == $num_tokenDest)
+{
+string $connect_attr = "";
+int $f;
+for ($f=0; $f<size($bufferObjcts); $f++)
+ {
+int $i;
+for ($i=0; $i<size($bufferDest); $i++)
+   {
+$connect_attr = $bufferObj[0] + "." + $bufferSource[$i] + " " +
+	$bufferObjcts[$f] + "." + $bufferDest[$i];
+string $connect_by_1attr = "connectAttr -f " + $connect_attr;
+eval $connect_by_1attr;
+   }
+ }
+}
+
+}
+
+//____________________________________
+// Disconnection
+//
+global proc DISCONNECT_CONNECTLIST ()
+{
+	// obj
+string $objField = `textField -q -tx OBJ_CONNECTLIST`;
+string $bufferObj[]; //clear $buffer;
+string $num_tokenObj;
+$num_tokenObj = `tokenize $objField "\n " $bufferObj`;
+
+	// source list
+string $listSourceAttr = `scrollField -q -tx LIST_SOURCE_ATTR_CONNECTLIST`;
+string $bufferSource[]; //clear $buffer;
+string $num_tokenSource;
+$num_tokenSource = `tokenize $listSourceAttr "\n " $bufferSource`;
+
+	// objects
+string $objctsField = `textField -q -tx OBJECTS_CONNECTLIST`;
+string $bufferObjcts[]; //clear $buffer;
+string $num_tokenObjcts;
+$num_tokenObjcts = `tokenize $objctsField "\n " $bufferObjcts`;
+
+	// destination list
+string $listDestinAttr = `scrollField -q -tx LIST_DEST_ATTR_CONNECTLIST`;
+string $bufferDest[]; //clear $buffer;
+string $num_tokenDest;
+$num_tokenDest = `tokenize $listDestinAttr "\n " $bufferDest`;
+
+	// 1 attr -> array atr
+if ($num_tokenSource == 1)
+{
+string $connect_attr = "";
+int $f;
+for ($f=0; $f<size($bufferObjcts); $f++)
+ {
+int $i;
+for ($i=0; $i<size($bufferDest); $i++)
+   {
+$connect_attr = $bufferObj[0] + "." + $bufferSource[0] + " " +
+	$bufferObjcts[$f] + "." + $bufferDest[$i];
+string $connect_by_1attr = "disconnectAttr " + $connect_attr;
+eval $connect_by_1attr;
+   }
+ }
+}
+
+	// array -> array attr
+else if ($num_tokenSource == $num_tokenDest)
+{
+string $connect_attr = "";
+int $f;
+for ($f=0; $f<size($bufferObjcts); $f++)
+ {
+int $i;
+for ($i=0; $i<size($bufferDest); $i++)
+   {
+$connect_attr = $bufferObj[0] + "." + $bufferSource[$i] + " " +
+	$bufferObjcts[$f] + "." + $bufferDest[$i];
+string $connect_by_1attr = "disconnectAttr " + $connect_attr;
+eval $connect_by_1attr;
+   }
+ }
+}
+
+}
+
+//====================================================================
+// Lists
+
+//____________________________________
+// List from source by object
+//
+global proc SOURCE_OBJ_CONNECTLIST ()
+{
+string $objName_infoSrc = `textField -q -tx OBJNAME_INFO_OBJ_CONNECTLIST`;
+
+	// source connect
+string $listConctSrc[] = `listConnections -c on $objName_infoSrc`;
+string $compStrSrc = "";
+int $i;
+for ($i=0; $i<size($listConctSrc)/2; $i++)
+   {
+string $targObjSrx[0] = `connectionInfo -dfs $listConctSrc[$i*2]`;
+   $compStrSrc += $listConctSrc[$i*2] + " > " + $targObjSrx[0] + "\n";
+   }
+scrollField -e -tx $compStrSrc SCROLL_OBJ_CONNECTLIST;
+}
+
+//____________________________________
+// List of destination by object
+//
+global proc DESTIN_OBJ_CONNECTLIST ()
+{
+string $objName_info = `textField -q -tx OBJNAME_INFO_OBJ_CONNECTLIST`;
+
+	// source connect
+string $listConct[] = `listConnections -c on $objName_info`;
+string $compStr = "";
+string $targObj = "";
+int $i;
+for ($i=0; $i<size($listConct)/2; $i++)
+   {
+   $targObj = `connectionInfo -sfd $listConct[$i*2]`;
+   $compStr += $listConct[$i*2] + " < " + $targObj + "\n";
+   }
+scrollField -e -tx $compStr SCROLL_OBJ_CONNECTLIST;
+}
+
+
+//____________________________________
+// List of object/attribute
+//
+global proc OBJATTR_CONNECTLIST ()
+{
+string $objName_info = `textField -q -tx OBJNAME_INFO_OBJATTR_CONNECTLIST`;
+string $objAttr_info = `textField -q -tx ATTR_INFO_CONNECTLIST`;
+string $compNameAttr = $objName_info + "." + $objAttr_info; 
+	
+	// connect destination
+string $listConctDest[] = `listConnections -p on $compNameAttr`;
+string $compStrDest = "";
+int $i;
+
+int $connQuery_from = `connectionInfo -is $compNameAttr`;
+if ($connQuery_from)
+ {
+for ($i=0; $i<=size($listConctDest)-1; $i++)
+   {
+   $compStrDest += $objName_info + "." + $objAttr_info + " > " + $listConctDest[$i] + " " + "\n";
+   }
+ }
+else {
+for ($i=0; $i<=size($listConctDest)-1; $i++)
+   {
+   $compStrDest += $objName_info + "." + $objAttr_info + " < " + $listConctDest[$i] + " " + "\n";
+   }
+ }
+scrollField -e -tx $compStrDest SCROLL_OBJATTR_CONNECTLIST;
+}
+
+//____________________________________
+// close window
+//
+global proc CLOSE_CONNECTLIST ()
+{
+if (`window -exists win_CONNECTLIST`) {deleteUI win_CONNECTLIST;}
+}
+
+
+//====================================================================
+// ___________________________________________________________________
+// Connection list window
+//
+global proc k_connectionList ()
+{
+if (`window -exists win_CONNECTLIST`) {deleteUI win_CONNECTLIST;}
+
+window -t "Connection list" -w 425 -h 680 win_CONNECTLIST;
+
+scrollLayout;
+   columnLayout;
+
+// _____________________________
+// _____________________________
+// objects
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 3
+	-cw 1 195 -cw 2 12 -cw 3 180;
+	textField -w 195 -tx "objectName1" OBJ_CONNECTLIST;
+	text " ";
+	textField -tx "objectName2" OBJECTS_CONNECTLIST;
+
+	button -w 195 -l "Load object" -c LOADOBJ_CONNECTLIST;
+	text " ";
+	button -l "Load object/objects" -c LOADOBJECTS_CONNECTLIST;
+   setParent..;
+
+text "________________________________>>______________________________";
+
+// _____________________________
+// panel
+
+paneLayout -configuration "vertical2" -h 150 -w 390;
+	scrollField -wordWrap false
+-text "translateY" -editable true LIST_SOURCE_ATTR_CONNECTLIST;
+	scrollField -wordWrap false
+-text "translateX\rtranslateZ" -editable true LIST_DEST_ATTR_CONNECTLIST;
+setParent..;
+
+// _____________________________
+// buttons
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 3
+	-cw 1 130 -cw 2 130 -cw 3 130;
+	button -l "Connect" -w 130 -c "CONNECT_CONNECTLIST"; 
+	button -l "Disconnect" -c "DISCONNECT_CONNECTLIST";
+	button -l "Close" -c "CLOSE_CONNECTLIST";
+   setParent..;
+
+text " ";
+
+// ___________________________________________________________________
+// _____________________________
+// connection info by object
+
+frameLayout -l "Connection Information by object" -w 390
+    -borderStyle "etchedOut"
+    -cll true -cl false;
+columnLayout;
+
+// _____________________________
+// objects
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 2
+	-cw 1 150 -cw 2 74;
+	textField -w 150 -tx "objectName" OBJNAME_INFO_OBJ_CONNECTLIST;
+	button -l "Load Obj" -c LOADOBJ_INFO_OBJ_CONNECTLIST;
+   setParent..;
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 2
+	-cw 1 112 -cw 2 112;
+	button -w 112 -l "List from source :" -c SOURCE_OBJ_CONNECTLIST;
+	button -l "List of destination :" -c DESTIN_OBJ_CONNECTLIST;
+   setParent..;
+
+// _____________________________
+// panel connection
+
+paneLayout -configuration "single" -h 150 -w 390;
+	scrollField -wordWrap false
+-text "" -editable false SCROLL_OBJ_CONNECTLIST;
+
+   setParent..;
+setParent..;
+setParent..;
+
+// ___________________________________________________________________
+// _____________________________
+// connection info by objects / attribute
+
+frameLayout -l "Connection Information by object.attribute" -w 390
+    -borderStyle "etchedOut"
+    -cll true -cl false;
+columnLayout;
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 4
+	-cw 1 150 -cw 2 74 -cw 3 12 -cw 4 150;
+	textField -w 150 -tx "objectName" OBJNAME_INFO_OBJATTR_CONNECTLIST;
+	button -l "Load Obj" -c LOADOBJ_INFO_OBJATTR_CONNECTLIST;
+	text " ";
+	textField -tx "attribute" ATTR_INFO_CONNECTLIST;
+   setParent..;
+
+   rowColumnLayout 
+	-columnAttach 1 "right" 1
+	-nc 2
+	-cw 1 112 -cw 2 112;
+	button -w 112 -l "List by object/attr :" -c OBJATTR_CONNECTLIST;
+	button -l "";
+   setParent..;
+
+// _____________________________
+// panel connection
+
+paneLayout -configuration "single" -h 100 -w 390;
+	scrollField -wordWrap false
+-text "" -editable false SCROLL_OBJATTR_CONNECTLIST;
+setParent..;
+
+showWindow win_CONNECTLIST;
+}
+
+// k_connectionList;
+
+
+
+

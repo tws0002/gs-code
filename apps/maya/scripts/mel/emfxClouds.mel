@@ -1,0 +1,1562 @@
+// --------------------------------------------------------------------------
+// 							       emfxClouds.mel
+// --------------------------------------------------------------------------
+
+/*
+DESCRIPTION:
+This script allow you to create realistic cloud with maya 2011 & 2012
+
+AUTHORS:
+Emmanuel Mouillet - emfx.mail@gmail.com
+Copyright ©2011 Emmanuel Mouillet - All Rights Reserved.
+
+VERSIONS:
+1.0 - December 29, 2011 - Initial Release.
+
+INSTALL:
+- copy emfxClouds.mel and AEfluidEmitterTemplate.mel in C:\Users\*\Documents\maya\201*-x64\scripts
+- copy emfx_cloud.bmp emfx_cloud_icone.bmp in C:\Users\*\Documents\maya\201*-x64\prefs\icons
+- create a shelf icons that contain the following code :
+
+source emfxClouds.mel;
+source AEfluidEmitterTemplate.mel;
+emfxCloudsCreateUI();
+
+- set the shelf icons emfx_cloud_icone.bmp manually
+
+LIST OF PROCEDURES:
+
+   1. CORE PROCEDURES
+   emfx_combineMesh
+   emfx_meshToPosition 
+   emfx_positionToSphere
+   emfx_modifySphereRadius
+   emfx_sphereToNparticle
+   emfx_nParticleToMesh
+   
+   2. FLUID PRESETS
+   emfx_fluidPresetBase
+   emfx_fluidPresetCluster
+   
+   3. USER EVENTS
+   emfx_clicStartLayout
+   emfx_clicUpdateCloud
+   emfx_clicToggleDisplay
+   emfx_clicCreatePosition
+   emfx_clicModifyRadius
+   emfx_clicCreateEmitter
+   emfx_clicNoiseEmission
+   emfx_clicCreateFluid
+   emfx_clicToggleEmission
+   emfx_clicToggleRatePP
+   emfx_clicToggleVelocity
+   emfx_bakeFluid
+   emfx_createLightBW
+   emfx_createLightRGB
+   
+   4. UI
+   emfxCloudsCreateUI
+*/
+   
+//------------------------------------------------------------------------------
+//                               1. CORE PROCEDURES
+//------------------------------------------------------------------------------
+
+//----------------------------- emfx_combineMesh -------------------------------
+
+/* cette procedure permet de combiner avec un booleen, tout les mesh de
+<$listMesh> */
+global proc string emfx_combineMesh(string $listMesh[],string $nomMeshOut)
+{
+	string $listBoolean[]; clear($listBoolean);
+	string $tmpMesh[]; clear($tmpMesh);
+	string $meshCombine = "";
+    
+	//on copie chaque element de la liste
+	for($i=0;$i<size($listMesh);$i++)
+	{
+	    string $tmp[] = duplicate("-name","boolean_"+$listMesh[$i],$listMesh[$i]);
+	    $listBoolean[$i] = $tmp[0];
+	}
+
+	if(size($listBoolean)>1)
+	{
+		//on fait un booleen entre chaque element
+		for($i=0;$i<size($listBoolean);$i++)
+		{
+			if($i==0)
+				$tmpMesh = polyBoolOp("-op",1,"-ch",0,$listBoolean[$i],$listBoolean[$i+1]);
+
+		    
+		    	if($i>1)
+		       		$tmpMesh = polyBoolOp("-op",1,"-ch",0,$tmpMesh[0],$listBoolean[$i]);
+		}
+		xform("-cp",$tmpMesh[0]);
+		$meshCombine = rename($tmpMesh[0],$nomMeshOut);
+	}
+	else
+	{
+		$meshCombine = rename($listBoolean[0],$nomMeshOut);
+	}
+	return $meshCombine;
+}
+
+//--------------------------- emfx_meshToPosition ------------------------------
+
+/* cette fonction renvoie un nombre <$nbPosition> de positions aleatoire a 
+l’ interieur du mesh <$mesh>. Le random peut etre modifier grace a 
+<$seedPosition>. l'ecart min entre une position et le bord de l'objet est gerer
+par $<offsetMin> et l'ecart min entre chaque position par <$ecartMin> */
+
+global proc vector[] emfx_meshToPosition(string $mesh,int $nbPosition,int $seedPosition,float $offsetMin,float $ecartMin)
+{
+	//On calcul la bouding box de l'objet
+	string $meshShape[] = listRelatives("-shapes",$mesh);
+	float $bbox[] = polyEvaluate("-boundingBox",$meshShape[0]);
+
+	//On creer et on connect le closest point on mesh
+	string $cpomNode = createNode("closestPointOnMesh");
+	connectAttr("-force",$meshShape[0]+".worldMesh[0]",$cpomNode+".inMesh");    
+	connectAttr("-force",$meshShape[0]+".worldMatrix[0]",$cpomNode+".inputMatrix");
+
+	//TANT QUE le nombre de particules n'est pas atteint
+	vector $listPosition[]; clear($listPosition);
+	int $i=0,$debug=0;
+	seed($seedPosition);
+	while($i<$nbPosition)
+	{
+		if($debug>50000)
+		{
+			delete("tmp_combine_*");
+			error("Change your parameter ! Or Maya is gonna CRASH !!!");
+		}
+
+		//on genere une position dans la BBox
+		vector $P = <<rand($bbox[0],$bbox[1]),rand($bbox[2],$bbox[3]),rand($bbox[4],$bbox[5])>>;
+
+		//on calcul le closest point et sa normale
+		setAttr($cpomNode+".inPosition",$P.x,$P.y,$P.z);
+		vector $Nc = getAttr($cpomNode+".normal");
+		vector $Pc = getAttr($cpomNode+".position");
+		vector $PPc = $Pc-$P;
+		
+		//SI la position est ds les mesh et si elle est assez loin du bord
+		if((dot($PPc,$Nc)>0.01)&&(mag($PPc)>=$offsetMin))
+		{
+			
+			//on calcul la distance de la particule la plus proche
+			float $minDist = 100000000;
+			for($j=0;$j<size($listPosition);$j++)
+			{
+			    	vector $evalP = $listPosition[$j];
+				float $evalDist = mag($evalP-$P);
+				if($evalDist<$minDist)
+					$minDist=$evalDist;
+			}
+			//SI la distance est ok on creer la position 
+			if($minDist>=$ecartMin)
+			{
+				$listPosition[$i]=$P;
+				$i++;
+			}
+		}
+		$debug++;
+	}
+	delete $cpomNode;
+	return $listPosition;
+}
+
+//----------------------------- emfx_positionToSphere --------------------------
+
+/* cette procedure place une sphere <$nomSphere> a chaque position de la liste
+<$listPosition> elle retourne la liste des spheres creer  */
+
+global proc string[] emfx_positionToSphere(vector $listPosition[],string $nomSphere,int $color)
+{
+    string $listSphere[];
+    clear($listSphere);
+    
+	//POUR chaque position
+	for($i=0;$i<size($listPosition);$i++)
+	{
+		//on creer une sphere
+		vector $P = $listPosition[$i];
+		string $currentSphere[] = sphere("-axis",0,1,0,"-name",$nomSphere+"_"+($i+1));
+		setAttr($currentSphere[0]+".translate",$P.x,$P.y,$P.z);
+		setAttr($currentSphere[0]+".scale",0.07,0.07,0.07);
+		setAttr($currentSphere[2]+".overrideEnabled",1);
+		setAttr($currentSphere[2]+".overrideColor",$color);
+		$listSphere[$i] = $currentSphere[0];
+	}
+	select("-replace",$listSphere);
+	CenterPivot;
+	DeleteHistory;
+	return $listSphere;
+}
+
+//------------------------- emfx_modifySphereRadius ----------------------------
+
+/* cette procedure modifie le scale des spheres contenues dans <listSphere> en 
+leur donnant une valeur aleatoire comprise entre <scaleMin> et <scaleMax>  */
+
+global proc int emfx_modifySphereRadius(string $listSphere[],int $seedRadius,float $scaleMin,float $scaleMax,int $color)
+{
+	seed($seedRadius);
+	for($i=0;$i<size($listSphere);$i++)
+	{
+		float $haz = rand($scaleMin,$scaleMax);
+		setAttr($listSphere[$i]+".scale",$haz,$haz,$haz) ;
+		setAttr($listSphere[$i]+".overrideColor",$color);
+	}
+	return 0;
+}
+
+//-------------------------- emfx_sphereToNparticle ----------------------------
+
+/* Cette procedure convertit les spheres contenues ds le groupe <nomGroupe> en 
+un systeme de Nparticle <nomParticle> */
+
+global proc string[] emfx_sphereToNparticle(string $listSphere[],string $nomEmitter,string $nomNparticle,vector $color)
+{
+	if(objExists($nomEmitter))
+		delete($nomEmitter);
+
+	if(objExists($nomNparticle))
+		delete($nomNparticle);
+
+	// on creer le particle shape
+	currentTime(1);
+	string $nomEmit[] = emitter("-pos",0,0,0,"-name",$nomEmitter);
+	string $nomNpart[] = nParticle("-name",$nomNparticle);
+	connectDynamic("-em",$nomEmit[0],$nomNpart[0]);
+	setAttr($nomEmit[0]+".rate",size($listSphere)*3);
+	setAttr($nomEmit[0]+".speed",0);
+	setAttr($nomNpart[1]+".maxCount",size($listSphere));
+	setAttr($nomNpart[1]+".particleRenderType",4);
+	setAttr($nomNpart[1]+".ignoreSolverGravity",1);
+	setAttr($nomNpart[1]+".selfCollide",0);
+	setAttr($nomNpart[1]+".collide", 0);
+	setAttr($nomNpart[1]+".enableSPH",0);
+	setAttr($nomNpart[1]+".conserve",0);
+	setAttr($nomNpart[1]+".opacity",1);
+	setAttr($nomNpart[1]+".template",1);
+	setAttr($nomNpart[1]+".color[1].color_Color","-type","double3",$color.x,$color.y,$color.z) ;
+	setAttr($nomNpart[1]+".color[0].color_Color","-type","double3",$color.x,$color.y,$color.z) ;
+	addAttr("-longName","radiusPP","-dataType","doubleArray",$nomNpart[1]);
+	
+	// on creer les particules et on recupere les positions et les scales des spheres ds des listes
+	string $expr ="";
+	for($i=0;$i<size($listSphere);$i++)
+	{
+
+		$expr+="if(particleId=="+$i+")\n{\nradiusPP = "+$listSphere[$i]+".scaleX;\nposition = <<"+$listSphere[$i]+".translateX,"+$listSphere[$i]+".translateY,"+$listSphere[$i]+".translateZ>>;\n}\n";	
+	}
+	dynExpression("-string",$expr,"-creation",$nomNpart[1]);
+	string $nomDynObject[];clear($nomDynObject);
+	$nomDynObject[0] = $nomEmit[0];
+	$nomDynObject[1] = $nomNpart[0];
+	return $nomDynObject;
+}
+
+//---------------------------- emfx_nParticleToMesh ----------------------------
+/* cette procedure convertit le Nparticle Shape <nomNparticule> en un nMesh
+<nomMmesh> */
+
+global proc int emfx_nParticleToNmesh(string $nomNparticle, string $nomNmesh, float $meshSize, int $maxRes, int $colorOveride)
+{
+
+	if(objExists($nomNmesh))
+		delete($nomNmesh);
+	
+	// on prepare les reglages du nMesh
+	string $partShape[] = listRelatives("-shapes",$nomNparticle);
+	setAttr ($partShape[0]+".threshold", 0.007);
+	setAttr ($partShape[0]+".blobbyRadiusScale",1.1);
+	setAttr ($partShape[0]+".meshTriangleSize",$meshSize);
+	setAttr ($partShape[0]+".maxTriangleResolution",$maxRes);
+	setAttr ($partShape[0]+".meshMethod",3);
+	setAttr ($partShape[0]+".meshSmoothingIterations",10);
+	
+	// on convertit les nParticules en nMesh
+	currentTime(2);
+	select ("-replace",$nomNparticle) ;
+	particleToPoly;
+	$nomMesh = rename($nomNmesh);
+	string $nomShape[] = listRelatives("-children",$nomMesh);
+	setAttr($nomShape[0]+".overrideEnabled",1);
+	setAttr($nomShape[0]+".overrideColor",$colorOveride);
+	
+	//on reaffiche les nparticles
+	string $npartShape[] = listRelatives("-children",$nomNparticle);
+	setAttr($npartShape[0]+".intermediateObject",0);
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+//                               2. FLUID PRESETS
+//------------------------------------------------------------------------------
+
+//---------------------------- emfx_fluidPresetBase ----------------------------
+/* cette procedure applique le preset de type <base> au fluid */
+
+global proc int emfx_fluidPresetBase(string $nomFluid)
+{
+	string $nomFluidShape[] = listRelatives("-children",$nomFluid);
+	
+	setAttr($nomFluidShape[0]+".densityMethod",2);
+	setAttr($nomFluidShape[0]+".velocityMethod",1);
+
+	// shading transparency
+	setAttr($nomFluidShape[0]+".transparency","-type","double3",0.65,0.65,0.65);
+	setAttr($nomFluidShape[0]+".edgeDropoff",0);
+	
+	// shading color
+	setAttr($nomFluidShape[0]+".color[0].color_Color","-type","double3",1,1,1);
+	setAttr($nomFluidShape[0]+".colorInput",5);
+	setAttr($nomFluidShape[0]+".colorInputBias",0);
+	
+	// shading incandescence
+	removeMultiInstance("-break",true,$nomFluidShape[0]+".incandescence[1]");
+	removeMultiInstance("-break",true,$nomFluidShape[0]+".incandescence[2]");
+	setAttr($nomFluidShape[0]+".incandescence[0].incandescence_Color","-type","double3",0,0,0);
+	setAttr($nomFluidShape[0]+".incandescenceInput",5);
+	setAttr($nomFluidShape[0]+".incandescenceInputBias",0);
+	
+	// shading Opacity
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_FloatValue",0);
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_Position", 0);
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_FloatValue",0);
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_Position", 0.57);
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_FloatValue",0.025);
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_Position",0.65);
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_FloatValue",0.125);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Position",0.673);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Interp",1);
+		
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_FloatValue",0.35);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Position",0.695);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_FloatValue",0.55);
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_Position",0.74);
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_FloatValue",0.675);
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_Position",0.84);
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_FloatValue",0.75);
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_Position",1);
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacityInput",5);
+	setAttr($nomFluidShape[0]+".opacityInputBias",0.160);
+	
+	// Shading Quality
+	setAttr($nomFluidShape[0]+".quality",4);
+	setAttr($nomFluidShape[0]+".contrastTolerance",0.05);
+	setAttr($nomFluidShape[0]+".renderInterpolator",3);
+	
+	// Textures
+	setAttr($nomFluidShape[0]+".opacityTexture",1);
+	setAttr($nomFluidShape[0]+".opacityTexGain",2);
+	setAttr($nomFluidShape[0]+".amplitude",1);
+	setAttr($nomFluidShape[0]+".ratio",0.6);
+	setAttr($nomFluidShape[0]+".frequencyRatio",3);
+	setAttr($nomFluidShape[0]+".depthMax",4);
+	setAttr($nomFluidShape[0]+".inflection",1);
+	setAttr($nomFluidShape[0]+".textureTime",0.8);
+	setAttr($nomFluidShape[0]+".frequency",2);
+	setAttr($nomFluidShape[0]+".textureScaleX",1);
+	setAttr($nomFluidShape[0]+".textureScaleY",1);
+	setAttr($nomFluidShape[0]+".textureScaleZ",1);
+	
+	// Lighting
+	setAttr($nomFluidShape[0]+".selfShadowing",1);
+	setAttr($nomFluidShape[0]+".shadowOpacity",0.21);
+	setAttr($nomFluidShape[0]+".ambientBrightness",1);
+	setAttr($nomFluidShape[0]+".ambientDiffusion",2.5);
+	setAttr($nomFluidShape[0]+".ambientColor","-type","double3",0.1,0.1,0.1);
+	return 0;
+}
+
+//--------------------------- emfx_fluidPresetCluster ----------------------------
+/* cette procedure applique le preset de type <Cluster> au fluid */
+
+global proc int emfx_fluidPresetCluster(string $nomFluid)
+{
+	string $nomFluidShape[] = listRelatives("-children",$nomFluid);
+
+	setAttr($nomFluidShape[0]+".densityMethod",2);
+	setAttr($nomFluidShape[0]+".velocityMethod",1);
+
+	// shading transparency
+	setAttr($nomFluidShape[0]+".transparency","-type","double3",0.45,0.45,0.45);
+	setAttr($nomFluidShape[0]+".edgeDropoff",0);
+	
+	// shading color
+	setAttr($nomFluidShape[0]+".color[0].color_Color","-type","double3",1,1,1);
+	setAttr($nomFluidShape[0]+".colorInput",5);
+	setAttr($nomFluidShape[0]+".colorInputBias",0);
+	
+	// shading incandescence
+	removeMultiInstance("-break",true,$nomFluidShape[0]+".incandescence[1]");
+	removeMultiInstance("-break",true,$nomFluidShape[0]+".incandescence[2]");
+	setAttr($nomFluidShape[0]+".incandescence[0].incandescence_Color","-type","double3",0,0,0);
+	setAttr($nomFluidShape[0]+".incandescenceInput",5);
+	setAttr($nomFluidShape[0]+".incandescenceInputBias",0);
+	
+	// shading Opacity
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_FloatValue",0);
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_Position",0);
+	setAttr($nomFluidShape[0]+".opacity[0].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_FloatValue",0.0);
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_Position",0.48);
+	setAttr($nomFluidShape[0]+".opacity[1].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_FloatValue",0.019);
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_Position",0.637);
+	setAttr($nomFluidShape[0]+".opacity[2].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_FloatValue",0.1296);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Position",0.68);
+	setAttr($nomFluidShape[0]+".opacity[3].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[4].opacity_FloatValue",0.3258);
+	setAttr($nomFluidShape[0]+".opacity[4].opacity_Position",0.6947);
+	setAttr($nomFluidShape[0]+".opacity[4].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_FloatValue",0.5);
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_Position",0.75);
+	setAttr($nomFluidShape[0]+".opacity[5].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_FloatValue",0.6346);
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_Position", 0.8450);
+	setAttr($nomFluidShape[0]+".opacity[6].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_FloatValue",0.69);
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_Position",1);
+	setAttr($nomFluidShape[0]+".opacity[7].opacity_Interp",1);
+	
+	setAttr($nomFluidShape[0]+".opacityInput",5);
+	setAttr($nomFluidShape[0]+".opacityInputBias",0);
+	
+	// Shading Quality
+	setAttr($nomFluidShape[0]+".quality",4);
+	setAttr($nomFluidShape[0]+".contrastTolerance",0.05);
+	setAttr($nomFluidShape[0]+".renderInterpolator",3);
+	
+	// Textures
+	setAttr($nomFluidShape[0]+".opacityTexture",1);
+	setAttr($nomFluidShape[0]+".opacityTexGain",2);
+	setAttr($nomFluidShape[0]+".amplitude",1);
+	setAttr($nomFluidShape[0]+".ratio",0.6);
+	setAttr($nomFluidShape[0]+".frequencyRatio",3);
+	setAttr($nomFluidShape[0]+".depthMax",4);
+	setAttr($nomFluidShape[0]+".inflection",1);
+	setAttr($nomFluidShape[0]+".textureTime",0.8);
+	setAttr($nomFluidShape[0]+".frequency",2);
+	setAttr($nomFluidShape[0]+".textureScaleX",1);
+	setAttr($nomFluidShape[0]+".textureScaleY",1);
+	setAttr($nomFluidShape[0]+".textureScaleZ",1);
+	
+	// Lighting
+	setAttr($nomFluidShape[0]+".selfShadowing",1);
+	setAttr($nomFluidShape[0]+".shadowOpacity",0.21);
+	setAttr($nomFluidShape[0]+".ambientBrightness",1);
+	setAttr($nomFluidShape[0]+".ambientDiffusion",2.5);
+	setAttr($nomFluidShape[0]+".ambientColor","-type","double3",0.1,0.1,0.1);
+	return 0;
+}
+
+//------------------------------------------------------------------------------
+//                                3. USER EVENTS
+//------------------------------------------------------------------------------
+
+//------------------------- emfx_clicStartLayout -------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur le bouton
+start cloud */
+
+global proc int emfx_clicStartLayout()
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+
+	if(objExists($idCloud))
+		error("This Cloud already exist !");
+	
+	// on creer l'arbo du nuage
+	string $loc[]=spaceLocator("-p",0,0,0,"-n",$idCloud);
+	string $locShape[]=listRelatives("-children",$loc[0]);
+	setAttr($locShape[0]+".template",1);
+
+	string $box[] = polyCube("-ax",0,1,0,"-name","BBOX_"+$idCloud);
+	setAttr($box[0]+".scale",50,50,50);
+	setAttr($box[2]+".template",1);
+	delete("-constructionHistory",$box[0]);
+	parent($box[0],$loc[0]);
+
+	string $g1=group("-empty","-name","E1_LAYOUT_"+$idCloud);
+	string $g2=group("-empty","-name","layoutBase_"+$idCloud);
+	string $g3=group("-empty","-name","layoutCluster_"+$idCloud);
+	parent($g1,$loc[0]);
+	parent($g2,$g1);
+	parent($g3,$g1);
+		
+	// on creer les attributs par default ds la BBOX
+	setAttr("-keyable",0,$box[0]+".translateX");
+	setAttr("-keyable",0,$box[0]+".translateY");
+	setAttr("-keyable",0,$box[0]+".translateZ");
+	setAttr("-keyable",0,$box[0]+".rotateX");
+	setAttr("-keyable",0,$box[0]+".rotateY");
+	setAttr("-keyable",0,$box[0]+".rotateZ");
+	setAttr("-keyable",0,$box[0]+".scaleX");
+	setAttr("-keyable",0,$box[0]+".scaleY");
+	setAttr("-keyable",0,$box[0]+".scaleZ");
+	
+	addAttr("-ln","BASE_DATA","-at","long",$box[0]);
+    	setAttr("-e","-cb",1,$box[0]+".BASE_DATA");
+    	addAttr("-ln","nb_position_b","-at","long","-min",1,"-max",1000,"-k",1,"-dv",15,$box[0]);
+    	addAttr("-ln","seed_position_b","-at","long","-min",1,"-max",1000,"-k",1,"-dv",1,$box[0]);
+    	addAttr("-ln","surface_offset_b","-at","double","-min",0,"-max",10,"-k",1,"-dv",1,$box[0]);
+    	addAttr("-ln","point_distance_b","-at","double","-min",0,"-max",10,"-k",1,"-dv",2,$box[0]);
+    	addAttr("-ln","seed_radius_b","-at","long","-min",1,"-max",1000,"-k",1,"-dv",1,$box[0]);
+    	addAttr("-ln","min_radius_b","-at","double","-min",0,"-max",100,"-k",1,"-dv",3,$box[0]);
+    	addAttr("-ln","max_radius_b","-at","double","-min",0,"-max",100,"-k",1,"-dv",4,$box[0]);
+
+    	addAttr("-ln","CLUSTER_DATA","-at","long",$box[0]);
+    	setAttr("-e","-cb",1,$box[0]+".CLUSTER_DATA");
+    	addAttr("-ln","nb_position_c","-at","long","-min",1,"-max",1000,"-k",1,"-dv",15,$box[0]);
+    	addAttr("-ln","seed_position_c","-at","long","-min",1,"-max",1000,"-k",1,"-dv",1,$box[0]);
+    	addAttr("-ln","surface_offset_c","-at","double","-min",0,"-max",10,"-k",1,"-dv",1,$box[0]);
+    	addAttr("-ln","point_distance_c","-at","double","-min",0,"-max",10,"-k",1,"-dv",2,$box[0]);
+    	addAttr("-ln","seed_radius_c","-at","long","-min",1,"-max",1000,"-k",1,"-dv",1,$box[0]);
+		addAttr("-ln","min_radius_c","-at","double","-min",0,"-max",100,"-k",1,"-dv",4,$box[0]);
+    	addAttr("-ln","max_radius_c","-at","double","-min",0,"-max",100,"-k",1,"-dv",5,$box[0]);
+
+	// on creer le proxy pour la base du nuage
+	string $base[] = polyCube("-ax",0,1,0,"-name","proxyBase_"+$idCloud+"_001");
+	polyColorPerVertex("-r",1,"-g",0.645,"-b",0.675,"-a",0.75,"-colorDisplayOption");
+	setAttr($base[0]+".scale",10,3,10);
+	setAttr($base[2]+".overrideEnabled",1);
+	setAttr($base[2]+".overrideColor",13);
+	delete("-constructionHistory",$base[0]);
+	parent($base[0],$g2);
+	
+	// on creer le proxy pour les grappes du nuage
+	string $cluster[] = polyCube("-ax",0,1,0,"-name","proxyCluster_"+$idCloud+"_001");
+	polyColorPerVertex("-r",0.57,"-g",0.69,"-b",1,"-a",0.75,"-colorDisplayOption");
+	setAttr($cluster[0]+".scale",7,7,7);
+	setAttr($cluster[0]+".translate",0,3,0);
+	setAttr($cluster[2]+".overrideEnabled",1);
+	setAttr($cluster[2]+".overrideColor",6);
+	delete("-constructionHistory",$cluster[0]);
+	parent($cluster[0],$g3);
+	
+	return 0;
+}
+
+//------------------------- emfx_clicUpdateCloud -------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+update cloud */
+
+global proc int emfx_clicUpdateCloud()
+{
+	string $sel[] = ls("-sl");
+	string $idCloud = "";
+	if(size($sel)==1)
+	{
+		$idCloud = $sel[0];
+		textField("-e","-tx",$idCloud,"inputIdCloud");
+	}
+	$idCloud = textField("-q","-tx","inputIdCloud");
+	
+	if(objExists($idCloud))
+	{
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".nb_position_b"),"intPositionBase");
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".seed_position_b"),"intSeedPositionBase");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".surface_offset_b"),"floatOffsetBase");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".point_distance_b"),"floatPointDistBase");
+
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".seed_radius_b"),"intSeedSphereBase");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".min_radius_b"),"floatMinRadiusBase");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".max_radius_b"),"floatMaxRadiusBase");
+
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".nb_position_c"),"intPositionCluster");
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".seed_position_c"),"intSeedPositionCluster");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".surface_offset_c"),"floatOffsetCluster");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".point_distance_c"),"floatPointDistCluster");
+
+		intField("-e","-v",getAttr("BBOX_"+$idCloud+".seed_radius_c"),"intSeedSphereCluster");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".min_radius_c"),"floatMinRadiusCluster");
+		floatField("-e","-v",getAttr("BBOX_"+$idCloud+".max_radius_c"),"floatMaxRadiusCluster");
+	}
+	else
+		error("This Cloud doesn't exist !");
+	return 0;
+}
+
+//-------------------------- emfx_clicToggleDisplay -------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton
+Toggle Display */
+
+global proc int emfx_clicToggleDisplay(string $component)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+   
+	if(objExists($component+$idCloud))	
+	{
+		if(getAttr($component+$idCloud+".visibility")==1)
+			setAttr($component+$idCloud+".visibility",0);
+		else
+			setAttr($component+$idCloud+".visibility",1);
+	}
+	else
+		error("This Component doesn't exist !");
+	return 0;
+}
+
+//----------------------------- emfx_clicCreatePosition -----------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton
+ create position */
+
+global proc int emfx_clicCreatePosition(string $level,int $color)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+
+	string $g1 = "E2_MODELING_"+$idCloud;
+	if(!(objExists($g1)))
+	{
+    		group("-empty","-name",$g1);
+		parent($g1,$idCloud);
+		setAttr($g1+".translate",0,0,0);
+		setAttr($g1+".rotate",0,0,0);
+		setAttr($g1+".scale",1,1,1);
+	}
+
+	string $g2 = "blobby"+$level+"_"+$idCloud;
+	if(!(objExists($g2)))
+	{
+    		group("-empty","-name",$g2);
+		parent($g2,$g1);
+		setAttr($g2+".translate",0,0,0);
+		setAttr($g2+".rotate",0,0,0);
+		setAttr($g2+".scale",1,1,1);
+	}
+	else
+	{
+		string $toDelete[] = listRelatives("-children",$g2);
+		delete($toDelete);
+	}
+  
+	//on creer le mesh a remplir
+	string $nomMeshOut = "tmp_combine_"+$level+"_"+$idCloud;
+	string $listMesh[] = listRelatives("-children","layout"+$level+"_"+$idCloud);
+	string $mesh = emfx_combineMesh($listMesh,$nomMeshOut);
+    
+   
+	//on creer les position dans le mesh
+	int $nbPosition = intField("-q","-v","intPosition"+$level);
+	int $seedPosition = intField("-q","-v","intSeedPosition"+$level);
+	float $offsetMin = floatField("-q","-v","floatOffset"+$level);
+	float $ecartMin = floatField("-q","-v","floatPointDist"+$level);
+	vector $listPosition[] = emfx_meshToPosition($mesh,$nbPosition,$seedPosition,$offsetMin,$ecartMin);
+     
+	//on creer les spheres a chaque position
+	string $listSphere[] = emfx_positionToSphere($listPosition,$g2,$color);
+	parent($listSphere,$g2);
+
+	//on stocke les valeurs dans la BBOX
+	string $idLevel = (strcmp($level,"Base")==0) ? "b" : "c";
+	setAttr("BBOX_"+$idCloud+".nb_position_"+$idLevel,$nbPosition);
+	setAttr("BBOX_"+$idCloud+".seed_position_"+$idLevel,$seedPosition);
+	setAttr("BBOX_"+$idCloud+".surface_offset_"+$idLevel,$offsetMin);
+	setAttr("BBOX_"+$idCloud+".point_distance_"+$idLevel,$ecartMin);
+	
+	//on change la couleur du lambert1
+	setAttr("lambert1.color","-type","double3",1,1,1);
+	setAttr("lambert1.diffuse",1);
+	
+	delete($nomMeshOut);
+	return 0;
+}
+
+//------------------------ emfx_clicModifyRadius -------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+update radius */
+
+global proc int emfx_clicModifyRadius(string $level,int $color)
+{
+	//on scale les spheres
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $listSphere[] = listRelatives("-children","blobby"+$level+"_"+$idCloud);
+    int $seedRadius = intField("-q","-v","intSeedSphere"+$level);
+    float $scaleMin = floatField("-q","-v","floatMinRadius"+$level);
+    float $scaleMax = floatField("-q","-v","floatMaxRadius"+$level);
+   	emfx_modifySphereRadius($listSphere,$seedRadius,$scaleMin,$scaleMax,$color);
+
+	//on stocke les valeurs dans la BBOX
+	string $idLevel = (strcmp($level,"Base")==0) ? "b" : "c";
+	setAttr("BBOX_"+$idCloud+".seed_radius_"+$idLevel,$seedRadius);
+	setAttr("BBOX_"+$idCloud+".min_radius_"+$idLevel,$scaleMin);
+	setAttr("BBOX_"+$idCloud+".max_radius_"+$idLevel,$scaleMax);
+	return 0;
+}
+
+//------------------------ emfx_clicCreateEmitter -------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+Create Emitter */
+
+global proc int emfx_clicCreateEmitter(string $level)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $g1 = "E3_EMISSION_"+$idCloud;
+	string $g2 = "emission"+$level+"_"+$idCloud;
+	if(!(objExists($g1)))
+	{
+    	group("-empty","-name",$g1);
+		parent($g1,$idCloud);
+		setAttr($g1+".translate",0,0,0);
+		setAttr($g1+".rotate",0,0,0);
+		setAttr($g1+".scale",1,1,1);
+	}
+
+	if(!(objExists($g2)))
+	{
+    	group("-empty","-name",$g2);
+		parent($g2,$g1);
+		setAttr($g2+".translate",0,0,0);
+		setAttr($g2+".rotate",0,0,0);
+		setAttr($g2+".scale",1,1,1);
+	}
+	else
+	{
+		string $toDelete[] = listRelatives("-children",$g2);
+		delete($toDelete);
+	}
+
+	string $listSphere[] = listRelatives("-children","blobby"+$level+"_"+$idCloud);
+	string $nomEmitter = "emitter"+$level+"_"+$idCloud;
+	string $nomNparticle = "nParticle"+$level+"_"+$idCloud;
+	vector $color = (strcmp($level,"Base")==0) ? <<1,0,0>> : <<0,0,1>>;
+
+	string $nomDynObject[] = emfx_sphereToNparticle($listSphere,$nomEmitter,$nomNparticle,$color);
+	parent($nomDynObject[0],$g2);
+	parent($nomDynObject[1],$g2);
+
+	setAttr($nomDynObject[0]+".translate",0,0,0);
+	setAttr($nomDynObject[0]+".rotate",0,0,0);
+	setAttr($nomDynObject[0]+".scale",1,1,1);
+
+	setAttr($nomDynObject[1]+".translate",0,0,0);
+	setAttr($nomDynObject[1]+".rotate",0,0,0);
+	setAttr($nomDynObject[1]+".scale",1,1,1);
+	return 0;
+}
+
+//------------------------ emfx_clicNoiseEmission ------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+toggle noise emission */
+
+global proc int emfx_clicToggleNoise(string $level)
+{
+	select("-clear");
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $noiseField = "noise"+$level+"_"+$idCloud;
+	string $nomParticle = "nParticle"+$level+"_"+$idCloud;
+
+	if(objExists($nomParticle))
+	{
+		if(!(objExists($noiseField)))
+		{
+			volumeAxis("-name",$noiseField);
+			connectAttr("time1.outTime",$noiseField+".time");
+			string $nomPartShape[] = listRelatives("-children","nParticle"+$level+"_"+$idCloud);
+			connectDynamic("-f",$noiseField,$nomPartShape[0]);
+			parent($noiseField,"emission"+$level+"_"+$idCloud);
+
+			float $scale = (strcmp($level,"Base")==0) ? 35 : 33;
+			setAttr($noiseField+".translate",0,0,0);
+			setAttr($noiseField+".rotate",0,0,0);
+			setAttr($noiseField+".scale",$scale,$scale,$scale);
+
+			addAttr("-ln","magStore","-at","double",$noiseField);
+			setAttr("-e","-keyable",true,$noiseField+".magStore");
+			addAttr("-ln","switchStore","-at","bool",$noiseField);
+			setAttr("-e","-keyable",true,$noiseField+".switchStore");
+
+			setAttr($noiseField+".magStore",20);
+			setAttr($noiseField+".switchStore",1);
+			setAttr($noiseField+".magnitude",20);
+			setAttr($noiseField+".awayFromCenter",0.2);
+			setAttr($noiseField+".turbulence",0.2);
+			setAttr($noiseField+".turbulenceFrequencyX",2);
+			setAttr($noiseField+".turbulenceFrequencyY",2);
+			setAttr($noiseField+".turbulenceFrequencyZ",2);
+			setAttr($noiseField+".detailTurbulence",1);
+		}
+		else if(getAttr($noiseField+".switchStore")==1)
+		{
+			float $tmpMag = getAttr($noiseField+".magnitude");
+			setAttr($noiseField+".magStore",$tmpMag);
+			setAttr($noiseField+".magnitude",0);
+			setAttr($noiseField+".visibility",0);
+			setAttr($noiseField+".switchStore",0);
+		}
+		else
+		{
+			float $tmpMag = getAttr($noiseField+".magStore");
+			setAttr($noiseField+".magnitude",$tmpMag);
+			setAttr($noiseField+".visibility",1);
+			setAttr($noiseField+".switchStore",1);
+		}
+	}
+	else
+		error("Create particle emitter before !");
+	return 0;
+}
+
+//-------------------------- emfx_clicCreateFluid -----------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur le bouton
+create fluid */
+
+global proc int emfx_clicCreateFluid(string $level)
+{ 
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $nomBBox = "blobby"+$level+"_"+$idCloud;
+	string $nomParticle = "nParticle"+$level+"_"+$idCloud;
+	string $nomParticleShape[] = listRelatives("-children",$nomParticle);
+	
+	if(getAttr($nomBBox+".visibility")==0)
+		 setAttr(($nomBBox+".visibility"),1);
+
+	vector $P = getAttr($idCloud+".translate");
+	vector $R = getAttr($idCloud+".rotate");
+	vector $S = getAttr($idCloud+".scale");
+
+	setAttr($idCloud+".translate",0,0,0);
+	setAttr($idCloud+".rotate",0,0,0);
+	setAttr($idCloud+".scale",1,1,1);
+
+	string $g1 = "E4_FLUIDS_"+$idCloud;
+	if(!(objExists($g1)))
+	{
+    	group("-empty","-name",$g1);
+		parent($g1,$idCloud);
+	}
+
+	// on creer le fluid
+	float $bbox[] = xform("-q","-ws","-bb",$nomBBox);
+	string $tmpFluid = create3DFluid(7,7,7,7,7,7);
+	setAttr($tmpFluid+".baseResolution",35);
+	setAttr($tmpFluid+".velocityMethod",0);
+
+	string $nomFluid[] = listRelatives("-parent",$tmpFluid);	
+	extendFluid("-sw",abs($bbox[0]),"-ew",abs($bbox[3]),"-sh",abs($bbox[1]),"-eh",abs($bbox[4]),"-sd",abs($bbox[2]),"-ed",abs($bbox[5]));
+	
+	// on applique le bon presets
+	if(strcmp($level,"Base")==0)
+	{
+		emfx_fluidPresetBase($nomFluid[0]);
+	}
+	else
+	{
+		emfx_fluidPresetCluster($nomFluid[0]);
+	}
+
+	$nomFluid[0] = rename($nomFluid[0],"fluid"+$level+"_"+$idCloud);
+	parent($nomFluid[0],$g1);
+
+	setAttr($idCloud+".translate",$P.x,$P.y,$P.z);
+	setAttr($idCloud+".rotate",$R.x,$R.y,$R.z);
+	setAttr($idCloud+".scale",$S.x,$S.y,$S.z);
+
+	// on creer l'emission
+	select("-replace",$nomParticle);
+	string $nomEmit[] = fluidEmitter("-typ","surface","-der",1,"-her",0,"-fer",0,"-fdr",4,"-r",100.0);
+	$nomEmit[1] = rename($nomEmit[1],"fluidEmitter"+$level+"_"+$idCloud);
+	string $nomFluidShape[] = listRelatives("-children",$nomFluid[0]);
+	setAttr($nomEmit[1]+".fluidDensityEmission",10);
+	connectDynamic("-em",$nomEmit[1],$nomFluidShape[0]); 
+	return 0;
+}
+
+//------------------------- emfx_clicToggleEmission -----------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur le bouton
+Toggle Emission */
+
+global proc int emfx_clicToggleEmission(string $level)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+   	string $nomEmitter = "fluidEmitter"+$level+"_"+$idCloud;
+
+	if(objExists($nomEmitter))	
+	{
+		if(getAttr($nomEmitter+".useParticleRadius")==1)
+		{
+			setAttr($nomEmitter+".useParticleRadius",0);
+			AEfluidEmitterRadiusPP($nomEmitter);
+			refreshAE();
+			listHistory("-pdo",true,"-lf",false,"-il",2,$nomEmitter);
+			listHistory("-pdo",true,"-lf",false,"-il",2,"-f",true,$nomEmitter);
+		}
+		else
+		{
+			setAttr($nomEmitter+".useParticleRadius",1);
+			AEfluidEmitterRadiusPP($nomEmitter);
+			refreshAE();
+			listHistory("-pdo",true,"-lf",false,"-il",2,$nomEmitter);
+			listHistory("-pdo",true,"-lf",false,"-il",2,"-f",true,$nomEmitter);
+		}
+	}
+	else
+		error("You must create the fluid before !");
+	return 0;
+}
+
+//------------------------ emfx_clicToggleRatePP ------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+toggle RatePP emission */
+
+global proc int emfx_clicToggleRatePP(string $level)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $nomEmetteur = "fluidEmitter"+$level+"_"+$idCloud;
+	string $nomParticle = "nParticle"+$level+"_"+$idCloud;
+	string $nomParticleShape[] = listRelatives("-children",$nomParticle);
+	
+	if(objExists($nomEmetteur))
+	{
+	  	if(!(attributeExists("switchStore",$nomEmetteur))) 
+		{
+			//select("-clear");
+			addAttr("-ln","switchStore","-at","long",$nomEmetteur);
+			setAttr("-e","-keyable",true,$nomEmetteur+".switchStore");
+			setAttr($nomEmetteur+".switchStore",1);
+			addPP("-atr","rate",$nomEmetteur);
+			string $exp = dynExpression("-q","-c",$nomParticleShape[0]);
+			$exp = $exp+"\n"+$nomParticleShape[0]+"."+$nomEmetteur+"RatePP = rand(0.7)";
+			dynExpression("-e","-s",$exp,"-c",$nomParticleShape[0]);
+		}
+		else if(getAttr($nomEmetteur+".switchStore")==1)
+		{
+			setAttr($nomEmetteur+".switchStore",0);
+			setAttr($nomEmetteur+".useRatePP",0);
+		}
+		else
+		{
+			setAttr($nomEmetteur+".switchStore",1);
+			setAttr($nomEmetteur+".useRatePP",1);
+		}
+	}
+	else
+		error("You must create the fluid before !");
+	return 0;
+}
+
+//------------------------ emfx_clicToggleVelocity ------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+toggle Velocity emission */
+
+global proc int emfx_clicToggleVelocity(string $level)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $nomFluid = "fluid"+$level+"_"+$idCloud;
+	string $nomFluidShape[] = listRelatives("-children",$nomFluid);
+	
+	if(objExists($nomFluid))
+	{
+	  	if(!(attributeExists("switchStore",$nomFluidShape[0]))) 
+		{
+			addAttr("-ln","switchStore","-at","long",$nomFluidShape[0]);
+			setAttr("-e","-keyable",true,$nomFluidShape[0]+".switchStore");
+			setAttr($nomFluidShape[0]+".switchStore",1);
+			setAttr($nomFluidShape[0]+".velocityMethod",2);
+			setAttr($nomFluidShape[0]+".gravity",0.5);
+			setAttr($nomFluidShape[0]+".velocityDamp",0.05);
+			setAttr($nomFluidShape[0]+".highDetailSolve",3);
+			setAttr($nomFluidShape[0]+".solverQuality",100);
+			setAttr($nomFluidShape[0]+".densityBuoyancy",0.5);
+			setAttr($nomFluidShape[0]+".velocitySwirl",1);
+			setAttr($nomFluidShape[0]+".velocityNoise",0.1);
+		}
+		else if(getAttr($nomFluidShape[0]+".switchStore")==1)
+		{
+			setAttr($nomFluidShape[0]+".switchStore",0);
+			setAttr($nomFluidShape[0]+".velocityMethod",0);
+		}
+		else
+		{
+			setAttr($nomFluidShape[0]+".switchStore",1);
+			setAttr($nomFluidShape[0]+".velocityMethod",2);
+		}
+	}
+	else
+		error("You must create the fluid before !");
+	return 0;
+}
+
+//------------------------------ emfx_bakeFluid ---------------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur un bouton 
+toggle Velocity emission */
+
+global proc int emfx_bakeFluid(string $level)
+{
+	string $idCloud = textField("-q","-tx","inputIdCloud");
+	string $nomFluid = "fluid"+$level+"_"+$idCloud;
+	string $nomEmitter = "fluidEmitter"+$level+"_"+$idCloud;
+	string $nomFluidShape[] = listRelatives("-children",$nomFluid);
+	
+	if(objExists($nomFluid))
+	{
+		select("-r",$nomFluid);
+		doSetFluidState 1 { "1", 1, 1, 1, 1, 1, 1 };
+		setAttr($nomFluidShape[0]+".densityMethod",1);
+		setAttr($nomFluidShape[0]+".velocityMethod",0);
+		setAttr($nomEmitter+".fluidDensityEmission",0);
+	}
+	else
+		error("You must create the fluid before !");
+	return 0;
+}
+
+//---------------------------- emfx_createLightBW ----------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur le bouton 
+create LIGHT RIG BW */
+
+global proc int emfx_createLightBW()
+{
+	if(objExists("LIGHT_RIG_CLOUD"))
+		delete("LIGHT_RIG_CLOUD");
+		
+	string $loc[] = spaceLocator("-n","LIGHT_RIG_CLOUD","-p",0,0,0);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",-140,0,40);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",1,1,1);
+	setAttr($lightShape+".intensity",0.95);
+	setAttr($lightShape+".shadowColor","-type","double3",0.333,0.333,0.333);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_KEY");
+	parent($nomTmp,$loc[0]);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",80,-30,-35);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",1,1,1);
+	setAttr($lightShape+".intensity",-0.15);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_BOUNCE");
+	parent($nomTmp,$loc[0]);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",125,-60,85);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",1,1,1);
+	setAttr($lightShape+".intensity",0.1);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_FILL");
+	parent($nomTmp,$loc[0]);
+	return 0; 
+}
+
+//---------------------------- emfx_createLightRGB ----------------------------
+/* cette procedure gere l'evenement lorsque l'utilisateur clique sur le bouton 
+create LIGHT RIG RGB */
+
+global proc int emfx_createLightRGB()
+{
+	if(objExists("LIGHT_RIG_CLOUD"))
+		delete("LIGHT_RIG_CLOUD");
+		
+	string $loc[] = spaceLocator("-n","LIGHT_RIG_CLOUD","-p",0,0,0);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",-140,0,40);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",0.9,0,0);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_KEY_R");
+	parent($nomTmp,$loc[0]);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",80,-30,-35);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",0,0.9,0);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_BOUNCE_G");
+	parent($nomTmp,$loc[0]);
+
+	string $lightShape = directionalLight();
+	string $lightTransform[] = listRelatives("-parent",$lightShape);
+	setAttr($lightTransform[0]+".rotate",125,-60,85);
+	setAttr($lightTransform[0]+".scale",10,10,10);
+	setAttr($lightShape+".color","-type","double3",0,0,0.9);
+	setAttr($lightShape+".useRayTraceShadows",1);
+	string $nomTmp = rename($lightTransform[0],"Light_FILL_B");
+	parent($nomTmp,$loc[0]);
+	return 0; 
+}
+
+//------------------------------------------------------------------------------
+//                                4. UI
+//------------------------------------------------------------------------------
+
+//--------------------------------- CreateUI -----------------------------------
+/* cette procedure genere l'interface du programme */
+
+global proc int emfxCloudsCreateUI()
+{
+	if(window("-exists","emfxCloudsUI"))
+		deleteUI("emfxCloudsUI");
+
+	// LISTE COMMANDES
+	string $cmd_btStartCloud = "emfx_clicStartLayout()";
+	string $cmd_btUpdateCloud = "emfx_clicUpdateCloud()";
+
+	string $cmd_btDisplayCloud = "emfx_clicToggleDisplay(\"\");";
+	string $cmd_btDisplayBbox = "emfx_clicToggleDisplay(\"BBOX_\");";
+	string $cmd_btDisplayLayoutBase = "emfx_clicToggleDisplay(\"layoutBase_\");";
+	string $cmd_btDisplayLayoutCluster = "emfx_clicToggleDisplay(\"layoutCluster_\");";
+	string $cmd_btDisplayBlobbyBase = "emfx_clicToggleDisplay(\"blobbyBase_\");";
+	string $cmd_btDisplayBlobbyCluster = "emfx_clicToggleDisplay(\"blobbyCluster_\");";
+	string $cmd_btDisplayEmissionBase = "emfx_clicToggleDisplay(\"emissionBase_\");";
+	string $cmd_btDisplayEmissionCluster = "emfx_clicToggleDisplay(\"emissionCluster_\");";
+	string $cmd_btDisplayFluidBase = "emfx_clicToggleDisplay(\"fluidBase_\");";
+	string $cmd_btDisplayFluidCluster = "emfx_clicToggleDisplay(\"fluidCluster_\");";
+
+	string $cmd_btPositionBase = "emfx_clicCreatePosition(\"Base\",13)";
+	string $cmd_btPositionCluster = "emfx_clicCreatePosition(\"Cluster\",6)";
+
+	string $cmd_btModifyRadiusBase = "emfx_clicModifyRadius(\"Base\",20)";
+	string $cmd_btModifyRadiusCluster = "emfx_clicModifyRadius(\"Cluster\",18)";
+
+	string $cmd_btEmitterBase = "emfx_clicCreateEmitter(\"Base\")";
+	string $cmd_btEmitterCluster = "emfx_clicCreateEmitter(\"Cluster\")";
+	string $cmd_btToggleNoiseBase = "emfx_clicToggleNoise(\"Base\")";
+	string $cmd_btToggleNoiseCluster = "emfx_clicToggleNoise(\"Cluster\")";
+
+	string $cmd_btFluidBase = "emfx_clicCreateFluid(\"Base\")";
+	string $cmd_btFluidCluster = "emfx_clicCreateFluid(\"Cluster\")";
+	string $cmd_btToggleEmitBase = "emfx_clicToggleEmission(\"Base\")";
+	string $cmd_btToggleEmitCluster = "emfx_clicToggleEmission(\"Cluster\")";
+	string $cmd_btToggleRatePPBase = "emfx_clicToggleRatePP(\"Base\")";
+	string $cmd_btToggleRatePPCluster = "emfx_clicToggleRatePP(\"Cluster\")";
+	string $cmd_btToggleVelocityBase = "emfx_clicToggleVelocity(\"Base\")";
+	string $cmd_btToggleVelocityCluster = "emfx_clicToggleVelocity(\"Cluster\")";
+	
+	string $cmd_btBakeBase = "emfx_bakeFluid(\"Base\")";
+	string $cmd_btBakeCluster = "emfx_bakeFluid(\"Cluster\")";
+	string $cmd_btCreateLightBW = "emfx_createLightBW()";
+	string $cmd_btCreateLightRGB = "emfx_createLightRGB()";
+	
+	// CREATION INTERFACE
+	window("-sizeable",false,"emfxCloudsUI");
+	columnLayout();
+	    image("-w",220,"-h",45,"-i","emfx_cloud.bmp","mainLogo");
+		// GLOBAL PANEL
+		frameLayout("-label","GLOBAL","-w",220,"-bgc",0.3,0.3,0.3,"-collapsable",true,"-cl",true,"-borderStyle","in");
+			formLayout("-bgc",.4,.4,.4,"globalPanel");
+
+                // GLOBAL COMPOSANTS
+				rowColumnLayout("-nc",2,
+						"-columnWidth",1,85,"-columnSpacing",1,0,
+						"-columnWidth",2,121,"-columnSpacing",2,5,
+						"tabCloudId");
+					   
+					text("-label","CLOUD ID","-align","right","-fn","boldLabelFont");
+					textField("-bgc",0.77,0.77,0.77,"-h",25,"-it","CLOUD_001","inputIdCloud");
+					setParent("..");
+
+				separator("-style","in","separatorGlobal_1");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabOperation");
+					   
+					text("-label","Operation","-align","right");
+					button("-label","Create","-bgc",.77,.77,.77,"-c",$cmd_btStartCloud,"btStartCloud");
+					button("-label","Update","-bgc",.77,.77,.77,"-c",$cmd_btUpdateCloud,"btUpdateCloud");
+					setParent("..");
+							    
+				// POSITIONEMENT DES COMPOSANTS	
+				formLayout("-edit", 
+				   	   "-attachForm","tabCloudId","top",3,
+				   	   "-attachForm","tabCloudId","left",3,
+				   	   "-attachForm","tabCloudId","right",3,
+
+					   "-attachControl","separatorGlobal_1","top",3,"tabCloudId",
+					   "-attachForm","separatorGlobal_1","top",3,
+					   "-attachForm","separatorGlobal_1","left",3,
+					   "-attachForm","separatorGlobal_1","right",3,
+
+					   "-attachControl","tabOperation","top",3,"separatorGlobal_1",
+					   "-attachForm","tabOperation","top",3,
+					   "-attachForm","tabOperation","left",3,
+					   "-attachForm","tabOperation","right",3,
+					   "-attachForm","tabOperation","bottom",3,
+					   "globalPanel");
+            			setParent("..");
+        		setParent("..");
+
+		// DISPLAY PANEL
+		frameLayout("-label","DISPLAY","-w",220,"-bgc",0.3,0.3,0.3,"-collapsable",true,"-cl",true,"-borderStyle","in");
+			formLayout("-bgc",.4,.4,.4,"displayPanel");
+                		// DISPLAY COMPOSANTS
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabDisplayGlobal");
+					   
+					text("-label","Global Toggle","-align","right","-fn","boldLabelFont");
+					button("-label","CLOUD","-bgc",.35,.35,.35,"-c",$cmd_btDisplayCloud,"btDisplayCloud");
+					button("-label","BBOX","-bgc",.35,.35,.35,"-c",$cmd_btDisplayBbox,"btDisplayBbox");
+					setParent("..");
+
+				separator("-style","in","separatorDisplay_1");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabDisplayLayout");
+					   
+					text("-label","Layout Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btDisplayLayoutBase,"btDisplayLayoutBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btDisplayLayoutCluster,"btDisplayLayoutCluster");
+					setParent("..");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabDisplayBlobby");
+					   
+					text("-label","Blobby Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btDisplayBlobbyBase,"btDisplayBlobbyBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btDisplayBlobbyCluster,"btDisplayBlobbyCluster");
+					setParent("..");
+
+				separator("-style","in","separatorDisplay_2");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabDisplayParticle");
+					   
+					text("-label","Emitter Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btDisplayEmissionBase,"btDisplayEmissionBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btDisplayEmissionCluster,"btDisplayEmissionCluster");
+					setParent("..");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabDisplayFluid");
+					   
+					text("-label","Fluid Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btDisplayFluidBase,"btDisplayFluidBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btDisplayFluidCluster,"btDisplayFluidCluster");
+					setParent("..");		  
+							    
+				// POSITIONEMENT DES COMPOSANTS	
+				formLayout("-edit", 
+				   	   "-attachForm","tabDisplayGlobal","top",3,
+				   	   "-attachForm","tabDisplayGlobal","left",3,
+				   	   "-attachForm","tabDisplayGlobal","right",3,
+
+					   "-attachControl","separatorDisplay_1","top",1,"tabDisplayGlobal",
+					   "-attachForm","separatorDisplay_1","top",1,
+					   "-attachForm","separatorDisplay_1","left",3,
+					   "-attachForm","separatorDisplay_1","right",3,
+
+					   "-attachControl","tabDisplayLayout","top",1,"separatorDisplay_1",
+					   "-attachForm","tabDisplayLayout","top",1,
+					   "-attachForm","tabDisplayLayout","left",3,
+					   "-attachForm","tabDisplayLayout","right",3,
+
+					   "-attachControl","tabDisplayBlobby","top",1,"tabDisplayLayout",
+					   "-attachForm","tabDisplayBlobby","top",1,
+					   "-attachForm","tabDisplayBlobby","left",3,
+					   "-attachForm","tabDisplayBlobby","right",3,
+
+					   "-attachControl","separatorDisplay_2","top",1,"tabDisplayBlobby",
+					   "-attachForm","separatorDisplay_2","top",1,
+					   "-attachForm","separatorDisplay_2","left",3,
+					   "-attachForm","separatorDisplay_2","right",3,
+
+					   "-attachControl","tabDisplayParticle","top",1,"separatorDisplay_2",
+					   "-attachForm","tabDisplayParticle","top",1,
+					   "-attachForm","tabDisplayParticle","left",3,
+					   "-attachForm","tabDisplayParticle","right",3,
+
+					   "-attachControl","tabDisplayFluid","top",1,"tabDisplayParticle",
+					   "-attachForm","tabDisplayFluid","top",1,
+					   "-attachForm","tabDisplayFluid","left",3,
+					   "-attachForm","tabDisplayFluid","right",3,
+					   "-attachForm","tabDisplayFluid","bottom",3,
+					   "displayPanel");
+            			setParent("..");
+        		setParent("..");
+
+		// MODELING PANEL
+		frameLayout("-label","MODELING","-w",220,"-bgc",0.3,0.3,0.3,"-collapsable",true,"-cl",true,"-borderStyle","in");
+			formLayout("-bgc",.4,.4,.4,"modelingPanel");
+			
+                		// MODELING COMPOSANTS			
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabPosition");
+					   
+					text("-label","Create Position","-align","right","-fn","boldLabelFont");
+					button("-label","Base","-bgc",.35,.35,.35,"-c",$cmd_btPositionBase,"btPositionBase");
+					button("-label","Cluster","-bgc",.35,.35,.35,"-c",$cmd_btPositionCluster,"btPositionCluster");
+					    
+					text("-label","Nb Position","-align","right");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.9,0.7,0.7,"-v",15,"intPositionBase");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.7,0.8,1,"-v",15,"intPositionCluster");
+
+					text("-label","Seed Position","-align","right");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.9,0.7,0.7,"-v",1,"intSeedPositionBase");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.7,0.8,1,"-v",1,"intSeedPositionCluster");
+					    
+					text("-label","Surface Offset","-align","right");
+					floatField("-minValue",-1.0,"-maxValue",100,"-w",60,"-bgc",0.9,0.7,0.7,"-v",1,"floatOffsetBase");
+					floatField("-minValue",-1.0,"-maxValue",100,"-w",60,"-bgc",0.7,0.8,1,"-v",1,"floatOffsetCluster");
+					    
+					text("-label","Point Distance","-align","right");
+					floatField("-minValue",-1.0,"-maxValue",100,"-w",60,"-bgc",0.9,0.7,0.7,"-v",2,"floatPointDistBase");
+					floatField("-minValue",-1.0,"-maxValue",100,"-w",60,"-bgc",0.7,0.8,1,"-v",2,"floatPointDistCluster");
+					setParent("..");	
+				
+				separator("-style","in","separatorMode_1");
+				
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabRadius");
+					   
+					text("-label","Create Blobby","-align","right","-fn","boldLabelFont");
+					button("-label","Base","-bgc",.35,.35,.35,"-c",$cmd_btModifyRadiusBase,"btModifyRadiusBase");
+					button("-label","Cluster","-bgc",.35,.35,.35,"-c",$cmd_btModifyRadiusCluster,"btModifyRadiusCluster"); 
+
+					text("-label","Seed Radius","-align","right");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.9,0.7,0.7,"-v",1,"intSeedSphereBase");
+					intField("-minValue",0,"-maxValue",1000,"-w",60,"-bgc",0.7,0.8,1,"-v",1,"intSeedSphereCluster");
+					    
+					text("-label","Min Radius","-align","right");
+					floatField("-minValue",0,"-maxValue",100,"-w",60,"-bgc",0.9,0.7,0.7,"-v",3,"floatMinRadiusBase");
+					floatField("-minValue",0,"-maxValue",100,"-w",60,"-bgc",0.7,0.8,1,"-v",4,"floatMinRadiusCluster");
+					    
+					text("-label","Max Radius","-align","right");
+					floatField("-minValue",0,"-maxValue",100,"-w",60,"-bgc",0.9,0.7,0.7,"-v",4,"floatMaxRadiusBase");
+					floatField("-minValue",0,"-maxValue",100,"-w",60,"-bgc",0.7,0.8,1,"-v",5,"floatMaxRadiusCluster");
+					setParent("..");
+							    
+				// POSITIONEMENT DES COMPOSANTS	
+				formLayout("-e", 
+				   	   "-af","tabPosition","top",3,
+				   	   "-af","tabPosition","left",3,
+				   	   "-af","tabPosition","right",3,
+		     
+					   "-ac","separatorMode_1","top",3,"tabPosition",
+					   "-af","separatorMode_1","top",3,
+					   "-af","separatorMode_1","left",3,
+					   "-af","separatorMode_1","right",3,
+					   
+					   "-ac","tabRadius","top",3,"separatorMode_1",
+					   "-af","tabRadius","top",3,
+					   "-af","tabRadius","left",3,
+					   "-af","tabRadius","right",3,
+					   "-af","tabRadius","bottom",3,
+					   "modelingPanel");	    
+            			setParent("..");
+        		setParent("..");
+
+		// SHADING PANEL
+		frameLayout("-label","SHADING","-w",220,"-bgc",0.3,0.3,0.3,"-collapsable",true,"-cl",true,"-borderStyle","in");
+			formLayout("-bgc",.4,.4,.4,"shadingPanel");
+
+                		// SHADING COMPOSANTS
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabEmitter");
+					   
+					text("-label","Create Emitter","-align","right","-fn","boldLabelFont");
+					button("-label","Base","-bgc",.35,.35,.35,"-c",$cmd_btEmitterBase,"btEmitterBase");
+					button("-label","Cluster","-bgc",.35,.35,.35,"-c",$cmd_btEmitterCluster,"btEmitterCluster");
+					setParent("..");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabNoiseEmitter");
+
+					text("-label","Noise Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btToggleNoiseBase,"btToggleNoiseBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btToggleNoiseCluster,"btToggleNoiseCluster");
+					setParent("..");
+
+				separator("-style","in","separatorShading_1");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabFluid");
+					   
+					text("-label","Create Fluid","-align","right","-fn","boldLabelFont");
+					button("-label","Base","-bgc",.35,.35,.35,"-c",$cmd_btFluidBase,"btFluidBase");
+					button("-label","Cluster","-bgc",.35,.35,.35,"-c",$cmd_btFluidCluster,"btFluidCluster");
+					setParent("..");
+	
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabToggleEmit");
+					   
+					text("-label","Emission Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btToggleEmitBase,"btToggleEmitBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btToggleEmitCluster,"btToggleEmitCluster");
+					setParent("..");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabEmissionRatePP");
+
+					text("-label","RatePP Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btToggleRatePPBase,"btToggleRatePPBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btToggleRatePPCluster,"btToggleRatePPCluster");
+					setParent("..");
+
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabToggleVelocity");
+					   
+					text("-label","Velocity Toggle","-align","right");
+					button("-label","On / Off","-bgc",0.9,0.7,0.7,"-c",$cmd_btToggleVelocityBase,"btToggleVelocityBase");
+					button("-label","On / Off","-bgc",0.7,0.8,1,"-c",$cmd_btToggleVelocityCluster,"btToggleVelocityCluster");
+					setParent("..");
+							    
+				// POSITIONEMENT DES COMPOSANTS	
+				formLayout("-edit", 
+				   	   "-attachForm","tabEmitter","top",3,
+				   	   "-attachForm","tabEmitter","left",3,
+				   	   "-attachForm","tabEmitter","right",3,
+
+					   "-attachControl","tabNoiseEmitter","top",1,"tabEmitter",
+					   "-attachForm","tabNoiseEmitter","top",1,
+					   "-attachForm","tabNoiseEmitter","left",3,
+					   "-attachForm","tabNoiseEmitter","right",3,
+
+					   "-attachControl","separatorShading_1","top",3,"tabNoiseEmitter",
+					   "-attachForm","separatorShading_1","top",3,
+					   "-attachForm","separatorShading_1","left",3,
+					   "-attachForm","separatorShading_1","right",3,
+
+					   "-attachControl","tabFluid","top",3,"separatorShading_1",
+					   "-attachForm","tabFluid","top",3,
+					   "-attachForm","tabFluid","left",3,
+					   "-attachForm","tabFluid","right",3,
+
+					   "-attachControl","tabToggleEmit","top",1,"tabFluid",
+					   "-attachForm","tabToggleEmit","top",1,
+					   "-attachForm","tabToggleEmit","left",3,
+					   "-attachForm","tabToggleEmit","right",3,
+
+					   "-attachControl","tabEmissionRatePP","top",1,"tabToggleEmit",
+					   "-attachForm","tabEmissionRatePP","top",1,
+					   "-attachForm","tabEmissionRatePP","left",3,
+					   "-attachForm","tabEmissionRatePP","right",3,
+
+					   "-attachControl","tabToggleVelocity","top",1,"tabEmissionRatePP",
+					   "-attachForm","tabToggleVelocity","top",1,
+					   "-attachForm","tabToggleVelocity","left",3,
+					   "-attachForm","tabToggleVelocity","right",3,
+					   "-attachForm","tabToggleVelocity","bottom",3,
+					   "shadingPanel");
+            			setParent("..");
+        		setParent("..");
+				
+		// RENDERING PANEL
+		frameLayout("-label","RENDERING","-w",220,"-bgc",0.3,0.3,0.3,"-collapsable",true,"-cl",true,"-borderStyle","in");
+			formLayout("-bgc",.4,.4,.4,"renderingPanel");
+
+                // SHADING COMPOSANTS
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabBake");
+					   
+					text("-label","Bake Cloud","-align","right");
+					button("-label","Base","-bgc",.9,.7,.7,"-c",$cmd_btBakeBase,"btBakeBase");
+					button("-label","Cluster","-bgc",.7,.8,1,"-c",$cmd_btBakeCluster,"btBakeCluster");
+					setParent("..");
+					
+				separator("-style","in","separatorRendering_1");
+				
+				rowColumnLayout("-nc",3,
+				                "-columnWidth",1,85,"-cs",1,0, 
+				                "-columnWidth",2,60,"-cs",2,5, 
+				                "-columnWidth",3,60,"-cs",3,1,
+				                "tabLight");
+
+					text("-label","Create Light","-align","right","-fn","boldLabelFont");
+					button("-label","BW","-bgc",0.35,0.35,0.35,"-c",$cmd_btCreateLightBW,"btCreateLightBW");
+					button("-label","RGB","-bgc",0.35,0.35,0.35,"-c",$cmd_btCreateLightRGB,"btCreateLightRGB");
+					setParent("..");
+							    
+				// POSITIONEMENT DES COMPOSANTS	
+				formLayout("-edit", 
+				   	   "-attachForm","tabBake","top",3,
+				   	   "-attachForm","tabBake","left",3,
+				   	   "-attachForm","tabBake","right",3,
+
+					   "-attachControl","separatorRendering_1","top",1,"tabBake",
+					   "-attachForm","separatorRendering_1","top",1,
+					   "-attachForm","separatorRendering_1","left",3,
+					   "-attachForm","separatorRendering_1","right",3,
+
+					   "-attachControl","tabLight","top",1,"separatorRendering_1",
+					   "-attachForm","tabLight","top",1,
+					   "-attachForm","tabLight","left",3,
+					   "-attachForm","tabLight","right",3,
+					   "-attachForm","tabLight","bottom",3,
+					   "renderingPanel");
+            			setParent("..");
+        		setParent("..");
+
+        	setParent("..");
+	setParent("..");
+	showWindow("emfxCloudsUI");
+	return 0;
+}

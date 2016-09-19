@@ -1,0 +1,26 @@
+#! /Applications/Nuke6.1v2/NukeX6.1v2.app/../Nuke6.1v2.app/Contents/MacOS/Nuke6.1v2 -nx
+version 6.1 v2
+Gizmo {
+ addUserKnob {20 User l "Overall Stereo"}
+ addUserKnob {7 amount l Amount R -50 50}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -19
+  ypos -375
+ }
+ Transform {
+  translate {(default {{-translate.left.x i} 0} left {{parent.amount.left i} 0})}
+  center {1024 578}
+  name Transform1
+  xpos -19
+  ypos -335
+  addUserKnob {20 User}
+ }
+ Output {
+  name Output1
+  xpos -19
+  ypos -235
+ }
+end_group

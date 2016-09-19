@@ -1,0 +1,179 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ help "A useful gizmo to extend source edge color detail into white/black/greeen/blue or whatever haloing to avoid eroding into your matte and losing edge details to get rid of unfavorable edges."
+ addUserKnob {20 User l "Extend Edge Detail"}
+ addUserKnob {41 size l "Alpha Erode (Extend Color Source)" T Dilate14.size}
+ addUserKnob {41 size_1 l "Color Source Blur" T Blur40.size}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -592
+  ypos 137
+ }
+ Dot {
+  name Dot88
+  xpos -558
+  ypos 177
+ }
+set N9464a820 [stack 0]
+ Dot {
+  name Dot89
+  xpos -705
+  ypos 177
+ }
+ Group {
+  name AlphaEdgeBBoxExtend
+  xpos -739
+  ypos 242
+  addUserKnob {20 User}
+  addUserKnob {41 scale T Transform5.scale}
+ }
+  Input {
+   inputs 0
+   name Input1
+   xpos 570
+   ypos 353
+  }
+  Shuffle {
+   red alpha
+   green alpha
+   blue alpha
+   name Shuffle1
+   xpos 570
+   ypos 395
+  }
+  Crop {
+   box {0 0 1920 1080}
+   crop false
+   name Crop12
+   xpos 570
+   ypos 438
+  }
+  Transform {
+   scale 0.9
+   center {960 540}
+   black_outside false
+   name Transform5
+   xpos 570
+   ypos 462
+  }
+  Crop {
+   box {0 0 1920 1080}
+   name Crop13
+   xpos 570
+   ypos 486
+  }
+  Transform {
+   scale {{parent.Transform5.scale}}
+   center {960 540}
+   invert_matrix true
+   black_outside false
+   name Transform6
+   xpos 570
+   ypos 510
+  }
+  Output {
+   name Output1
+   xpos 570
+   ypos 565
+  }
+ end_group
+push $N9464a820
+ Dot {
+  name Dot246
+  xpos -558
+  ypos 343
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy7
+  xpos -739
+  ypos 334
+ }
+ Dot {
+  name Dot247
+  xpos -817
+  ypos 343
+ }
+set N9464cdf0 [stack 0]
+ Dot {
+  name Dot248
+  xpos -1154
+  ypos 343
+ }
+ Dot {
+  name Dot249
+  xpos -1154
+  ypos 867
+ }
+push $N9464cdf0
+add_layer {alpha alpha.red alpha.green alpha.blue alpha.Gmatte alpha.G_matte rga.alpha}
+ Dilate {
+  channels alpha
+  size -2
+  name Dilate14
+  xpos -851
+  ypos 459
+ }
+ Premult {
+  name Premult13
+  xpos -851
+  ypos 505
+ }
+ Dot {
+  name Dot250
+  xpos -817
+  ypos 555
+ }
+set N9464df20 [stack 0]
+ Dot {
+  name Dot251
+  xpos -817
+  ypos 794
+ }
+push $N9464df20
+ Dot {
+  name Dot252
+  xpos -562
+  ypos 555
+ }
+ Blur {
+  size 5
+  name Blur40
+  xpos -596
+  ypos 573
+ }
+ Unpremult {
+  name Unpremult5
+  xpos -596
+  ypos 633
+ }
+ Merge2 {
+  inputs 2
+  name Merge91
+  xpos -596
+  ypos 791
+ }
+ Copy {
+  inputs 2
+  from0 rgba.alpha
+  to0 rgba.alpha
+  name Copy22
+  xpos -596
+  ypos 858
+ }
+ Premult {
+  name Premult14
+  xpos -596
+  ypos 925
+ }
+ Output {
+  name Output1
+  xpos -596
+  ypos 1025
+ }
+end_group

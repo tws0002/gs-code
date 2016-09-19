@@ -1,0 +1,164 @@
+global proc shelf_PacificMotion () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "setAttr \"AnimateMe.translateX\" 0;\rsetAttr \"AnimateMe.translateY\"..." 
+        -enableBackground 0
+        -align "center" 
+        -label "setAttr \"AnimateMe.translateX\" 0;\rsetAttr \"AnimateMe.translateY\"..." 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "home" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "setAttr \"AnimateMe.translateX\" 0;\nsetAttr \"AnimateMe.translateY\" 0;\nsetAttr \"AnimateMe.translateZ\" 0;\nsetAttr \"AnimateMe.rotateX\" 0;\nsetAttr \"AnimateMe.rotateY\" 0;\nsetAttr \"AnimateMe.rotateZ\" 0;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "select -cl  ;\rselect -r AnimateMe ;" 
+        -enableBackground 0
+        -align "center" 
+        -label "select -cl  ;\rselect -r AnimateMe ;" 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "anme" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "select -cl  ;\nselect -r AnimateMe ;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "select -cl  ;\rselect -r MoveRig ;" 
+        -enableBackground 0
+        -align "center" 
+        -label "select -cl  ;\rselect -r MoveRig ;" 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "move" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "select -cl  ;\nselect -r MoveRig ;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Main Underslung Button" 
+        -enableBackground 0
+        -align "center" 
+        -label "Main Underslung Button" 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "undr" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "//Primary Underslung Button\n\nstring $whichrig = `getAttr KuperMachine.RigType`;\n\nif ($whichrig == \"GazellePTR\")\n{\n\t//Underslung Gazelle PTR\n\tsetAttr \"SorensonRotator_Pan.rotateX\" 0;\n\tsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" 18.268;\n\tsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" 0;\n\tsetAttr \"KuperMachine.PosOrNeg\" -1;\n\ttransformLimits -ty -48.296069 43.20394 -ety 1 1 AnimateMe;\n\tprint \"Gazelle Pan Tilt Roll is now in Underslung mode\";\n}\n\nelse if ($whichrig == \"GazellePT\")\n{\n//Underslung Gazelle Pan and Tilt\nsetAttr \"SorensonRotator_Pan.rotateX\" 0;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" 20.625;\n\nsetAttr \"KuperMachine.PosOrNeg\" -1;\nsetAttr \"DB_Hook.translateY\" 0;\ntransformLimits -ty -48.296069 43.20394 -ety 1 1 AnimateMe;\nprint \"Gazelle Pan Tilt is now in Underslung mode\";\n}\n\nelse if ($whichrig == \"GraphlitePTR\")\n{\n//Underslung ForGraphlite PTR\nsetAttr \"SorensonRotator_Pan.rotateX\" 0;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" 18.268;\n\nsetAttr \"KuperMachine.PosOrNeg\" -1;\n\nsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" 0;\ntransformLimits -ty -44.561624 89.438376 -ety 1 1 AnimateMe;\nprint \"Graphlite Pan Tilt Roll is now in Underslung mode\";\n}\n\nelse if ($whichrig == \"GraphlitePT\")\n{\n//Under ForGraphlite PT\nsetAttr \"SorensonRotator_Pan.rotateX\" 0;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" 20.625;\nsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" 0;\n//53.561624 = Home Height\n//For Graphlite Underslung 143 is max height and min is -10 inches but im making it +9\ntransformLimits -ty -44.561624 89.438376 -ety 1 1 AnimateMe;\nprint \"Graphlite Pan Tilt is now in Underslung mode\";\n}\n\nelse if ($whichrig == \"ZebraPTR\")\n{\n//Zebra Pan Tilt Roll\n//Underslung For Zebra PTR\nsetAttr \"SorensonRotator_Pan.rotateX\" 0;\nsetAttr \"DivingBoardHook.translateY\" 0;\nsetAttr \"AnimateMe_pointConstraint1.offsetY\" -18.268;\n\nsetAttr \"Castelnut.translateY\" 0;\nsetAttr \"Castelnut.rotateZ\" 0;\nprint \"Zebra Pan Tilt Roll is now in Underslung mode\";\n}\n\nelse if ($whichrig == \"ZebraPT\")\n{\n//Zebra Pan Tilt\n//Underslung For Zebra PT\nsetAttr \"SorensonRotator_Pan.rotateX\" 0;\nsetAttr \"DivingBoardHook.translateY\" 0;\nsetAttr \"AnimateMe_pointConstraint1.offsetY\" -20.625;\n\nsetAttr \"Castelnut.translateY\" 0;\nsetAttr \"Castelnut.rotateZ\" 0;\nprint \"Zebra Pan Tilt is now in Underslung mode\";\n}\n\n\n" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Main Overslung Button" 
+        -enableBackground 0
+        -align "center" 
+        -label "Main Overslung Button" 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "over" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "//Primary Overslung Button\n\nstring $whichrig = `getAttr KuperMachine.RigType`;\n\nif ($whichrig == \"GazellePTR\")\n{\n\t//Overslung Gazelle PTR\n\tsetAttr \"SorensonRotator_Pan.rotateX\" 180;\n\tsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" -18.268;\n\tsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" -2.625;\n\tsetAttr \"KuperMachine.PosOrNeg\" -1;\n\ttransformLimits -ty -7.296069  87.703931   -ety 1 1 AnimateMe;\n        print \"Gazelle Pan Tilt Roll is now in Overslung mode\";\n}\n\nelse if ($whichrig == \"GazellePT\")\n{\n//Overslung Gazelle Pan and Tilt\nsetAttr \"SorensonRotator_Pan.rotateX\" 180;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" -21.732;\n\nsetAttr \"KuperMachine.PosOrNeg\" -1;\nsetAttr \"DB_Hook.translateY\" 0;\ntransformLimits -ty -7.296069  87.703931   -ety 1 1 AnimateMe;\nprint \"Gazelle Pan Tilt is now in Overslung mode\";\n}\n\nelse if ($whichrig == \"GraphlitePTR\")\n{\n//Overslung For Graphlite PTR\nsetAttr \"SorensonRotator_Pan.rotateX\" 180;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" -18.268;\nsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" -3.5;\ntransformLimits -ty -16.561624  137.438376   -ety 1 1 AnimateMe;\nprint \"Graphlite Pan Tilt Roll is now in Overslung mode\";\n}\n\nelse if ($whichrig == \"GraphlitePT\")\n{\n//Overslung Graphlite PT\nsetAttr \"SorensonRotator_Pan.rotateX\" 180;\nsetAttr \"SorensonRotator_Pan_pointConstraint1.offsetY\" -20.625;\nsetAttr \"CenterOfRotation_pointConstraint1.offsetY\" -3.5;\ntransformLimits -ty -16.561624  137.438376   -ety 1 1 AnimateMe;\nprint \"Graphlite Pan Tilt is now in Overslung mode\";\n}\n\nelse if ($whichrig == \"ZebraPTR\")\n{\n//Overslung For ZebraPTR\nsetAttr \"SorensonRotator_Pan.rotateX\" 180;\nsetAttr \"DivingBoardHook.translateY\" 2.625;\nsetAttr \"AnimateMe_pointConstraint1.offsetY\" 18.268;\n\nsetAttr \"Castelnut.translateY\" -2.625;\nsetAttr \"Castelnut.rotateZ\" 180;\nprint \"Zebra Pan Tilt Roll is now in Overslung mode\";\n}\n\nelse if ($whichrig == \"ZebraPT\")\n{\n//Overslung For ZebraPT\nsetAttr \"SorensonRotator_Pan.rotateX\" 180;\nsetAttr \"DivingBoardHook.translateY\" 2.625;\nsetAttr \"AnimateMe_pointConstraint1.offsetY\" 20.625;\n\nsetAttr \"Castelnut.translateY\" -2.625;\nsetAttr \"Castelnut.rotateZ\" 180;\nprint \"Zebra Pan Tilt is now in Overslung mode\";\n}" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 37
+        -height 37
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "pointConstraint -offset 0 0 0 -weight 1;\rorientConstraint -offse..." 
+        -enableBackground 0
+        -align "center" 
+        -label "pointConstraint -offset 0 0 0 -weight 1;\rorientConstraint -offse..." 
+        -labelOffset 0
+        -font "tinyBoldLabelFont" 
+        -imageOverlayLabel "hook" 
+        -overlayLabelColor 1 1 1 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "mayaIcon.png" 
+        -image1 "mayaIcon.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "pointConstraint -offset 0 0 0 -weight 1;\norientConstraint -offset 0 0 0 -weight 1;" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+    ;
+
+} 

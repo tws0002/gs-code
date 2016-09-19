@@ -1,0 +1,118 @@
+// hfAutoGamma by Henry Foster
+// www.toadstorm.com
+// if you like this script then say so
+//
+// purpose: linear workflow is really annoying because you have to
+// manually gamma-correct every texture to do it properly.
+// this script automates that process so all the user really has to
+// do is select the shaders, push a button, and apply the tonemapper.
+//
+// usage: select some shaders, type "hfAutoGamma(0.455)" or whatever number you want your gamma to be in the parentheses.
+//
+// notes: this currently doesn't play well with ramp shaders or layered shaders. you'll still have to correct ramp shaders
+// manually in most cases. try correcting individual shaders piped into a layered shader instead of the layered shader itself.
+
+global proc hfAutoGamma(float $gammaVal) {
+	string $gammaNodes[];
+	string $shadersList[] = `ls -sl`;
+	for($i=0;$i<size($shadersList);$i++) {
+		// list all leaf channels. find anything ending in R G and B
+		// print("checking " + $shadersList[$i]);
+		string $channelsListRaw[] = `attributeInfo -l on -h off -w on -i off $shadersList[$i]`;
+		// print $channelsListRaw;
+		string $channelsListRGB[];
+		string $channelsListMi[];
+		string $channelsListFinal[];
+		
+		for($j=0;$j<size($channelsListRaw);$j++) {
+			// keep only channels which end in R G or B. get rid of vector renderer crap.
+			$cSize = size($channelsListRGB);
+			if((endsWith($channelsListRaw[$j],"G")) && (startsWith($channelsListRaw[$j],"vr") == 0) && (startsWith($channelsListRaw[$j],"lightIntensity") == 0)) {
+				// add the base channel name to our list of RGB channels.
+				// we need an exception for the dumb outColor attribute, which always keeps popping up. only surface shaders 
+				// should allow a connection for outColor.
+				if(startsWith($channelsListRaw[$j],"outColor") && (`nodeType($shadersList[$i])` != "surfaceShader")) {
+					// print("ignoring outColor for non-surface shader.");
+				} else {
+					$channelNameSize = size($channelsListRaw[$j]);
+					$baseChannelName = substring($channelsListRaw[$j], 1, ($channelNameSize-1));
+					//print($baseChannelName);
+					$channelsListRGB[$cSize] = $baseChannelName;
+				}
+			}
+	
+		}
+		// print $channelsListRGB;
+		// if the shader's .miDeriveFromMaya attr is zero, remove all channels starting with "mi" from the array.
+		if(`attributeExists "miDeriveFromMaya" $shadersList[$i]`) {
+			if(`getAttr($shadersList[$i]+".miDeriveFromMaya")` == 1) {
+				for($k=0;$k<size($channelsListRGB);$k++) {
+					$cSize = size($channelsListMi);
+					if(startsWith($channelsListRGB[$k],"mi") == 0) {
+						$channelsListMi[$cSize] = $channelsListRGB[$k];
+					}
+				}
+			}
+		} else {
+			$channelsListMi = $channelsListRGB;
+		}
+		// okay, now we have a list of all remaining channels that might need correction. 
+		// print $channelsListMi;
+		//
+		// this is to correct for an older version of the code... basically channelsListFinal is the same as channelsListMi.
+		$channelsListFinal = $channelsListMi;
+		// print $channelsListFinal;
+		// OKAY FINALLY we have all of the channels we need to gamma correct.
+		// Let's loop through each one and then see how we'll attach the gamma node.
+		for($n=0;$n<size($channelsListFinal);$n++) {
+			$chanName = $channelsListFinal[$n];
+			string $connectionName[] = `listConnections -p 1 -s 1 -d 0 ($shadersList[$i]+"."+$channelsListFinal[$n])`;
+			// this returns textureName.outputName
+			// if the array size is zero, we're dealing with a swatch, so let's just attach some shit.
+			$gammaName = ($shadersList[$i]+"_"+$channelsListFinal[$n]+"_gamma");
+			$gSize = size($gammaNodes);
+			if(size($connectionName) == 0) {
+				$cNameR = ($channelsListFinal[$n]+"R");
+				$cNameG = ($channelsListFinal[$n]+"G");
+				$cNameB = ($channelsListFinal[$n]+"B");
+				$cR = `getAttr($shadersList[$i]+"."+$cNameR)`;
+				$cG = `getAttr($shadersList[$i]+"."+$cNameG)`;
+				$cB = `getAttr($shadersList[$i]+"."+$cNameB)`;
+				// now, for each channel, is the value plain black or white? we don't need to correct those.
+				if(($cR + $cG + $cB != 0.0) && ($cR + $cG + $cB != 3.0)) {
+
+					$newGamma = `shadingNode -au -n $gammaName gammaCorrect`;
+					setAttr ($newGamma+".valueX") $cR;
+					setAttr ($newGamma+".valueY") $cG;
+					setAttr ($newGamma+".valueZ") $cB;
+					setAttr ($newGamma+".gammaX") $gammaVal;
+					setAttr ($newGamma+".gammaY") $gammaVal;
+					setAttr ($newGamma+".gammaZ") $gammaVal;
+					connectAttr -f ($newGamma+".outValue") ($shadersList[$i]+"."+$channelsListFinal[$n]);
+					$gammaNodes[$gSize] = $newGamma;
+					// TONIGHT I DINE ON TURTLE SOUP
+				}
+			} else {
+				// we have something connected here.
+				// is it a gammaCorrect node already? if not, let's make the connections.
+				if(`nodeType ($connectionName[0])` != "gammaCorrect") {
+					// $newGamma = `shadingNode -au -n $gammaName gammaCorrect`;
+					$newGamma = `shadingNode -asUtility -n $gammaName gammaCorrect`;
+					setAttr ($newGamma+".gammaX") $gammaVal;
+					setAttr ($newGamma+".gammaY") $gammaVal;
+					setAttr ($newGamma+".gammaZ") $gammaVal;
+					connectAttr -f $connectionName[0] ($newGamma+".value");
+					connectAttr -f ($newGamma+".outValue") ($shadersList[$i]+"."+$channelsListFinal[$n]);
+					$gammaNodes[$gSize] = $newGamma;
+				} // end if
+			} // end else if
+		} // end for channelsListFinal
+		clear $channelsListRGB;
+		clear $channelsListMi;
+		clear $channelsListFinal;
+	} // end shader loop
+	print $gammaNodes;
+	print ("\n// SHAZAM! //");
+} // end proc
+//hfAutoGamma(0.455);
+

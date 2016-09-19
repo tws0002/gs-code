@@ -1,0 +1,203 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ addUserKnob {20 User}
+ addUserKnob {41 operation T Keyer1.operation}
+ addUserKnob {41 detail l "point detail" T PositionToPoints1.detail}
+ addUserKnob {41 pointSize l "point size" T PositionToPoints1.pointSize}
+ addUserKnob {26 ""}
+ addUserKnob {6 ShowColor l "Show Colors for Red Green/Blue/Luma Keyers" t "Will show the original colors on the point cloud when you select red, green, blue or luminance keyers" +STARTLINE}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -403
+  ypos 416
+ }
+ Shuffle {
+  alpha white
+  name Shuffle2
+  xpos -403
+  ypos 473
+ }
+ Dot {
+  name Dot2
+  xpos -369
+  ypos 518
+ }
+set N888dee0 [stack 0]
+ Dot {
+  name Dot3
+  xpos -271
+  ypos 518
+ }
+set N888e250 [stack 0]
+ Dot {
+  name Dot4
+  xpos -176
+  ypos 518
+ }
+set N888e5c0 [stack 0]
+ Dot {
+  name Dot5
+  xpos -66
+  ypos 518
+ }
+set N888e930 [stack 0]
+ Dot {
+  name Dot6
+  xpos 51
+  ypos 518
+ }
+set N888eca0 [stack 0]
+ Dot {
+  name Dot1
+  xpos 195
+  ypos 518
+ }
+ Keyer {
+  operation "luminance key"
+  name Keyer1
+  xpos 161
+  ypos 574
+ }
+set N888f380 [stack 0]
+ Crop {
+  box {0 0 {input.width} {input.height}}
+  name Crop1
+  xpos 307
+  ypos 580
+ }
+ Crop {
+  box {0 0 {parent.Crop1.box.r} {parent.Crop1.box.t}}
+  reformat true
+  crop false
+  name Crop2
+  xpos 307
+  ypos 623
+ }
+ Expression {
+  expr0 x/width
+  expr1 y/height*(height/width)
+  name Expression1
+  xpos 307
+  ypos 695
+ }
+set N888fdd0 [stack 0]
+push $N888fdd0
+push $N888f380
+ Shuffle {
+  green alpha
+  name Shuffle1
+  xpos 161
+  ypos 622
+ }
+ Copy {
+  inputs 2
+  from0 rgba.red
+  to0 rgba.red
+  name Copy2
+  xpos 161
+  ypos 689
+ }
+ Copy {
+  inputs 2
+  from0 rgba.green
+  to0 rgba.blue
+  name Copy3
+  xpos 161
+  ypos 792
+ }
+push $N888dee0
+push $N888dee0
+push $N888dee0
+push $N888dee0
+push $N888eca0
+ Saturation {
+  saturation 0
+  name Saturation1
+  xpos 17
+  ypos 565
+ }
+ Shuffle {
+  green red
+  blue red
+  alpha white
+  name Shuffle6
+  xpos 17
+  ypos 589
+ }
+push $N888dee0
+push $N888dee0
+push $N888dee0
+push $N888e930
+ Shuffle {
+  red black
+  green black
+  alpha white
+  name Shuffle5
+  xpos -100
+  ypos 576
+ }
+push $N888e5c0
+ Shuffle {
+  red black
+  blue black
+  alpha white
+  name Shuffle4
+  xpos -210
+  ypos 572
+ }
+push $N888e250
+ Shuffle {
+  green black
+  blue black
+  alpha white
+  name Shuffle3
+  xpos -305
+  ypos 575
+ }
+ Switch {
+  inputs 10
+  which {{group.Keyer1.operation}}
+  name Switch1
+  xpos -305
+  ypos 665
+ }
+set Nf6760c0 [stack 0]
+ Switch {
+  inputs 2
+  which {{parent.ShowColor}}
+  name Switch2
+  selected true
+  xpos -403
+  ypos 722
+ }
+ PositionToPoints2 {
+  inputs 2
+  display textured
+  render_mode textured
+  cast_shadow false
+  receive_shadow false
+  P_channel alpha
+  detail 0.03
+  name PositionToPoints1
+  xpos -403
+  ypos 798
+ }
+ Output {
+  name Output1
+  xpos -403
+  ypos 923
+ }
+push $N888f380
+push $Nf6760c0
+ Viewer {
+  inputs 2
+  frame 827
+  input_process false
+  name Viewer1
+  xpos -100
+  ypos 701
+ }
+end_group

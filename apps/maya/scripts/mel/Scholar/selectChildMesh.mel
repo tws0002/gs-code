@@ -1,0 +1,33 @@
+global proc string[] selectChildMesh() {
+	
+	/* get selected object
+	select the heirarchy
+	are any of the selected objects NOT geo, if yes add to a list
+	deslect the list
+	
+	02.22.2010 - Christopher Hendryx
+		Gave the procedure a return statement so the user can query the children geo in scripts.
+	
+	*/
+	select -hierarchy;
+	select `ls -sl -g`;
+	
+	string $currSelect[] = `ls -sl`;
+	string $meshSelect[];
+	int $i;
+	
+	for ($i =0; $i < size($currSelect); $i++)
+	{
+		
+		if (`nodeType $currSelect[$i]` == "mesh") 
+		{
+			int $temp = size($meshSelect);
+			$meshSelect[$temp] = $currSelect[$i];
+		}
+	}
+	select -cl;
+	select $meshSelect;
+	
+	string $selection[] = `pickWalk -d up` ;   // comment out to only select shape nodes, this walks up to select the transforms
+	return $selection ;
+}

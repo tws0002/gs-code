@@ -1,0 +1,536 @@
+
+//------------------------------------------------------------------------------------------- 
+// animImportExport.mel
+//
+//
+// Creation Date:  08/28/02
+//
+//
+// Description: These scripts import and export sentinel/apu/digger animation
+//
+//		selAnimFileSave - use this to save out the animation on whatever is selected
+//		selAnimFileLoad - use this to load the animation saved with selAnimFileSave
+//
+// Notes:	o the animation is saved out into a Maya ascii file (default) or mayaBinary
+//   	o entire animation curves are saved - no start/end times supported
+//
+//        selAnimFileSave and selAnimFileLoad
+//
+//			o the scripts only export animation channels on selected objects
+//			o the scripts support prefix renaming, attribute renaming and pasting to locked channels
+//
+//
+//------------------------------------------------------------------------------------------- 
+
+
+
+global proc selAnimFileSave() {
+
+
+	string $selected[] = `ls -sl`;
+
+	if (size($selected) == 0) {
+		error ("selAnimFileSave: Nothing selected.");
+	}
+	catchQuiet(`delete vectorRenderGlobals`);
+	fileBrowser("assignSGEsaveSelAnimCallBack","Save","mayaAscii",1);
+
+
+} // selAnimFileSave 
+
+
+global proc selAnimFileLoad() {
+
+	global string $selObjList[];
+
+	$selObjList = `ls -sl`;
+
+	fileBrowser("assignSGEloadSelCallBack","Load","mayaAscii",0);
+
+
+} // selAnimFileLoad 
+
+
+
+//
+// This gets run when you press the 'save' button
+//
+//
+global proc int assignSGEsaveSelAnimCallBack(string $fileName, string $fileType) {
+
+	string $fname;
+	string $objList[] = `ls -sl`;
+	int    $numKeys;
+	string $objName;
+	string $attrList[];
+	string $filePath[];
+
+
+	if ( gmatch ($fileName, "*.ma")  || gmatch ($fileName,"*.mb") ) {
+
+		$fname = `substring $fileName 1 (size($fileName) - 3)`;
+
+	} else {
+
+		$fname = $fileName;
+	}
+
+	tokenize($fname, "/", $filePath);
+
+	print ("fileName = " + $fileName + "\n");
+	print ("fileType = " + $fileType + "\n");
+	print ("fname = " + $fname + "\n");
+
+	// Loop Through Object List
+
+	if (`objExists "TEMPanimXferNode"`) delete TEMPanimXferNode; 
+
+	createNode "transform" -n TEMPanimXferNode; 
+        
+	for ($objCur in $objList) {
+
+		if (`objExists $objCur`) {
+
+			$attrList = `listAttr -k $objCur`;
+
+			$objName = `substitute ":" $objCur "__"`;
+			
+			for ($attrCur in $attrList) {
+
+				$numKeys = `keyframe -t ":" -query -keyframeCount ($objCur + "." + $attrCur)`;
+				print( "Number of keys existing: " + $numKeys + " for object " + $objCur + "." + $attrCur + "\n" );
+
+				if ($numKeys > 0) {
+					addAttr -ln ($objName + "ANIM" + $attrCur) -at double TEMPanimXferNode;
+					$numKeys = `copyKey -t ":"  -at $attrCur $objCur`;
+					print( "Number of keys copied: " + $numKeys + "\n");
+					$numKeys = `pasteKey  -option "replaceCompletely" -at ($objName + "ANIM" + $attrCur) TEMPanimXferNode`;
+					print( "Number of keys pasted: " + $numKeys + "\n");
+				}
+                        
+			}
+		}
+	}
+
+	// Export StoreHouse
+        
+
+	select TEMPanimXferNode;
+
+	print ("Saving animation to file: " + $fileName + "\n");
+
+	if ( catch(`file -es -chn 1 -type $fileType $fileName`) ) warning ("saveAnim: Error saving file.");
+
+	delete TEMPanimXferNode;
+
+	return true;
+
+
+} // assignSGEsaveSelAnimCallBack
+
+
+//
+// This gets run when you press the 'load' button
+//
+//
+global proc int assignSGEloadSelCallBack(string $fname, string $fileType) {
+
+	string $filename;
+	string $attrList[];
+	string $nameBuf[];
+	string $filePath[];
+	int $numTokens;
+	string $prefix = "";
+	string $token = "_";
+	string $tokens[];
+
+
+
+	if ( gmatch ($fname, "*.ma")  || gmatch ($fname,"*.mb") ) {
+
+		$filename = `substring $fname 1 (size($fname) - 3)`;
+
+	} else {
+
+		$filename = $fname;
+	}
+
+
+	// make sure there's no left-over animXformNode before we import it
+	// otherwise it gets renamed and shit breaks and then I get IMs and
+	// yada yada yada
+
+	if (`objExists "TEMPanimXferNode"`) delete TEMPanimXferNode; 
+
+
+	// import the file here 
+
+	file -i $fname  ;
+
+	// if that node isn't in the file then error out:
+	if (!`objExists "TEMPanimXferNode"`) {
+		warning("Can't find animXferNode in this file... Sorry.  It happens");
+		return false;
+	}
+
+	// get our list of attributes
+
+	$attrList = `listAttr TEMPanimXferNode`;
+
+	// loop through the attributes until we find a saved
+	// animation channel then extract the object name
+
+	for ($attrCur in $attrList) {
+
+		if (match("ANIM", $attrCur) != "") {       
+
+			string $tempString = substitute ("ANIM", $attrCur, "^");
+			tokenize( $tempString, "^", $nameBuf); 
+			break;
+		}
+	}
+
+	// extract the prefix
+
+	if (`gmatch $nameBuf[0] "*__*"`) {
+		$nameBuf[0] = `substitute  "__" $nameBuf[0] ":"`;
+		$token = ":";
+	}
+
+	$numTokens = `tokenize $nameBuf[0] $token $tokens`;
+	if ($numTokens > 1) 
+		$prefix = ($tokens[0] + $token );
+
+	loadSelAnimGUI($filename, $prefix);
+
+	return true;
+
+} // assignSGEloadSelCallBack
+
+
+//------------------------------------------------------------------------------------------- 
+// loadSelAnimGUI
+//
+// Description: 
+//
+// Inputs: string $filename - the filename (this is just passed to pasteSelAnim) 
+//         string $prefix   - the prefix to be put in the 'old prefix' field
+//
+//
+//
+//------------------------------------------------------------------------------------------- 
+
+global proc loadSelAnimGUI (string $filename, string $prefix) { 
+
+	int $uiWidth  = 380;
+	int $uiHeight = 200;
+	string $prfx  = "";
+
+	if (size($prefix) > 0) $prfx = `substring $prefix 1 (size($prefix) - 1)`;
+
+	if (( `window -ex loadSelAnimWindow`) == true) deleteUI loadSelAnimWindow;
+	window	-title "SGE Load Animation"
+			-w $uiWidth -h $uiHeight
+			-rtf true
+			loadSelAnimWindow;
+
+	string $form = `formLayout -numberOfDivisions 2`;
+
+	string $frame =`frameLayout -borderStyle "in" -labelVisible false -mh 5 -mw 5`;
+
+	string $col = `columnLayout -adjustableColumn true -parent $frame`;
+
+	// prefix
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+	text -l "Replace prefix";
+	checkBox	-h 20	-value 0 -label ""
+					-onc "textField -e -ed 1 rtTextOldPre; textField -e -ed 1 rtTextNewPre;"
+					-ofc "textField -e -ed 0 rtTextOldPre; textField -e -ed 0 rtTextNewPre;"
+					cbPrefixReplace;
+
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "Old prefix";
+		textField -w 200 -text $prefix -ed 0 rtTextOldPre;
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "New prefix";
+		textField -w 200 -ed 0 rtTextNewPre;
+
+	setParent ..;
+	separator -height 10;
+
+
+	// search and replace
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+	text -l "Search & Replace";
+	checkBox	-h 20	-value 0 -label ""
+					-onc "textField -e -ed 1 rtTextOld; textField -e -ed 1 rtTextNew;"
+					-ofc "textField -e -ed 0 rtTextOld; textField -e -ed 0 rtTextNew;"
+					cbSearchReplace;
+
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "Replace: ";
+		textField -w 200 -ed 0 rtTextOld;
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "With: ";
+		textField -w 200 -ed 0 rtTextNew;
+
+	setParent ..;
+	separator -height 10;
+
+
+	// paste method 
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "Paste Method";
+		radioButtonGrp -numberOfRadioButtons 3
+					-labelArray3 "Insert" "Replace" "Replace Completely"
+					-cw 1 50 -cw 2 70 -cw 3 120 -select 3
+					-on1 "intField -e -ed 1 startFrameIF; intField -e -ed 0 rtEndFrameIF; intField -e -ed 0 rtOffsetIF;" 
+					-on2 "intField -e -ed 1 startFrameIF; intField -e -ed 1 rtEndFrameIF; intField -e -ed 1 rtOffsetIF;"
+					-on3 "intField -e -ed 0 startFrameIF; intField -e -ed 0 rtEndFrameIF; intField -ed 0 rtOffsetIF;"
+					pasteMethBG;
+
+	
+	setParent ..;
+	separator -style "none" -height 10;
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "Start Frame";
+		intField  -v 0 -ed 0 startFrameIF;
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "End Frame";
+		intField -v 0 -ed 0 rtEndFrameIF;
+
+	setParent ..;
+	rowLayout	-numberOfColumns 2 -cat 1 "right" 5 -columnWidth 1 95 -parent $col;
+		text -l "Offset";
+		intField -v 0 -ed 0 rtOffsetIF;
+
+	setParent ..;
+	separator -height 10;
+
+	// paste to locked
+
+	setParent ..;
+	rowLayout	-numberOfColumns 4  -cat 1 "right" 5 -cat 3 "both" 5 -columnWidth 1 95 -columnWidth 2 30 -columnWidth 3 155 -parent $col;
+		text -l "Paste to locked";
+		checkBox	-h 20	-value 0 -label "" pasteLockedCB;
+
+	// paste channels button
+
+	string $pasteButton = `button	-l "Paste Channels" -parent $form`;
+	button -e -c ("pasteSelAnim(\"" + $filename + "\"); deleteUI loadSelAnimWindow;") $pasteButton;
+
+
+	formLayout	-edit
+				-af $frame "top"	3 
+				-af $frame "left"	3 
+				-af $frame "right"	3 
+				-ac $frame "bottom"	3 $pasteButton 
+
+				-an $pasteButton "top"
+				-af $pasteButton "left" 3
+				-af $pasteButton "right" 3
+				-af $pasteButton "bottom" 3
+				$form;
+
+	showWindow loadSelAnimWindow;
+
+
+} // loadSelAnimGUI
+
+
+
+//------------------------------------------------------------------------------------------- 
+// pasteSelAnim
+//
+// Description:  
+//
+//
+// Inputs:  string $filename    - the filename to read from
+//
+// Returns: none
+//
+//------------------------------------------------------------------------------------------- 
+global proc pasteSelAnim (string $filename) {
+
+	global string $selObjList[];
+
+	string $attrList[];
+	string $nameBuf[];
+	string $objList[];
+	string $filePath[];
+	string $obj;
+	string $atr;
+	string $oldPre  = `textField -q -text rtTextOldPre`;
+	string $newPre  = `textField -q -text rtTextNewPre`;
+	string $oldText = `textField -q -text rtTextOld`;
+	string $newText = `textField -q -text rtTextNew`;
+
+	int    $gotIt;
+	int 	  $numKeys;
+	int    $pasteMethod   = `radioButtonGrp -q -sl pasteMethBG`; 
+	int    $replacePrefix = `checkBox -q -v cbPrefixReplace`;
+	int    $searchReplace = `checkBox -q -v cbSearchReplace`;
+	int    $pasteLocked   = `checkBox -q -v pasteLockedCB`;
+	int    $startFrame    = `intField  -q -v startFrameIF`;
+	int    $endFrame      = `intField  -q -v rtEndFrameIF`;
+	int    $offset        = `intField  -q -v rtOffsetIF`;
+					
+
+
+	// print some useful info: 
+
+	print ("Loading animation from file: " + $filename + "\n" );
+
+	if ($replacePrefix) {
+
+		print ("Replacing prefixes. \n");
+		print ("	Old Prefix: " + $oldPre + "\n" );
+		print ("	New Prefix: " + $newPre + "\n" );
+
+	}
+
+	if ($searchReplace) print ("Replacing \"" + $oldText + "\" with \"" + $newText + "\"\n");
+
+
+	if ($pasteLocked) print "Pasting to locked channels..\n\n";
+
+	print ("Paste Method = " + $pasteMethod + "\n");
+
+	if ($pasteMethod != 3) {
+
+		print ("\tStart frame: " + $startFrame + "\n");
+		print ("\tEnd frame:   " + $endFrame + "\n");
+		print ("\tOffset:      " + $offset + "\n\n");
+	}
+
+
+	$attrList = `listAttr TEMPanimXferNode`;
+
+	for ($attrCur in $attrList) {
+
+
+		// Copy keys 
+
+		if (match("ANIM", $attrCur) != "") {       
+
+			print ("Working on " + $attrCur + "\n");
+
+			string $tempString = substitute ("ANIM", $attrCur, "^");
+			tokenize( $tempString, "^", $nameBuf); 
+			$obj = `substitute "__" $nameBuf[0] ":"`;
+			$atr = $nameBuf[1];
+
+			$numKeys = `keyframe -query -keyframeCount ("TEMPanimXferNode." + $attrCur)`;
+			print ("Found " + $numKeys + " keyframe(s) on " + $obj + "." + $atr +  "\n");
+
+
+			if ($numKeys > 0) {
+
+				if ($replacePrefix) {
+					if (size($oldPre) > 0 )
+						$obj = `substitute $oldPre $obj $newPre`; 
+					else
+						$obj = ($newPre +  $obj); 
+				}
+				if ($searchReplace) $obj = `substitute $oldText $obj $newText`; 
+
+				// check if the obj we're pasting to exists
+
+				if (!`objExists($obj)`) {
+					print ("WARNING: Couldn't find: " + $obj + " to paste to.  Skipping\n");
+					continue;
+				}
+
+				// check if the channel exists on the object we're pasting to
+
+				if (!`attributeExists $atr $obj`) {
+					print ("WARNING: Couldn't find: " + $atr + " on " + $obj + " to paste to.  Skipping\n");
+					continue;
+				}
+
+				$numKeys = `copyKey -t ":" -at ($attrCur) TEMPanimXferNode`;
+				string $numExpr[] = `listConnections -s true -d false -t "expression"  -scn true ($obj + "." + $atr)`;
+
+				if (size($numExpr) != 0) {
+
+					print $numExpr;
+					print ("WARNING: attribute has expression defined.  Ignoring animation\n");
+					continute;
+				}
+
+				// check if the target attribute is locked
+
+				if (`getAttr -l ($obj + "." + $atr) `)	{
+
+					if ($pasteLocked) {
+
+						print ("\t\tUNLOCKING: " + $obj + "." + $atr + "\n");
+						setAttr -lock false   ($obj + "." + $atr);
+						setAttr -keyable true ($obj + "." + $atr);
+
+					} else { 
+
+						print ("\t\tLOCKED ATTRIBUTE: " + $obj + "." + $atr + "   Skipping\n");
+						continue;
+					}
+
+				} 
+
+				switch ($pasteMethod) {
+
+					case 1: // insert
+
+						catch($numKeys =  `pasteKey	 -t $startFrame -option insert -at $atr $obj`);
+						break;
+
+					case 2: // replace
+
+						catch($numKeys =  `pasteKey	 -t (($startFrame + $offset) + ":" + ($endFrame + $offset))
+												 -option replace -at $atr $obj`);
+						break;
+
+					case 3: // replace completely
+
+						catch($numKeys =  `pasteKey  -option replaceCompletely -at $atr $obj`);
+						break;
+
+				}
+
+	
+
+
+				if ($numKeys) 
+					print ("Animation curve pasted to " + $obj + "." + $atr +  "\n");
+				else
+					print ("WARNING: nothing pasted to " + $obj + "." + $atr +  "\n");
+
+                                        
+
+			} // if numKeys
+		}
+
+	} // for
+
+    delete TEMPanimXferNode;
+
+}  // pasteSelAnim 
+
+

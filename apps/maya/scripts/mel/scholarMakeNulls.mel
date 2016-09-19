@@ -1,0 +1,262 @@
+// makin some nulls 1.00 by renree
+// this script requires djx's djRivet script, available at http://www.djx.com.au/blog/downloads/
+
+// interfeces notes: select an object, press "make null" button
+// selected surface becomes live and locator tool is activated, place on live surface
+// press "lock null" or whatever to bind it to the surface
+// dropdown list of nulls allows deletion of selected ones
+// dropdown to select camera
+// another button bakes every null in world space, also bakes camera, exports to .MA
+//
+
+global proc string[] scholarPopulateNullsList() {
+	// this is built in case the build window is closed. we want every named null to appear on the list.
+	global string $nullsListCtrl;
+	string $nullFilter = `itemFilter -byName "null_*"`;
+	string $xformFilter = `itemFilter -byType "locator"`;
+	string $finalFilter = `itemFilter -in $nullFilter $xformFilter`;
+	string $nulls[] = `lsThroughFilter $finalFilter`;
+	string $nullxforms[];
+	textScrollList -e -ra $nullsListCtrl;
+	for($null in $nulls) {
+		string $xforms[] = `listTransforms $null`;
+		textScrollList -e -a $xforms[0] $nullsListCtrl;
+		$nullxforms[size($nullxforms)] = $xforms[0];
+	}
+	return $nullxforms;
+}
+
+global proc scholarPopulateCamerasList() {
+	global string $scholarCamerasCtrl;
+	string $allCams[] = `ls -type camera`;
+	textScrollList -e -ra $scholarCamerasCtrl;
+	for($cam in $allCams) {
+		string $camxform[] = `listTransforms $cam`;
+		textScrollList -e -a $camxform[0] $scholarCamerasCtrl;
+	}
+}
+
+global proc string scholarPlaceNull() {
+	// make the selected surface live and place a locator on it. add this new null to $nullsListCtrl.
+	// set global var $currentLiveObject to the name of this object for locking later on.
+	// if no surface is selected, just make a null at the origin and add the null to $nullsListCtrl.
+	global string $nullsListCtrl;
+	global string $currentLiveObject;
+	// get number of entries in $nullsListCtrl
+	string $nullsNum = `textScrollList -q -ni $nullsListCtrl`;
+	string $newLocName = "null_"+$nullsNum;
+	string $sel[] = `ls -sl`;
+	string $newLoc[] = `spaceLocator -n $newLocName`;
+	textScrollList -e -a $newLocName $nullsListCtrl;
+	textScrollList -e -da $nullsListCtrl;
+	textScrollList -e -si $newLocName $nullsListCtrl;
+	if(size($sel) > 0) {
+		if(size($sel) > 1) {
+			error("Select a maximum of one object to place the null on.");
+		}
+		// make this object live.
+		makeLive $sel[0];
+		$currentLiveObject = $sel[0];
+		string $newConstraint[] = `parentConstraint $sel[0] $newLoc[0]`;
+		delete $newConstraint;
+		
+	} else {
+		makeLive -n;
+		$currentLiveObject = "";
+	}
+	select -r $newLoc[0];
+	setToolTo("Move");
+	return $newLoc[0];
+	
+} // end proc
+
+global proc string scholarLockNull() {
+	// find the current live surface... this is what we'll rivet to.
+	// apparently there really isn't a way to query what surface is live. thanks autodesk. we'll have to use a global variable instead.
+	// use djRivet to bind the current null to the live surface.
+	global string $currentLiveObject;
+	global string $nullsListCtrl;
+	select -cl;
+	// get the highlighted locator from the selection list.
+	string $selectedNulls[] = `textScrollList -q -si $nullsListCtrl`;
+	if(size($selectedNulls) > 1) {
+		error("You can only lock one null at a time to a surface.");
+	}
+	if(size($selectedNulls) < 1) {
+		error("Select a null from the list to lock to the live surface.");
+	}
+	if($currentLiveObject == "") {
+		error("You need a live object to lock a null to.");
+	}
+	// if the selected null is already constrained to something, the rivet won't work. we have to see
+	// if the null has any constraints attached, and remove them.
+	for($null in $selectedNulls) {
+		string $constraints[] = `listConnections -type parentConstraint $null`;
+		if(size($constraints) > 0) {
+			catchQuiet(`delete $constraints`);
+		}
+	}
+	select -add $selectedNulls[0];
+	select -add $currentLiveObject;
+	djRivet;
+	print("\n"+$selectedNulls[0] + " is now locked to " + $currentLiveObject);
+	makeLive -n;
+	$currentLiveObject = "";
+	select -cl;
+	return $selectedNulls[0];
+	
+} // end proc
+
+global proc string[] returnSelectedNulls() {
+	// return an array showing all selected nulls in $nullsListCtrl.
+	global string $nullsListCtrl;
+	string $selectedNulls[] = `textScrollList -q -si $nullsListCtrl`;
+	return $selectedNulls;
+} // end proc
+
+global proc string[] deleteSelectedNulls() {
+	// this needs to find all the nulls highlighted in $nullsListCtrl and delete them, then remove the entries from the control.
+	global string $nullsListCtrl;
+	string $selectedNulls[] = returnSelectedNulls();
+	// print $selectedNulls;
+	for($null in $selectedNulls) {
+		textScrollList -e -ri $null $nullsListCtrl;
+		delete $null;
+	}
+	return $selectedNulls;
+} // end proc
+
+global proc scholarMakeLive() {
+	// this is just so that we can quickly make things live while messing about with nulls.
+	global string $currentLiveObject;
+	string $sel[] = `ls -sl`;
+	$currentLiveObject = $sel[0];
+	makeLive $sel[0];
+}
+
+global proc scholarSelectNull() {
+	// highlight the null(s) currently selected from the menu.
+	global string $nullsListCtrl;
+	string $selNulls[] = `textScrollList -q -si $nullsListCtrl`;
+	select -cl;
+	select $selNulls;
+}
+
+global proc scholarBakeAndExportNulls() {
+	// get all nulls from list, get selected camera(s) from list.
+	// duplicate the camera(s) and parent constrain it to the original.
+	// select new camera(s) and all nulls, bake all xform channels, then export to .MA
+	//
+	// first, the cameras from the list.
+	global string $scholarCamerasCtrl;
+	string $selCams[] = `textScrollList -q -si $scholarCamerasCtrl`;
+	if(size($selCams) < 1) {
+		error("You need to select at least one camera to export from the list.");
+	}
+	string $exportCams[];
+	for($cam in $selCams) {
+		string $newCam[] = `duplicate -rc -rr $cam`;
+		// unlock xforms
+		setAttr -lock false ($newCam[0]+".tx");
+		setAttr -lock false ($newCam[0]+".ty");
+		setAttr -lock false ($newCam[0]+".tz");
+		setAttr -lock false ($newCam[0]+".rx");
+		setAttr -lock false ($newCam[0]+".ry");
+		setAttr -lock false ($newCam[0]+".rz");
+		catchQuiet(`parent -w $newCam[0]`);
+		parentConstraint $cam $newCam[0];
+		string $newName = `rename $newCam[0] ("camera_"+(size($exportCams)+1))`;
+		$exportCams[size($exportCams)] = $newName;
+	}
+	// okay, cameras are duped and ready. now get all nulls.
+	string $nulls[] = scholarPopulateNullsList();
+	select -cl;
+	select -add $exportCams;
+	select -add $nulls;
+	// everything is selected, now bake the shit out of this shit
+	int $minT = `playbackOptions -q -min`;
+	int $maxT = `playbackOptions -q -max`;
+	string $times = $minT + ":" + $maxT;
+	bakeResults -simulation true -smart 0 -s false -cp false -sb 1.0 -at tx -at ty -at tz -at rx -at ry -at rz -at sx -at sy -at sz -t $times;
+	// if we export now, we'll get the constraints and everything connected to them. that's bad, so we have to nuke all the constraints we just made.
+	print($nulls);
+	for($null in $nulls) {
+		string $constraints[] = `listConnections -type parentConstraint $null`;
+		print($constraints);
+		catchQuiet(`delete $constraints`);
+	}
+	for($camera in $exportCams) {
+		string $constraints[] = `listConnections -type parentConstraint $camera`;
+		catchQuiet(`delete $constraints`);
+	}
+	// now we have to export all this garbage to an .MA somewhere.
+	// project conventions would put it in //scholar/projects/[PROJECT]/03_production/05_elements/05_CAMERAS
+	/*string $sceneName = `file -q -sn`;
+	string $sceneNameBuffer[];
+	int $sceneTokens = `tokenize $sceneName "/" $sceneNameBuffer`;
+	// SPECIAL MAC FUNTIME ADVENTURE PETTING ZOO: /MNT/ BULLSHIT HAS TO BE DETECTED. FUCK YOU JOBS
+	string $projName;
+	if($sceneNameBuffer[0] == "mnt") {
+		$projName = $sceneNameBuffer[3];
+	} else {
+		$projName = $sceneNameBuffer[2];
+	}
+	string $fileNameExt = $sceneNameBuffer[$sceneTokens-1];
+	string $fileNameBuffer[];
+	tokenize $fileNameExt "." $fileNameBuffer;
+	string $fileName = ("NULLS_"+$fileNameBuffer[0]);
+	string $writeDir = ("/\/scholar/projects/"+$projName+"/03_production/05_elements/05_CAMERAS/");
+	*/
+	// put this shit in /data/NULLS/sceneName.ma
+	string $project = `workspace -q -fn`;
+	string $writeDir = $project+"/data/NULLS/";
+	// does path exist?
+	if(!`filetest -d $writeDir`) {
+		sysFile -md $writeDir;
+	}
+	select -cl;
+	select -add $exportCams;
+	select -add $nulls;
+	file -rts 1;
+	string $fileNameExt = `file -q -sn -shn`;
+	string $fileNameBuffer[];
+	tokenize $fileNameExt "." $fileNameBuffer;
+	string $fileName = $fileNameBuffer[0];
+	string $export = `file -force -type "mayaAscii" -es ($writeDir+$fileName)`;
+	print("\nNulls and camera exported to "+$export);
+	
+} // end proc
+	
+
+global proc scholarNullsUI() {
+	if(`window -exists scholarNullsWindow`) {
+		deleteUI scholarNullsWindow;
+	}
+	window -wh 400 400 -title "MAKIN' SOME NULLS" scholarNullsWindow;
+	string $uiForm = `formLayout -nd 100`;
+	string $makeNullBtn = `button -w 160 -h 45 -l "new null" -c scholarPlaceNull`;
+	string $lockNullBtn = `button -w 160 -h 45 -l "lock null" -c scholarLockNull`;
+	string $liveBtn = `button -w 160 -h 45 -l "make live" -c scholarMakeLive`;
+	string $nullsListLbl = `text -l "nulls list"`;
+	string $camerasListLbl = `text -l "cameras list"`;
+	string $bakeAndExportBtn = `button -w 160 -h 90 -l "bake and export" -c scholarBakeAndExportNulls`;
+	global string $nullsListCtrl;
+	global string $scholarCamerasCtrl;
+	$nullsListCtrl = `textScrollList -w 175 -h 200 -ams true -dkc deleteSelectedNulls -sc scholarSelectNull`;
+	$scholarCamerasCtrl = `textScrollList -w 175 -h 110 -ams true`;
+	formLayout -e
+		-attachForm $makeNullBtn "top" 30 -attachForm $makeNullBtn "left" 10
+		-attachForm $lockNullBtn "top" 90 -attachForm $lockNullBtn "left" 10
+		-attachForm $liveBtn "top" 150 -attachForm $liveBtn "left" 10
+		-attachForm $nullsListLbl "top" 10 -attachForm $nullsListLbl "left" 202
+		-attachForm $nullsListCtrl "top" 30 -attachForm $nullsListCtrl "left" 200
+		-attachForm $camerasListLbl "top" 250 -attachForm $camerasListLbl "left" 202
+		-attachForm $scholarCamerasCtrl "top" 270 -attachForm $scholarCamerasCtrl "left" 200
+		-attachForm $bakeAndExportBtn "top" 270 -attachForm $bakeAndExportBtn "left" 10
+	$uiForm;
+	scholarPopulateNullsList();
+	scholarPopulateCamerasList();
+	showWindow scholarNullsWindow;
+	window -e -wh 400 400 scholarNullsWindow;
+}
+scholarNullsUI;

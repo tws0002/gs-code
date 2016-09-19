@@ -1,0 +1,381 @@
+//Finds the last used object_ID number and returns it
+global proc int IDnum()
+{
+    //Builds a list of objects, sops, and material's with ID's 
+    string $types[] = {"transform", "mesh", "VRayObjectProperties"};
+    string $type_ls = stringArrayToString($types," -type ");
+    string $ID_list[] = `eval("ls -type "+$type_ls)`;
+
+
+    global int $ID_num[];
+    global int $inc = 0;
+    clear $ID_num;
+
+    //creates list of ID numbers for objects, sops, and materials
+    for ($current in $ID_list)
+    {   
+        if(`objectType $current` == "transform" || `objectType $current` == "mesh")
+        {
+            string $getNum = "$ID_num[`size $ID_num`] = `getAttr "+$current+".vrayObjectID`";
+            catchQuiet(`eval $getNum`);
+        }
+    
+        else if(`objectType $current` == "VRayObjectProperties")
+        {
+            string $getNum_sop = "$ID_num[`size $ID_num`] = `getAttr "+$current+".objectID`";
+            catchQuiet(`eval $getNum_sop`);
+        }    
+    }
+
+    //sorts list of ID's to find the last used number
+    $ID_num = sort($ID_num);
+    $inc = $ID_num[int(abs((`size $ID_num`)-1))];
+    print $inc;
+
+    return $inc;
+}
+
+//IDnum;
+
+//Finds the last used material_ID number and returns it
+global proc int IDnum_mtl()
+{
+    //Builds a list of objects, sops, and material's with ID's 
+    string $types[] = {"VRayMtl", "VRayBlendMtl", "VRayBumpMtl", "VRayCarPaintMtl","VRayFastSSS2","VRayLightMtl","VRayMeshMaterial", "VRayMtl2Sided", "VRayMtlWrapper", "lambert", "blinn", "phong","surfaceShader","VRayMtlHair3"};
+    string $type_ls = stringArrayToString($types," -type ");
+    string $ID_list[] = `eval("ls -type "+$type_ls)`;
+
+
+    global int $ID_num[];
+    global int $inc = 0;
+    clear $ID_num;
+
+    //creates list of ID numbers for objects, sops, and materials
+    for ($current in $ID_list)
+    {   
+            string $getNum_mtl = "$ID_num[`size $ID_num`] = `getAttr "+$current+".vrayMaterialId`";
+            catchQuiet(`eval $getNum_mtl`);    
+    }
+
+    //sorts list of ID's to find the last used number
+    $ID_num = sort($ID_num);
+    $inc = $ID_num[int(abs((`size $ID_num`)-1))];
+    print $inc;
+
+    return $inc;
+}
+
+//IDnum_mtl;
+
+
+//Creates Multi_Matte_RE for both objects and materials
+global proc Mult_RE_Add()
+{
+    //Gets all multimatte _RE and creates variables object and material
+    string $multimatte_RE_all[] =`ls -type "VRayRenderElement" "*Mult*"`;
+    string $multimatte_RE_obj[];
+    string $multimatte_RE_mtl[];
+    clear  $multimatte_RE_obj;
+    clear  $multimatte_RE_mtl;
+
+    //Sorts multimatte_RE_all into obj or mtl
+    for ($current in $multimatte_RE_all)
+    {
+        if (`getAttr ($current+".vray_usematid_multimatte")` == 0)
+        {
+            $multimatte_RE_obj[`size $multimatte_RE_obj`] = $current;
+        } 
+    
+        else $multimatte_RE_mtl[`size $multimatte_RE_mtl`] = $current;
+    }
+
+    //Finds the name of the last created multimatte_RE for both obj and mtl
+    int $multiInc_obj = `size $multimatte_RE_obj`;
+    int $multiInc_mtl = `size $multimatte_RE_mtl`;
+    int $last_IDnum_obj;
+    int $last_IDnum_mtl;
+    string $multimatte_RE_obj_last = $multimatte_RE_obj[int(abs((`size $multimatte_RE_obj`)-1))];
+    string $multimatte_RE_mtl_last = $multimatte_RE_mtl[int(abs((`size $multimatte_RE_mtl`)-1))];
+
+
+    //Finds the last number used for multimatte_RE for both obj and mtl
+    if ($multiInc_obj==0)
+    {
+        $last_IDnum_obj = 0;
+    }
+
+    else $last_IDnum_obj = `getAttr ($multimatte_RE_obj_last+".vray_blueid_multimatte")`;
+
+
+    if ($multiInc_mtl==0)
+    {
+        $last_IDnum_mtl = 0;
+    }
+
+    else $last_IDnum_mtl = `getAttr ($multimatte_RE_mtl_last+".vray_blueid_multimatte")`;
+
+    //Creates mulitmatte_RE for objects
+    int $IDnum; 
+    $IDnum = `IDnum`;
+    $IDnum = $IDnum +1;
+
+
+    for ($i=$last_IDnum_obj+1;$i<$IDnum; $i+=3)
+    {   
+        $multiInc_obj = $multiInc_obj +1;
+    
+        //Creates padding for asset multimatte_RE
+        string $pads;
+        int $padBuffer = `size (string($multiInc_obj))`;
+    
+        if ($padBuffer == 1)
+        {
+            $pads = "00";
+        }
+    
+        if ($padBuffer == 2)
+        {
+            $pads = "0";
+        }
+    
+        //Creates, renames, and numbers multimatte_RE
+        string $multimatte = `vrayAddRenderElement MultiMatteElement`;
+        string $multiName = ("Multi_Matte_Obj_"+ $pads + $multiInc_obj);
+        setAttr -type "string" ($multimatte+".vray_name_multimatte") $multiName;
+        string $newName = `rename $multimatte $multiName`;
+ 
+        setAttr ($newName+".vray_redid_multimatte") $i;
+        setAttr ($newName+".vray_greenid_multimatte") ($i+1);
+        setAttr ($newName+".vray_blueid_multimatte") ($i+2);
+    }
+
+
+    //Creates mulitmatte_RE for materials
+    int $IDnum_mtl; 
+    $IDnum_mtl = `IDnum_mtl`;
+    $IDnum_mtl = $IDnum_mtl +1;
+    
+    for ($i=$last_IDnum_mtl+1;$i<$IDnum_mtl; $i+=3)
+    {   
+
+        $multiInc_mtl = $multiInc_mtl +1;
+    
+        //Creates padding for asset multimatte_RE
+        string $pads;
+        int $padBuffer = `size (string($multiInc_mtl))`;
+    
+        if ($padBuffer == 1)
+        {
+            $pads = "00";
+        }
+    
+        if ($padBuffer == 2)
+        {
+            $pads = "0";
+        }
+    
+        //Creates, renames, and numbers multimatte_RE
+        string $multimatte = `vrayAddRenderElement MultiMatteElement`;
+        string $multiName = ("Multi_Matte_Mtl_"+ $pads + $multiInc_mtl);
+        setAttr -type "string" ($multimatte+".vray_name_multimatte") $multiName;
+        string $newName = `rename $multimatte $multiName`;
+        setAttr ($newName+".vray_usematid_multimatte") 1;
+     
+     
+        setAttr ($newName+".vray_redid_multimatte") $i;
+        setAttr ($newName+".vray_greenid_multimatte") ($i+1);
+        setAttr ($newName+".vray_blueid_multimatte") ($i+2);
+    }
+}
+
+
+//Adds ID attribute and increments latest number for both obj and mtl (incremental number mode)
+global proc IDadd()
+{
+    
+    string $types[] = {"transform", "mesh", "VRayObjectProperties", "VRayMtl", "VRayBlendMtl", "VRayBumpMtl", "VRayCarPaintMtl","VRayFastSSS2","VRayLightMtl","VRayMeshMaterial", "VRayMtl2Sided", "VRayMtlWrapper", "lambert", "blinn", "phong","surfaceShader","VRayMtlHair3"};
+    string $type_ls = stringArrayToString($types," -type ");    
+    string $selected[] = `eval("ls -sl -type "+$type_ls)`;
+    
+    for ($current in $selected)
+    {          
+        if(`objectType $current` == "transform" || `objectType $current` == "mesh")
+        {
+            vray addAttributesFromGroup $current vray_objectID 1;
+            string $setID = "setAttr "+$current+".vrayObjectID ((`IDnum`)+1)";
+            evalDeferred -lp $setID;
+        }
+    
+        else if(`objectType $current` == "VRayObjectProperties")
+        {   
+            setAttr ($current+".objectIDEnabled") 1;
+            string $setID_sop = "setAttr "+$current+".objectID ((`IDnum`)+1)"; 
+            evalDeferred -lp $setID_sop; 
+        }
+    
+        else
+        {   
+            vray addAttributesFromGroup $current vray_material_id 1;
+            string $setID_mtl = "setAttr "+$current+".vrayMaterialId ((`IDnum_mtl`)+1)"; 
+            evalDeferred -lp $setID_mtl;        
+        }      
+    }
+}
+
+//Adds ID attribute and increments latest number for both obj and mtl (single number mode)
+global proc IDadd_single()
+{
+    
+    string $types[] = {"transform", "mesh", "VRayObjectProperties", "VRayMtl", "VRayBlendMtl", "VRayBumpMtl", "VRayCarPaintMtl","VRayFastSSS2","VRayLightMtl","VRayMeshMaterial", "VRayMtl2Sided", "VRayMtlWrapper", "lambert", "blinn", "phong","surfaceShader","VRayMtlHair3"};
+    string $type_ls = stringArrayToString($types," -type ");    
+    string $selected[] = `eval("ls -sl -type "+$type_ls)`;
+    
+    int $num = ((`IDnum`)+1);
+    int $num_mtl = ((`IDnum_mtl`)+1);
+	
+    for ($current in $selected)
+    {          
+        if(`objectType $current` == "transform" || `objectType $current` == "mesh")
+        {
+            vray addAttributesFromGroup $current vray_objectID 1;
+            string $setID = "setAttr "+$current+".vrayObjectID "+$num;
+            evalDeferred -lp $setID;
+        }
+    
+        else if(`objectType $current` == "VRayObjectProperties")
+        {   
+            setAttr ($current+".objectIDEnabled") 1;
+            string $setID_sop = "setAttr "+$current+".objectID "+$num; 
+            evalDeferred -lp $setID_sop; 
+        }
+    
+        else
+        {   
+            vray addAttributesFromGroup $current vray_material_id 1;
+            string $setID_mtl = "setAttr "+$current+".vrayMaterialId "+$num_mtl; 
+            evalDeferred -lp $setID_mtl;        
+        }      
+    }
+}
+
+global proc SelectFromMultimatte()
+{
+    string $vrayRE_mult[] = `ls -sl -type "VRayRenderElement" "*Mult*"`;
+    string $selectionNames[];
+    clear $selectionNames; 
+
+    for ($current in $vrayRE_mult)
+    {   
+        int $matCheck = `getAttr ($current+".vray_usematid_multimatte")`;
+    
+        int $R = `getAttr ($current+".vray_redid_multimatte")`;
+        int $G = `getAttr ($current+".vray_greenid_multimatte")`;
+        int $B = `getAttr ($current+".vray_blueid_multimatte")`;
+    
+    
+        if ($matCheck == 0)
+        { 
+
+            string $objectID_Attr[] = `ls -l "*:*:*:*.vrayObjectID" "*:*:*:*.objectID" "*:*:*.vrayObjectID" "*:*:*.objectID" "*:*.vrayObjectID" "*:*.objectID" "*.vrayObjectID" "*.objectID"`;
+
+            
+            for ($objectId in $objectID_Attr)
+            {
+                    int $objectMatch = `getAttr $objectId`;
+                
+                    if ( $objectMatch == $R || $objectMatch == $G || $objectMatch == $B)
+                    {
+                        $selectionNames[`size $selectionNames`] = `match "^[^\.]+" $objectId`;
+                    }
+                }
+            
+        } 
+    
+        if ($matCheck == 1)
+        {   
+            
+            string $matID_Attr[] = `ls -l "*:*:*:*.vrayMaterialId" "*:*:*.vrayMaterialId" "*:*.vrayMaterialId" "*.vrayMaterialId"`;
+            
+            for ($matId in $matID_Attr)
+            {
+                int $matMatch = `getAttr $matId`;
+                
+                if ( $matMatch == $R || $matMatch == $G || $matMatch == $B)
+                {
+                    $selectionNames[`size $selectionNames`] = `match "^[^\.]+" $matId`;
+                }
+            }
+            
+        }    
+    }
+    
+select $selectionNames;
+}
+
+global proc ID_Rem_Selected()
+{
+    string $types[] = {"transform", "mesh", "VRayObjectProperties", "VRayMtl", "VRayBlendMtl", "VRayBumpMtl", "VRayCarPaintMtl","VRayFastSSS2","VRayLightMtl","VRayMeshMaterial", "VRayMtl2Sided", "VRayMtlWrapper", "lambert", "blinn", "phong","surfaceShader","VRayMtlHair3"};
+    string $type_ls = stringArrayToString($types," -type ");    
+    string $selected[] = `eval("ls -sl -type "+$type_ls)`;
+    
+    for ($current in $selected)
+    {          
+        if(`objectType $current` == "transform" || `objectType $current` == "mesh")
+        {
+            vray addAttributesFromGroup $current vray_objectID 0;
+        }
+    
+        else if(`objectType $current` == "VRayObjectProperties")
+        {   
+            setAttr ($current+".objectIDEnabled") 0;
+        }
+    
+        else
+        {   
+            vray addAttributesFromGroup $current vray_material_id 0;     
+        }      
+    }      
+}
+
+global proc ID_Rem_All()
+{
+    string $objectID_Attr[] = `ls -l "*:*:*:*.vrayObjectID" "*:*:*.vrayObjectID" "*:*.vrayObjectID" "*.vrayObjectID"`;
+    string $objectProperties[] = `ls -l "*:*:*:*.objectIDEnabled" "*:*:*.objectIDEnabled" "*:*.objectIDEnabled" "*.objectIDEnabled"`;
+    string $matID_Attr[] = `ls -l "*:*:*:*.vrayMaterialId" "*:*:*.vrayMaterialId" "*:*.vrayMaterialId" "*.vrayMaterialId"`;
+    string $multimatte_RE_all[] =`ls -type "VRayRenderElement" "*Mult*"`;
+
+    for ($current in $objectID_Attr)
+    {
+        string $name = `match "^[^\.]+" $current`;    
+        vray addAttributesFromGroup $name vray_objectID 0;            
+    }
+    
+    for ($current in $objectProperties)
+    {
+        setAttr $current 0;        
+    }
+    
+    for ($current in $matID_Attr)
+    {
+        string $name = `match "^[^\.]+" $current`;
+        vray addAttributesFromGroup $name vray_material_id 0;     
+    }
+    
+    delete $multimatte_RE_all;           
+}
+
+//UI FOR BUTTONS
+if (`window -exists VRayAutoID`) 
+{
+	deleteUI -window VRayAutoID;
+	windowPref -remove VRayAutoID;  
+} 
+
+window -title "VRayAutoID" -widthHeight 200 118 VRayAutoID;
+    columnLayout -adjustableColumn true;
+    button -label "Create ID Multi" -command "IDadd; evalDeferred -lp Mult_RE_Add";
+    button -label "Create ID Single"-command "IDadd_single; evalDeferred -lp Mult_RE_Add";
+    button -label "Select From Multimatte" -command "SelectFromMultimatte";
+    button -label "Remove Sel" -command "ID_Rem_Selected";
+    button -label "Remove All" -command "ID_Rem_All";
+showWindow VRayAutoID;

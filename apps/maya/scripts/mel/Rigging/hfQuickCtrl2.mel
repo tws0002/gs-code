@@ -1,0 +1,720 @@
+// hfQuickCtrl2 v0.2 by henry foster, henry@toadstorm.com
+//
+// an improvement over the original interface. builds fancy controllers for selected objects. 
+// constrains translate, rotate, scale, parent, and visibility.
+// portions of this code blatantly stolen from DDCtrlMaker.mel. sorry but i don't want to have to figure out all those numbers
+// myself. thanks DD!
+//
+//
+global proc hfGetCtrlName() {
+    global string $hftargetNameCtrl;
+    global string $hfctrlNameCtrl;
+    string $targetName = `textField -q -tx $hftargetNameCtrl`;
+    if(!`objExists($targetName)`) {
+        warning("\nNo target exists by that name.");
+    } else {
+        textField -e -tx ($targetName+"_CTRL") $hfctrlNameCtrl;
+    }
+} // end hfGetCtrlName
+
+global proc hfGetTargetName() {
+    string $sel[] = `ls -sl`;
+    global string $hftargetNameCtrl;
+    if(size($sel) > 1) {
+        warning("\nYou can only control one object at a time. To constrain multiple objects, group them first.");
+    } else {
+        if(size($sel) < 1) {
+            warning("\nYou need to select an object to control!");
+        } else {
+            textField -e -tx $sel[0] $hftargetNameCtrl;
+        }
+    }
+} // end hfGetTargetName
+global proc string hfgenerateCtrl(string $shapeName, string $ctrlName) {
+	// this actually generates the curve shape.
+	string $c;
+	if ($shapeName=="arrow") {
+		$c=`curve -d 1 -p 0 0.6724194 0.4034517 -p 0 0 0.4034517 -p 0 0
+			0.6724194 -p 0 -0.4034517 0 -p 0 0 -0.6724194 -p 0 0 -0.4034517 -p 0
+			0.6724194 -0.4034517 -p 0 0.6724194 0.4034517 -k 0 -k 1 -k 2 -k 3 -k 4
+			-k 5 -k 6 -k 7 `;
+	    setAttr ($c+".rz") 180;
+	    makeIdentity -apply true $c;
+	}
+	if ($shapeName=="cross") {
+		$c=`curve -d 1 -p 1 0 -1 -p 2 0 -1 -p 2 0 1 -p 1 0 1 -p 1 0 2 -p -1 0 2
+			-p -1 0 1 -p -2 0 1 -p -2 0 -1 -p -1 0 -1 -p -1 0 -2 -p 1 0 -2 -p 1 0 -1
+			-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 `;
+		setAttr ($c+".sx") 0.4;
+		setAttr ($c+".sy") 0.4;
+		setAttr ($c+".sz") 0.4;
+		makeIdentity -apply true $c;
+	}
+	if ($shapeName=="snow") {
+		$c=`curve -d 1 
+		-p 4.4408920985006262e-016 -0.0015683700000006517 2
+		-p 1.0000000000000004 -6.6613381477509392e-016 1.9999999999999998
+		-p 1.0000000000000002 -4.4408920985006257e-016 0.99999999999999978
+		-p 2 -6.6613381477509383e-016 0.99999999999999956
+		-p 2 0 -0.0015683700000002077
+		-p 2 1 -2.2204460492503131e-016
+		-p 1 1 -2.2204460492503131e-016
+		-p 1 2 -4.4408920985006262e-016
+		-p -1 2 -4.4408920985006262e-016
+		-p -1 1 -2.2204460492503131e-016
+		-p -2 1 -2.2204460492503131e-016
+		-p -2 -1 2.2204460492503131e-016
+		-p -1 -1 2.2204460492503131e-016
+		-p -1 -2 4.4408920985006262e-016
+		-p 1 -2 4.4408920985006262e-016
+		-p 1 -1 2.2204460492503131e-016
+		-p 2 -1 2.2204460492503131e-016
+		-p 2 0 -0.0015683700000002077
+		-p 2 -6.6613381477509383e-016 0.99999999999999956
+		-p 1.0000000000000002 -4.4408920985006257e-016 0.99999999999999978
+		-p 1.0000000000000004 -6.6613381477509392e-016 1.9999999999999998
+		-p 0.099999999999998312 -0.0014115330000006563 2
+		-p 4.4408920985006262e-016 -0.0015683700000006517 2
+		-p -0.10000000000000098 -0.0014115330000006067 2
+		-p -0.99999999999999956 -2.2204460492503136e-016 2.0000000000000004
+		-p -0.99999999999999978 -4.9303806576313238e-032 1.0000000000000002
+		-p -1.9999999999999998 2.2204460492503121e-016 1.0000000000000004
+		-p -2 6.6613381477509383e-016 -0.99999999999999956
+		-p -1.0000000000000002 4.4408920985006257e-016 -0.99999999999999978
+		-p -1.0000000000000004 6.6613381477509392e-016 -1.9999999999999998
+		-p 0.99999999999999956 2.2204460492503136e-016 -2.0000000000000004
+		-p 0.99999999999999978 4.9303806576313238e-032 -1.0000000000000002
+		-p 1.9999999999999998 -2.2204460492503121e-016 -1.0000000000000004
+		-p 2 -6.6613381477509383e-016 0.99999999999999956
+		-p 1.0000000000000002 -4.4408920985006257e-016 0.99999999999999978
+		-p 1.0000000000000004 -6.6613381477509392e-016 1.9999999999999998
+		-p 0.099999999999998312 -0.0014115330000006563 2
+		-p 4.4408920985006262e-016 -0.0015683700000006517 2
+		-p 3.9968028886505572e-016 -0.10141153300000205 2
+		-p 0 -1.0000000000000004 1.9999999999999998
+		-p -2.2204460492503131e-016 -1.0000000000000002 0.99999999999999978
+		-p -6.6613381477509392e-016 -2 0.99999999999999956
+		-p -1.1102230246251565e-015 -1.9999999999999998 -1.0000000000000004
+		-p -6.6613381477509392e-016 -0.99999999999999978 -1.0000000000000002
+		-p -8.8817841970012523e-016 -0.99999999999999956 -2
+		-p 0 1.0000000000000004 -1.9999999999999998
+		-p 2.2204460492503131e-016 1.0000000000000002 -0.99999999999999978
+		-p 6.6613381477509392e-016 2 -0.99999999999999956
+		-p 1.1102230246251565e-015 1.9999999999999998 1.0000000000000004
+		-p 6.6613381477509392e-016 0.99999999999999978 1.0000000000000002
+		-p 8.8817841970012523e-016 0.99999999999999956 2
+		-p 0.0015683700000006517 -4.4443745794708893e-016 2
+		-p 4.4408920985006262e-016 -0.0015683700000006517 2
+		-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 
+		-k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 -k 20
+		-k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 29 -k 30
+		-k 31 -k 32 -k 33 -k 34 -k 35 -k 36 -k 37 -k 38 -k 39 -k 40
+		-k 41 -k 42 -k 43 -k 44 -k 45 -k 46 -k 47 -k 48 -k 49 -k 50
+		-k 51 -k 52 `;
+		setAttr ($c+".sx") 0.38;
+		setAttr ($c+".sy") 0.38;
+		setAttr ($c+".sz") 0.38;
+		makeIdentity -apply true $c;
+	}	
+	if ($shapeName=="square") {
+		 $c=`curve -d 1 -p -1 0 1 -p 1 0 1 -p 1 0 -1 -p -1 0 -1 -p -1 0 1 -k 0
+			-k 1 -k 2 -k 3 -k 4 `;
+	}
+	if ($shapeName=="circle") {
+		 $c= `curve -d 3 
+		-p -0.50525882489399365 0 -0.83512503818809947
+		-p 0.022313365804565437 0 -0.96744341986682636
+		-p 0.71031056148790783 0 -0.71031056148790783
+		-p 1 0 0
+		-p 0.71031056148790783 0 0.71031056148790783
+		-p 0 0 1
+		-p -0.71031056148790783 0 0.71031056148790783
+		-p -0.98309609442669621 0 0.0077060138797057087
+		-p -0.81476494957991508 0 -0.54554155937325666
+		-p -0.50525882489399365 0 -0.83512503818809947
+		-p 0.022313365804565437 0 -0.96744341986682636
+		-p 0.71031056148790783 0 -0.71031056148790783 
+		-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13` ;
+	}
+	if ($shapeName=="cube") {
+		$c=`curve -d 1 -p -0.5 0.5 0.5 -p 0.5 0.5 0.5 -p 0.5 0.5 -0.5 -p -0.5
+			0.5 -0.5 -p -0.5 0.5 0.5 -p -0.5 -0.5 0.5 -p -0.5 -0.5 -0.5 -p 0.5 -0.5
+			-0.5 -p 0.5 -0.5 0.5 -p -0.5 -0.5 0.5 -p 0.5 -0.5 0.5 -p 0.5 0.5 0.5 -p
+			0.5 0.5 -0.5 -p 0.5 -0.5 -0.5 -p -0.5 -0.5 -0.5 -p -0.5 0.5 -0.5 -k 0 -k
+			1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14
+			-k 15  `;
+	}
+	if ($shapeName=="roundCube") {
+		$c=`curve -d 1
+		-p -0.5009066471890149 0.60793641188909775 0.73118575537458508
+		-p 0.50090664718901801 0.82865315865866107 0.87846330410159157
+		-p 0.50090664718901801 0.97968935442399785 0.44742662270877043
+		-p 0.50090664718901801 1.0202129758943719 1.1245241575642032e-015
+		-p 0.50090664718901801 0.97968935442399829 -0.44742662270876832
+		-p 0.50090664718901801 0.82865315865866107 -0.87846330410158957
+		-p -0.5009066471890149 0.60793641188909775 -0.73118575537458297
+		-p -0.5009066471890149 0.60793641188909775 0.73118575537458508
+		-p -0.50090664718901501 -0.6079364118891063 0.73118575537458508
+		-p -0.50090664718901501 -0.6079364118891063 -0.73118575537458297
+		-p 0.5009066471890179 -0.82865315865866929 -0.87846330410158957
+		-p 0.5009066471890179 -0.97968935442400651 -0.44742662270876832
+		-p 0.5009066471890179 -1.0202129758943803 1.0238432495687358e-015
+		-p 0.5009066471890179 -0.97968935442400651 0.44742662270877043
+		-p 0.5009066471890179 -0.82865315865866929 0.87846330410159157
+		-p -0.50090664718901501 -0.6079364118891063 0.73118575537458508
+		-p 0.5009066471890179 -0.82865315865866929 0.87846330410159157
+		-p 0.5009066471890179 -0.42205688324657348 1.042971853654209
+		-p 0.5009066471890179 -4.0646663654151772e-015 1.0784992010176448
+		-p 0.5009066471890179 0.42205688324656521 1.042971853654209
+		-p 0.50090664718901801 0.82865315865866107 0.87846330410159157
+		-p 0.50090664718901801 0.97968935442399785 0.44742662270877043
+		-p 0.50090664718901801 1.0202129758943719 1.1245241575642032e-015
+		-p 0.50090664718901801 0.97968935442399829 -0.44742662270876832
+		-p 0.50090664718901801 0.82865315865866107 -0.87846330410158957
+		-p 0.50090664718901801 0.42205688324656515 -1.0429718536542065
+		-p 0.5009066471890179 -4.090379302991285e-015 -1.0784992010176429
+		-p 0.5009066471890179 -0.42205688324657353 -1.0429718536542065
+		-p 0.5009066471890179 -0.82865315865866929 -0.87846330410158957
+		-p -0.50090664718901501 -0.6079364118891063 -0.73118575537458297
+		-p -0.5009066471890149 0.60793641188909775 -0.73118575537458297
+		-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 
+		-k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 
+		-k 20 -k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 29 
+		-k 30`;		
+		setAttr ($c+".sx") 0.73;
+		setAttr ($c+".sy") 0.73;
+		setAttr ($c+".sz") 0.73;
+		setAttr ($c+".rz") -90;
+		makeIdentity -apply true $c;
+	}		
+	if ($shapeName=="flatCube") {
+		$c=`curve -d 1
+		-p -1.4454197399737647 0.074786005662381347 0.33859391820135609
+		-p -0.0011382759774108964 0.18032561162967517 0.5
+		-p -0.0011382759774108964 0.18032561162967517 -0.5
+		-p -1.4454197399737647 0.074786005662381347 -0.33859391820135609
+		-p -1.4454197399737647 0.074786005662381347 0.33859391820135609
+		-p -1.4454197399737647 -0.074786005662381347 0.33859391820135609
+		-p -1.4454197399737647 -0.074786005662381347 -0.33859391820135609
+		-p -0.0011382759774108964 -0.18032561162967517 -0.5
+		-p -0.0011382759774108964 -0.18032561162967517 0.5
+		-p -1.4454197399737647 -0.074786005662381347 0.33859391820135609
+		-p -0.0011382759774108964 -0.18032561162967517 0.5
+		-p -0.0011382759774108964 0.18032561162967517 0.5
+		-p -0.0011382759774108964 0.18032561162967517 -0.5
+		-p -0.0011382759774108964 -0.18032561162967517 -0.5
+		-p -1.4454197399737647 -0.074786005662381347 -0.33859391820135609
+		-p -1.4454197399737647 0.074786005662381347 -0.33859391820135609
+		-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 
+		-k 11 -k 12 -k 13 -k 14 -k 15`;
+		setAttr ($c+".rz") -90;
+		setAttr ($c+".rx") 90;
+		makeIdentity -apply true $c;
+		
+	}
+	if ($shapeName=="orient") {
+		$c=`curve 
+			-d 3 -p 0.0959835 0.604001 -0.0987656 -p 0.500783 0.500458
+			-0.0987656 -p 0.751175 0.327886 -0.0987656 -p 0.751175 0.327886
+			-0.0987656 -p 0.751175 0.327886 -0.336638 -p 0.751175 0.327886 -0.336638
+			-p 1.001567 0 0 -p 1.001567 0 0 -p 0.751175 0.327886 0.336638 -p
+			0.751175 0.327886 0.336638 -p 0.751175 0.327886 0.0987656 -p 0.751175
+			0.327886 0.0987656 -p 0.500783 0.500458 0.0987656 -p 0.0959835 0.604001
+			0.0987656 -p 0.0959835 0.604001 0.0987656 -p 0.0959835 0.500458 0.500783
+			-p 0.0959835 0.327886 0.751175 -p 0.0959835 0.327886 0.751175 -p
+			0.336638 0.327886 0.751175 -p 0.336638 0.327886 0.751175 -p 0 0 1.001567
+			-p 0 0 1.001567 -p -0.336638 0.327886 0.751175 -p -0.336638 0.327886
+			0.751175 -p -0.0959835 0.327886 0.751175 -p -0.0959835 0.327886 0.751175
+			-p -0.0959835 0.500458 0.500783 -p -0.0959835 0.604001 0.0987656 -p
+			-0.0959835 0.604001 0.0987656 -p -0.500783 0.500458 0.0987656 -p
+			-0.751175 0.327886 0.0987656 -p -0.751175 0.327886 0.0987656 -p
+			-0.751175 0.327886 0.336638 -p -0.751175 0.327886 0.336638 -p -1.001567
+			0 0 -p -1.001567 0 0 -p -0.751175 0.327886 -0.336638 -p -0.751175
+			0.327886 -0.336638 -p -0.751175 0.327886 -0.0987656 -p -0.751175
+			0.327886 -0.0987656 -p -0.500783 0.500458 -0.0987656 -p -0.0959835	
+			0.604001 -0.0987656 -p -0.0959835 0.604001 -0.0987656 -p -0.0959835
+			0.500458 -0.500783 -p -0.0959835 0.327886 -0.751175 -p -0.0959835
+			0.327886 -0.751175 -p -0.336638 0.327886 -0.751175 -p -0.336638 0.327886
+			-0.751175 -p 0 0 -1.001567 -p 0 0 -1.001567 -p 0.336638 0.327886
+			-0.751175 -p 0.336638 0.327886 -0.751175 -p 0.0959835 0.327886 -0.751175
+			-p 0.0959835 0.327886 -0.751175 -p 0.0959835 0.500458 -0.500783 -p
+			0.0959835 0.604001 -0.0987656 -k 0 -k 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k
+			6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18
+			-k 19 -k 20 -k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 29 -k 30
+			-k 31 -k 32 -k 33 -k 34 -k 35 -k 36 -k 37 -k 38 -k 39 -k 40 -k 41 -k 42
+			-k 43 -k 44 -k 45 -k 46 -k 47 -k 48 -k 49 -k 50 -k 51 -k 52 -k 53 -k 53
+			-k 53 `;
+	}	
+	if ($shapeName=="bendedDoubleArrow") {
+		$c=`curve -d 3
+			-p 0.095983499999999999 0.60400100000000012 -0.098765600000000009
+			-p 0.095983499999999999 0.60400100000000012 0.098765600000000009
+			-p 0.095983499999999999 0.60400100000000012 0.098765600000000009
+			-p 0.095983499999999999 0.50045799999999996 0.50078300000000009
+			-p 0.095983499999999999 0.32788600000000001 0.75117500000000004
+			-p 0.095983499999999999 0.32788600000000001 0.75117500000000004
+			-p 0.33663799999999999 0.32788600000000001 0.75117500000000004
+			-p 0.33663799999999999 0.32788600000000001 0.75117500000000004
+			-p 0 0 1.0015670000000001
+			-p 0 0 1.0015670000000001
+			-p -0.33663799999999999 0.32788600000000001 0.75117500000000004
+			-p -0.33663799999999999 0.32788600000000001 0.75117500000000004
+			-p -0.095983499999999999 0.32788600000000001 0.75117500000000004
+			-p -0.095983499999999999 0.32788600000000001 0.75117500000000004
+			-p -0.095983499999999999 0.50045799999999996 0.50078300000000009
+			-p -0.095983499999999999 0.60400100000000012 0.098765600000000009
+			-p -0.095983499999999999 0.60400100000000012 0.098765600000000009
+			-p -0.095983499999999999 0.60400100000000012 -0.098765600000000009
+			-p -0.095983499999999999 0.60400100000000012 -0.098765600000000009
+			-p -0.095983499999999999 0.50045799999999996 -0.50078300000000009
+			-p -0.095983499999999999 0.32788600000000001 -0.75117500000000004
+			-p -0.095983499999999999 0.32788600000000001 -0.75117500000000004
+			-p -0.33663799999999999 0.32788600000000001 -0.75117500000000004
+			-p -0.33663799999999999 0.32788600000000001 -0.75117500000000004
+			-p 0 0 -1.0015670000000001
+			-p 0 0 -1.0015670000000001
+			-p 0.33663799999999999 0.32788600000000001 -0.75117500000000004
+			-p 0.33663799999999999 0.32788600000000001 -0.75117500000000004
+			-p 0.095983499999999999 0.32788600000000001 -0.75117500000000004
+			-p 0.095983499999999999 0.32788600000000001 -0.75117500000000004
+			-p 0.095983499999999999 0.50045799999999996 -0.50078300000000009
+			-p 0.095983499999999999 0.60400100000000012 -0.098765600000000009
+			-k 0 -k 0 -k 0 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 
+			-k 20 -k 21 -k 22 -k 23 -k 24 -k 25 -k 26 -k 27 -k 28 -k 41 
+			-k 42 -k 43 -k 44 -k 45 -k 46 -k 47 -k 48 -k 49 
+			-k 50 -k 51 -k 52 -k 53 -k 53 -k 53`;
+	}			
+	if ($shapeName=="spike") {
+		$c=`curve -d 1
+			-p -0.26962052657709101 0.26962052657709457 3.978142725902245e-006
+			-p 0.26962052657709101 0.26962052657709457 3.978142725902245e-006
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -0.26962052657709101 0.26962052657709457 3.978142725902245e-006
+			-p -0.26962052657709101 -0.26962052657708835 3.978142725902245e-006
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p 0.26962052657709101 -0.26962052657708835 3.978142725902245e-006
+			-p -0.26962052657709101 -0.26962052657708835 3.978142725902245e-006
+			-p 0.26962052657709101 -0.26962052657708835 3.978142725902245e-006
+			-p 0.26962052657709101 0.26962052657709457 3.978142725902245e-006
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-p -9.2566414394923413e-005 -9.2566414394035235e-005 -1.6708418691196432
+			-k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8
+			-k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16`;
+	    setAttr ($c+".rx") 90;
+	    makeIdentity -apply true $c;
+	}
+	if ($shapeName=="locator") {
+		$c=`curve -d 1 
+		-k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7
+		-p -2.3647008390477731 1.6653345369377348e-014 0
+		-p 2.3647008390477757 1.6653345369377348e-014 0
+		-p 1.3877787807814457e-015 1.6653345369377348e-014 0
+		-p 1.3877787807814457e-015 2.3647008390477913 0
+		-p 1.3877787807814457e-015 -2.364700839047758 0
+		-p 1.3877787807814457e-015 1.6653345369377348e-014 0
+		-p 1.3877787807814457e-015 1.6653345369377348e-014 2.3647008390477744
+		-p 1.3877787807814457e-015 1.6653345369377348e-014 -2.3647008390477744`;
+	}
+	// set curve color to yellow-green
+	color -ud 3;
+	// return curve shape name for other functions
+	print("\nGenerated control "+$ctrlName);
+	string $newName = `rename $c $ctrlName`;
+	return $newName;
+} // end hfgenerateCtrl
+
+global proc string hfFitCtrl(string $ctrl, string $target, int $matchAxes, int $xUp, int $yUp, int $zUp, int $autoScale) {
+    // this constrains the control object to the target and scales it, allowing the user to pick a final scale and up axis
+    // before committing to a controller.
+    // first, parent constrain the controller to the target.
+    
+    if($matchAxes==1) {
+        delete `parentConstraint $target $ctrl`;
+    } else {
+        delete `pointConstraint $target $ctrl`;
+        delete `orientConstraint -mo $target $ctrl`;
+    }
+   
+    // now get the bounding box of the target object as use that to set a default controller scale.
+    float $objectSize[] = `xform -q -bb -ws $target`;
+    float $normDims[];
+    $normDims[0] = abs($objectSize[0]-$objectSize[3]);
+    $normDims[1] = abs($objectSize[1]-$objectSize[4]);
+    $normDims[2] = abs($objectSize[2]-$objectSize[5]);
+    // before sorting, we should prioritize the bounding box based on our up axis. this way tall, skinny objects don't get
+    // enormous control objects.
+    if($xUp==1) {
+        $normDims[2] = 0;
+        float $x = `getAttr($ctrl+".rx")`;
+        float $y = `getAttr($ctrl+".ry")`;
+        float $z = `getAttr($ctrl+".rz")`;
+        setAttr ($ctrl+".rz") ($z-90.0);
+        setAttr ($ctrl+".rx") $y;
+        setAttr ($ctrl+".ry") $x;
+    }
+    if($yUp==1) {
+        $normDims[0] = 0;
+        
+    }
+    if($zUp==1) {
+        $normDims[1] = 0;
+        float $x = `getAttr($ctrl+".rx")`;
+        setAttr ($ctrl+".rx") ($x+90);
+        
+    }
+    float $normDimsSorted[] = `sort $normDims`;
+    float $ctrlRadius = $normDimsSorted[2] / 1.57; // 1.57 is about half of pi, should keep the radius in a good range
+    if($autoScale==1) {    
+        setAttr ($ctrl+".sx") $ctrlRadius;
+        setAttr ($ctrl+".sy") $ctrlRadius;
+        setAttr ($ctrl+".sz") $ctrlRadius;
+    }
+    // setAttr -e -lock true ($ctrl+".tx");
+    // setAttr -e -lock true ($ctrl+".ty");
+    // setAttr -e -lock true ($ctrl+".tz");
+    select -r $ctrl;
+    print("\nFitted control "+$ctrl);
+    return $ctrl;
+} // end hfFitCtrl
+
+global proc string hfReplaceCtrl(string $type, string $ctrl) {
+    // in case you want to hfReplace your temp controller shape with another. might not actually need this function but whatevs.
+    // if you push any of the replacement buttons with no target defined, this procedure will try to
+	// constrain an empty controller to itself...
+	global string $hfTempCtrl;
+	// print("\n$hfTempCtrl is listed as "+$hfTempCtrl);
+	if(size($hfTempCtrl) < 1) {
+		warning("You must use \"New Control\" before selecting a style.");
+	} else {
+		string $temp = $ctrl;    
+		string $newCtrl = hfgenerateCtrl($type, $temp);
+		delete `parentConstraint $ctrl $newCtrl`;
+		delete `scaleConstraint $ctrl $newCtrl`;
+		delete $ctrl;
+    
+		$hfTempCtrl = $newCtrl;
+		return $newCtrl;
+	}
+} // end hfReplaceCtrl
+
+global proc string hfApplyCtrl() {
+    // this actually applies all the constraints to the target object.
+    // all the params come from the dialog box except $ctrl which might need to be global...
+    // applying should also clear the dialogs or at least increment them to prevent duplicate names.
+    // create a null, create the controller inside it, apply & delete constraints from target to null, freeze xforms on ctrl.
+    global string $hfTempCtrl;
+    global string $hfctrlNameCtrl;
+    global string $hftargetNameCtrl;
+    global string $hftranslateCtrl;
+    global string $hfrotateCtrl;
+    global string $hfscaleCtrl;
+    global string $hfvisCtrl;
+	global string $hfSmoothCtrl;
+    global string $hflockCtrl;
+    
+    string $ctrl = $hfTempCtrl;
+    string $ctrlName = `textField -q -tx $hfctrlNameCtrl`;
+    string $target = `textField -q -tx $hftargetNameCtrl`;
+    string $point = `checkBox -q -v $hftranslateCtrl`;
+    string $orient = `checkBox -q -v $hfrotateCtrl`;
+    string $scale = `checkBox -q -v $hfscaleCtrl`;
+    string $vis = `checkBox -q -v $hfvisCtrl`;
+    string $lock = `checkBox -q -v $hflockCtrl`;
+	string $smooth = `checkBox -q -v $hfSmoothCtrl`;
+    
+    select -cl;
+   // setAttr -e -lock false ($ctrl+".tx");
+   // setAttr -e -lock false ($ctrl+".ty");
+   // setAttr -e -lock false ($ctrl+".tz");
+    string $null = `group -em -n ($ctrl+"_grp")`;
+    delete `parentConstraint $ctrl $null`;
+    parent $ctrl $null;
+    makeIdentity -apply true $ctrl;
+    if($point==1 && $orient==1) {
+        parentConstraint -mo $ctrl $target;
+    } else {
+        if($point==1) {
+            pointConstraint -mo $ctrl $target;
+        }
+        if($orient==1) {
+            orientConstraint -mo $ctrl $target;
+        }
+    }
+    if($scale==1) {
+        scaleConstraint -mo $ctrl $target;
+    }
+    if($vis==1) {
+        // rather than binding visibility directly to the controller's vis, it makes more sense to just add a new enum attribute
+        // and connect that to the target's visibility.
+        addAttr -ln "targetVisible" -at "enum" -en "Off:On" $ctrl;
+        setAttr -e -cb true -lock false ($ctrl+".targetVisible");
+        setAttr -e -keyable true ($ctrl+".targetVisible");
+        setAttr ($ctrl+".targetVisible") 1;
+        connectAttr -f ($ctrl+".targetVisible") ($target+".visibility");
+    }
+	if($smooth==1) {
+		string $smoothNodes[];
+		// get all poly meshes that are direct descendents of the currently selected xform, smooth them, and add the smooth nodes to an array.
+		// then add an enum attr to the controller and directly connect it to each smooth node.
+		string $selShapes[] = `listRelatives -ad -typ "mesh" $target`;
+		print("\nSmoothing relatives: ");
+		print $selShapes;
+		for($n=0;$n<size($selShapes);$n++) {
+			if(`objectType $selShapes[$n]` == "mesh") {
+				string $newSmooth[] = `polySmooth -dv 0 $selShapes[$n]`;
+				$smoothNodes[size($smoothNodes)] = $newSmooth[0];
+			}
+		}
+		// okay now the enum attr
+		addAttr -ln "smooth" -at "enum" -en "Off:Low:High:Puke" $ctrl;
+		setAttr -e -cb true -lock false ($ctrl+".smooth");
+		setAttr -e -keyable true ($ctrl+".smooth");
+		// finally, connect the controller to each smooth node.
+		for($n=0;$n<size($smoothNodes);$n++) {
+			connectAttr -f ($ctrl+".smooth") ($smoothNodes[$n]+".divisions");
+		}
+		
+	}
+    // are we auto-locking unused channels? 
+    if($lock==1) {    
+        if($point==0) {
+            setAttr -e -lock true ($ctrl+".tx");
+            setAttr -e -lock true ($ctrl+".ty");
+            setAttr -e -lock true ($ctrl+".tz");
+        }
+        if($orient==0) {
+            setAttr -e -lock true ($ctrl+".rx");
+            setAttr -e -lock true ($ctrl+".ry");
+            setAttr -e -lock true ($ctrl+".rz");
+        }
+        if($scale==0) {
+            setAttr -e -lock true ($ctrl+".sx");
+            setAttr -e -lock true ($ctrl+".sy");
+            setAttr -e -lock true ($ctrl+".sz");
+        }
+    }
+    string $newName = `rename $ctrl $ctrlName`; 
+    print("\nController "+$newName+" applied to target "+$target+".");
+    $hfTempCtrl = "";
+    return $newName;
+} // end hfApplyCtrl
+    
+// in the GUI, the target will be defined by the selected object. the user can "reload" the target with a button. this makes the whole
+// "OH SHIT I SELECTED THE WRONG THING" a little easier.
+
+
+global proc hfStartRigging() {
+    // this initializes the rigging process. get the target and run hfgenerateCtrl and hfFitCtrl for a quick start.
+    global string $hfctrlNameCtrl;
+    global string $hftargetNameCtrl;
+    global string $hfxUpCtrl;
+    global string $hfyUpCtrl;
+    global string $hfzUpCtrl;
+    global string $hfTempCtrl;
+    if(size($hfTempCtrl) > 0) {
+        catchQuiet(`delete $hfTempCtrl`);
+       // $hfTempCtrl = "";
+    }
+    string $ctrlName = `textField -q -tx $hfctrlNameCtrl`;
+    string $targetName = `textField -q -tx $hftargetNameCtrl`;
+    int $xUp = `radioButton -q -sl $hfxUpCtrl`;
+    int $yUp = `radioButton -q -sl $hfyUpCtrl`;
+    int $zUp = `radioButton -q -sl $hfzUpCtrl`;
+    
+    // error check
+    if(!`objExists($targetName)`) {
+        warning("no valid target in target box.");    
+    } else {
+        string $outCtrl = hfgenerateCtrl("circle", $ctrlName);
+        $hfTempCtrl = hfFitCtrl($outCtrl,$targetName,1,$xUp,$yUp,$zUp,1);
+    }
+}
+
+// individual replacement functions. i swear if i were a better programmer i wouldn't need to do this.
+global proc hfReplaceArrow() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("arrow",$hfTempCtrl);
+}
+global proc hfReplaceCube() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("cube",$hfTempCtrl);
+}
+global proc hfReplaceRoundCube() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("roundCube",$hfTempCtrl);
+}
+global proc hfReplaceFlatCube() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("flatCube",$hfTempCtrl);
+}
+global proc hfReplaceCross() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("cross",$hfTempCtrl);
+}
+global proc hfReplaceSnow() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("snow",$hfTempCtrl);
+}
+global proc hfReplaceSquare() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("square",$hfTempCtrl);
+}
+global proc hfReplaceCircle() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("circle",$hfTempCtrl);
+}
+global proc hfReplaceOrient() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("orient",$hfTempCtrl);
+}
+global proc hfReplaceBendedDoubleArrow() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("bendedDoubleArrow",$hfTempCtrl);
+}
+global proc hfReplaceSpike() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("spike",$hfTempCtrl);
+}
+global proc hfReplaceLocator() {
+    global string $hfTempCtrl;
+    hfReplaceCtrl("locator",$hfTempCtrl);
+}
+
+// UUGGGGGGGGGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHH
+global proc hfChangeOrient() {
+    global string $hfTempCtrl;
+    global string $hfxUpCtrl;
+    global string $hfyUpCtrl;
+    global string $hfzUpCtrl;
+    global string $hftargetNameCtrl;
+    string $target = `textField -q -tx $hftargetNameCtrl`;
+    int $xUp = `radioButton -q -sl $hfxUpCtrl`;
+    int $yUp = `radioButton -q -sl $hfyUpCtrl`;
+    int $zUp = `radioButton -q -sl $hfzUpCtrl`;
+   // setAttr -e -lock false ($hfTempCtrl+".tx");
+   // setAttr -e -lock false ($hfTempCtrl+".ty");
+   // setAttr -e -lock false ($hfTempCtrl+".tz");
+    hfFitCtrl($hfTempCtrl,$target,1,$xUp,$yUp,$zUp,0);
+}
+
+global proc hfResetCtrl() {
+    global string $hfTempCtrl;
+    catchQuiet(`delete $hfTempCtrl`);
+	$hfTempCtrl = "";
+	
+}
+
+proc hfQuickCtrl2() {
+   
+    // UI build. i fucking hate UI code...
+    // the names for $target and $ctrl will have to be global variables for the button functions to work.
+    if(`window -exists hfQuickCtrl2Window`) {
+        deleteUI hfQuickCtrl2Window;
+    }
+    window -wh 423 483 -title "HENRY'S RIGGING FIESTA!!!!1" hfQuickCtrl2Window;
+    string $uiForm = `formLayout -nd 100`;
+    // build UI ctrls
+    global string $hfctrlNameCtrl;
+    global string $hftargetNameCtrl;
+    string $labelsLbl = `text -label "LABELS" -fn "boldLabelFont"`;
+    string $ctrlNameLbl = `text -label "Controller name: "`;
+    $hfctrlNameCtrl = `textField -w 220 -tx "quickCTRL_01"`;
+    string $loadCtrlBtn = `button -w 80 -label "from target" -c "hfGetCtrlName"`;
+    string $targetNameLbl = `text -label "Target object: "`;
+    $hftargetNameCtrl = `textField -w 220 -tx "select a target and press load..."`;
+    string $loadTargetBtn = `button -w 80 -label "load target" -c "hfGetTargetName"`;
+    //
+    global string $hftranslateCtrl;
+    global string $hfrotateCtrl;
+    global string $hfscaleCtrl;
+    global string $hfvisCtrl;
+    global string $hflockCtrl;
+	global string $hfSmoothCtrl;
+    string $constraintsLbl = `text -label "CONSTRAINTS" -fn "boldLabelFont"`;
+    $hftranslateCtrl = `checkBox -label "Translate" -v true`;
+    $hfrotateCtrl = `checkBox -label "Rotate" -v true`;
+    $hfscaleCtrl = `checkBox -label "Scale" -v false`;
+    $hfvisCtrl = `checkBox -label "Visibility" -v true`;
+	$hfSmoothCtrl = `checkBox -label "Smooth control" -v false`;
+    $hflockCtrl = `checkBox -label "Lock unconstrained" -v true`;
+    //
+    string $orientLbl = `text -label "ORIENTATION" -fn "boldLabelFont"`;
+    radioCollection hfQuickCtrl2Radios;    
+    global string $hfxUpCtrl;
+    global string $hfyUpCtrl;
+    global string $hfzUpCtrl;
+    $hfxUpCtrl = `radioButton -label "X-up" -cc "hfChangeOrient"`;
+    $hfyUpCtrl = `radioButton -select -label "Y-up" -cc "hfChangeOrient"`;
+    $hfzUpCtrl = `radioButton -label "Z-up" -cc "hfChangeOrient"`;
+    //
+    string $styleLbl = `text -label "CONTROLLER STYLES" -fn "boldLabelFont"`;
+    // styles: arrow, cube, roundCube, flatCube, cross, snow, square, circle, orient, bendedDoubleArrow, spike, locator
+    string $arrowBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/arrow.xpm" -c "hfReplaceArrow"`;
+    string $cubeBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/cube.xpm" -c "hfReplaceCube"`;
+    string $roundCubeBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/roundCube.xpm" -c "hfReplaceRoundCube"`;
+    string $flatCubeBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/flatCube.xpm" -c "hfReplaceFlatCube"`;
+    string $crossBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/cross.xpm" -c "hfReplaceCross"`;
+    string $snowBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/snow.xpm" -c "hfReplaceSnow"`;
+    string $squareBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/square.xpm" -c "hfReplaceSquare"`;
+    string $circleBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/circle.xpm" -c "hfReplaceCircle"`;
+    string $orientBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/orient.xpm" -c "hfReplaceOrient"`;
+    string $bendedDoubleArrowBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/bendedDoubleArrow.xpm" -c "hfReplaceBendedDoubleArrow"`;
+    string $spikeBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/spike.xpm" -c "hfReplaceSpike"`;
+    string $locatorBtn = `symbolButton -w 32 -h 32 -i "//SCHOLAR/assets/SCHOLARPREFS/MAYA2011/PC/icons/hfQuickCtrl2/locator.xpm" -c "hfReplaceLocator"`;
+    //
+    string $startBtn = `button -label "New control" -w 180 -h 40 -c "hfStartRigging"`;
+    string $resetBtn = `button -label "Reset" -w 180 -h 40 -c "hfResetCtrl"`;
+    string $finishBtn = `button -label "Apply control" -w 180 -h 40 -c "hfApplyCtrl"`;
+    
+    // UI layout
+    formLayout -e
+        -attachForm $labelsLbl "top" 10 -attachForm $labelsLbl "left" 10
+        -attachForm $targetNameLbl "top" 50 -attachForm $targetNameLbl "left" 10
+        -attachForm $hftargetNameCtrl "top" 47 -attachForm $hftargetNameCtrl "left" 100
+        -attachForm $loadTargetBtn "top" 46 -attachForm $loadTargetBtn "left" 330
+        -attachForm $ctrlNameLbl "top" 80 -attachForm $ctrlNameLbl "left" 10
+        -attachForm $hfctrlNameCtrl "top" 77 -attachForm $hfctrlNameCtrl "left" 100
+        -attachForm $loadCtrlBtn "top" 76 -attachForm $loadCtrlBtn "left" 330
+        //
+        -attachForm $constraintsLbl "top" 140 -attachForm $constraintsLbl "left" 10
+        -attachForm $hftranslateCtrl "top" 180 -attachForm $hftranslateCtrl "left" 10
+        -attachForm $hfrotateCtrl "top" 200 -attachForm $hfrotateCtrl "left" 10
+        -attachForm $hfscaleCtrl "top" 220 -attachForm $hfscaleCtrl "left" 10
+        -attachForm $hfvisCtrl "top" 240 -attachForm $hfvisCtrl "left" 10
+		-attachForm $hfSmoothCtrl "top" 260 -attachForm $hfSmoothCtrl "left" 10
+        -attachForm $hflockCtrl "top" 290 -attachForm $hflockCtrl "left" 10
+        //
+        -attachForm $orientLbl "top" 336 -attachForm $orientLbl "left" 10
+        -attachForm $hfxUpCtrl "top" 376 -attachForm $hfxUpCtrl "left" 10
+        -attachForm $hfyUpCtrl "top" 396 -attachForm $hfyUpCtrl "left" 10
+        -attachForm $hfzUpCtrl "top" 416 -attachForm $hfzUpCtrl "left" 10
+        //
+        -attachForm $styleLbl "top" 220 -attachForm $styleLbl "left" 170
+        -attachForm $arrowBtn "top" 260 -attachForm $arrowBtn "left" 170
+        -attachForm $cubeBtn "top" 260 -attachForm $cubeBtn "left" 210
+        -attachForm $roundCubeBtn "top" 260 -attachForm $roundCubeBtn "left" 250
+        -attachForm $flatCubeBtn "top" 260 -attachForm $flatCubeBtn "left" 290
+        -attachForm $crossBtn "top" 260 -attachForm $crossBtn "left" 330
+        -attachForm $snowBtn "top" 260 -attachForm $snowBtn "left" 370
+        -attachForm $squareBtn "top" 300 -attachForm $squareBtn "left" 170
+        -attachForm $circleBtn "top" 300 -attachForm $circleBtn "left" 210
+        -attachForm $orientBtn "top" 300 -attachForm $orientBtn "left" 250
+        -attachForm $bendedDoubleArrowBtn "top" 300 -attachForm $bendedDoubleArrowBtn "left" 290
+        -attachForm $spikeBtn "top" 300 -attachForm $spikeBtn "left" 330
+        -attachForm $locatorBtn "top" 300 -attachForm $locatorBtn "left" 370
+        //
+        -attachForm $startBtn "top" 140 -attachForm $startBtn "left" 170
+        -attachForm $resetBtn "top" 366 -attachForm $resetBtn "left" 170
+        -attachForm $finishBtn "top" 416 -attachForm $finishBtn "left" 170
+        
+    $uiForm;
+    showWindow hfQuickCtrl2Window;
+    window -e -wh 423 483 hfQuickCtrl2Window;
+} // end hfQuickCtrl2
+    
+hfQuickCtrl2;
+

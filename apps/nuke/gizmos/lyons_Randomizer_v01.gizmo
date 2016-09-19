@@ -1,0 +1,45 @@
+#! C:/Program Files/Nuke7.0v4/Nuke7.0.exe -nx
+version 7.0 v4
+Gizmo {
+ help "****Randomizer_V01\n\nCreates a Random curve that the user can control using sliders."
+ note_font Verdana
+ mapsize {0.15 0.15}
+ addUserKnob {20 Settings}
+ addUserKnob {26 description l "" +STARTLINE T ":Randomizer: by Tony Lyons\n\nCreates a random curve with controls.\nBest to view curve editor while tweaking."}
+ addUserKnob {26 ""}
+ addUserKnob {41 Curve T Randomizer.Curve}
+ addUserKnob {26 ""}
+ addUserKnob {41 Amplitude T Randomizer.Amplitude}
+ addUserKnob {41 Frequency T Randomizer.Frequency}
+ addUserKnob {26 ""}
+ addUserKnob {41 PositionX T Randomizer.PositionX}
+ addUserKnob {41 PositionY T Randomizer.PositionY}
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos 289
+  ypos -532
+ }
+ NoOp {
+  name Randomizer
+  xpos 289
+  ypos -492
+  addUserKnob {20 Settings}
+  addUserKnob {7 Curve t "Copy this Curve to another nodes attributes and use the below sliders to adjust this curve. Use graph editor for guidance.\n" R -1 1}
+  Curve {{Randomizer.Amplitude*(random((frame*Randomizer.Frequency)+Randomizer.PositionX))-(abs(Randomizer.Amplitude/2))+(Randomizer.PositionY)}}
+  addUserKnob {26 ""}
+  addUserKnob {7 Amplitude t "Use this to control the amplitude or \"height\" of the curve." R 0 3}
+  Amplitude 1
+  addUserKnob {7 Frequency t "Use this to control the frequency or \"height\" of the curve." R 0 2}
+  Frequency 1
+  addUserKnob {26 ""}
+  addUserKnob {7 PositionX t "This will \"slide\" the Random curve along the X axis.  It is most useful for creating a variation of the random curve.\n\nEx: A curve with this set to 1 will be way different than a curve with this set to 430." R -10 10}
+  addUserKnob {7 PositionY t "This changes the Y position of the curve in the graph editor along the Y axis.\n\nKeyframing this will create a new curve which the random curve will be guided along.\n" R -4 4}
+ }
+ Output {
+  name Output1
+  xpos 289
+  ypos -392
+ }
+end_group

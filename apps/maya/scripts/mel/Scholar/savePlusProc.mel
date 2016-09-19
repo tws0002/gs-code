@@ -1,0 +1,91 @@
+global proc savePlusProc() {
+	string $filePath = `file -q -sn`;
+	string $pathTokens[];
+	int $tokenCount = `tokenize ($filePath) "//" $pathTokens`;
+	string $fileName = $pathTokens[$tokenCount-1];
+	string $filePath = `substring $filePath 1 (size($filePath) - size($fileName))`;
+
+	if($fileName == "") {
+		print("File must be saved before using SavePlus\n");
+	} else {
+		// this shit added by renry
+		//
+		if(`editRenderLayerGlobals -q -crl` != "defaultRenderLayer") {
+			editRenderLayerGlobals -crl defaultRenderLayer;
+		}
+		// end renryshits
+		
+		string $fileNameArray[];
+		for($i=0;$i<size($fileName);$i++) {
+			$fileNameArray[$i] = `substring $fileName ($i + 1) ($i + 1)`;
+		}
+
+		string $prefix = "";
+		string $suffix = "";
+		int $fileNumber = 0;
+		int $numStart = 1;
+		int $numEnd = -2;
+		int $digitCount = 2;
+		for($i = size($fileNameArray) - 1; $i > -1; $i--) {
+			if(isValidString($fileNameArray[$i], "([0-9])")) {
+				$numEnd = $i + 1;
+				break;
+			}
+		}
+		if($numEnd == -2) {
+			$fileNumber = 1;
+			$prefix = `substring $fileName 1 (size($fileName)-3)`;
+			string $fileExt = `substring $fileName (size($fileName)-2) (size($fileName))`;
+			if($fileExt == ".mb" || $fileExt == ".ma") {
+				$suffix = $fileExt;
+			} else {
+				$prefix += $fileExt;
+			}
+		} else {
+			for($i = $numEnd - 1; $i > -1; $i--) {
+				if(!(isValidString($fileNameArray[$i], "([0-9])"))) {
+					$numStart = $i + 2;
+					break;
+				}
+			}
+			$digitCount = ($numEnd - $numStart) + 1;
+			$fileNumber = `substring $fileName $numStart $numEnd`;
+			if($numStart > 1) {
+				$prefix = `substring $fileName 1 ($numStart-1)`;
+			}
+			if($numEnd < size($fileName)) {
+				$suffix = `substring $fileName ($numEnd+1) (size($fileName))`;
+			}
+		}
+
+		$fileNumber++;
+		string $fileNumStr = $fileNumber;
+		string $zeros = "";
+		if($digitCount > size($fileNumStr)) {
+			for($i=0;$i<($digitCount-size($fileNumStr));$i++) {
+				$zeros += "0";
+			}
+		}
+
+		string $newFile = $filePath + $prefix + $zeros + $fileNumber + $suffix;
+		if(`filetest -f $newFile`) {
+			print("Warning: " + $newFile + " already exists, file not saved\n");
+		} else {
+			file -rn ($newFile);
+			file -save;
+			print($newFile + " saved.\n");
+		}
+		// more shit added by renry
+		//
+		// print ("\nNEWFILE:"+$newFile);
+		string $fileType;
+		if(endsWith($newFile, ".mb")) {
+			$fileType = "mayaBinary";
+		} else {
+			$fileType = "mayaAscii";
+		}
+		addRecentFile($newFile, $fileType);
+		//
+	} // if exist filename
+}
+// end of savePlusProc
