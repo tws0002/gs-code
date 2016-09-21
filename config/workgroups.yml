@@ -58,6 +58,9 @@ default:
         jfDielectric: '1.0.5'
         vray: '3.30.01'
         advancedSkeleton: '4.0'
+        fumefx: '4.0.0'
+        soup: '2016.06.01'
+        zync: '1.0'
     houdini:
       version: '15.5.523'
     3dsmax:

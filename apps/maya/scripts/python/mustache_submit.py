@@ -16,7 +16,7 @@ except KeyError:
     GSCODEBASE = '//scholar/code'
 
 import gsstartup
-from gsstartup import muster
+from gsstartup import muster2
 
 MUSTER_POOLS = []
 majorver = ''
@@ -130,10 +130,10 @@ class Submitter:
 
         musterflags = {}
         if majorver and minorver:
-            musterflags['-add']             = '-V %s -v %s --render \"-x %s -y %s' %(majorver, minorver, x, y)
+            musterflags['-add']             = '--package maya --major %s --minor %s --render \"-x %s -y %s' %(majorver, minorver, x, y)
         else:
-            musterflags['-add']             = '--render \"-x %s -y %s' %(x, y)
-        musterflags['-e']               = '1006'
+            musterflags['-add']             = '--package maya --render \"-x %s -y %s' %(x, y)
+        musterflags['-e']               = '1106'
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'
         musterflags['-group']           = self.M.projectName

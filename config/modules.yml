@@ -323,20 +323,21 @@ playblastVR:
           versions:
           - '2015'
 zync:
-  name: fracturefx
+  name: zync
   show: false
   packages:
     maya:
       versions:
-        '0.1.0':
+        '1.0':
           env:
-            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/presenz/win/0.1.0/Maya2015'
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/zync/win/1.0/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/zync/win/1.0/%ST_MAYA%/shelves'
           path:
             linux: /
             mac: /
             win32: /
           versions:
-          - '2015'
+          - '2017'
 advancedSkeleton:
   name: advancedSkeleton
   show: false
@@ -345,7 +346,80 @@ advancedSkeleton:
       versions:
         '4.0':
           env:
-            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/4.0/win'
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/4.0/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/4.0/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
+soup:
+  name: soup
+  show: false
+  packages:
+    maya:
+      versions:
+        '2016.06.01':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/SOuP/2016.06.01/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/SOuP/2016.06.01/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
+fumefx:
+  name: fumefx
+  show: false
+  packages:
+    maya:
+      versions:
+        '4.0.0':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fumefx/4.0.0/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fumefx/4.0.0/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
+fracturefx:
+  name: fracturefx
+  show: false
+  packages:
+    maya:
+      versions:
+        '1.9.1':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.1/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.1/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
+krakatoa:
+  name: krakatoa
+  show: false
+  packages:
+    maya:
+      versions:
+        '2.4.3.59396':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/2.4.3.59396/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/2.4.3.59396/win/%ST_MAYA%/shelves'
           path:
             linux: /
             mac: /

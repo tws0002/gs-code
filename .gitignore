@@ -2,11 +2,8 @@
 *.pyc
 *~
 
-user/*
-bin/*
-lib/*
-general/*
-aftereffects/*
+ apps/maya/icons/soup/*
+ gs/python/launcher/design/*
 .svn
 
 # Packages #
