@@ -54,8 +54,8 @@ def init():
         
         if args.MAJV:
             version = args.MAJV
-            if args.MINV:
-                version += ('.'+args.MINV)
+            #if args.MINV:
+            #    version += ('.'+args.MINV)
 
         if args.cli:
             mode = 'cli'
@@ -134,13 +134,17 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #    return
 
     env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
+    #print '\n== ENV VARS =='
+    #for key, value in env.iteritems():
+    #    print (key+'='+value)
+    #print '== END ENV VARS ==\n'
     try:
         si = subprocess.STARTUPINFO()
         si.dwFlags = subprocess.STARTF_USESTDHANDLES
         cmd = executable + ' ' + add_args
         if mode == 'render':
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si, cwd=cwd)
-            #p.communicate()
+            p.communicate()
             while True:
                 output = p.stdout.readline()
                 if output == '' and p.poll() is not None:

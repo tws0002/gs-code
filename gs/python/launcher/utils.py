@@ -2,7 +2,7 @@ __author__ = 'adamb'
 
 import os, sys, shutil, errno
 from settings import *
-from win32com.client import Dispatch
+#from win32com.client import Dispatch
 
 
 def driveToUNC(p, switchToFwdSlash=False):
@@ -52,27 +52,27 @@ def copyDirTree(src,dest):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dest)
         #else: raise
-def updatePipelineFavorites():
-    # remove any gs pipelie favs
-    # add new pipeline faves
-    root = '//scholar/projects/{0}'.format(os.environ['GSPROJECT'])
-    createUserFavorite(root)
-
-def createUserFavorite(path):
-    link_name = '{0}.lnk'.format(os.path.basename(path))
-    fav_links = '{0}\{1}'.format(os.path.expandvars('%USERPROFILE%\Links'),link_name)
-    print (fav_links)
-    createShortcut(path=fav_links,target=path,wd=path)
- 
-def createShortcut(path, target='', wd='', icon=''):    
-    user = str(os.environ['USERNAME'])
-    shell = Dispatch('WScript.Shell', userName=user)
-    shortcut = shell.CreateShortCut(str(path))
-    print(dir (shortcut))
-    shortcut.Targetpath = target
-    shortcut.WorkingDirectory = wd
-    if icon == '':
-        pass
-    else:
-        shortcut.IconLocation = icon
-    shortcut.save()
+#def updatePipelineFavorites():
+#    # remove any gs pipelie favs
+#    # add new pipeline faves
+#    root = '//scholar/projects/{0}'.format(os.environ['GSPROJECT'])
+#    createUserFavorite(root)
+#
+#def createUserFavorite(path):
+#    link_name = '{0}.lnk'.format(os.path.basename(path))
+#    fav_links = '{0}\{1}'.format(os.path.expandvars('%USERPROFILE%\Links'),link_name)
+#    print (fav_links)
+#    createShortcut(path=fav_links,target=path,wd=path)
+# 
+#def createShortcut(path, target='', wd='', icon=''):    
+#    user = str(os.environ['USERNAME'])
+#    shell = Dispatch('WScript.Shell', userName=user)
+#    shortcut = shell.CreateShortCut(str(path))
+#    print(dir (shortcut))
+#    shortcut.Targetpath = target
+#    shortcut.WorkingDirectory = wd
+#    if icon == '':
+#        pass
+#    else:
+#        shortcut.IconLocation = icon
+#    shortcut.save()#

@@ -16,7 +16,7 @@ except KeyError:
     GSCODEBASE = '//scholar/code'
 
 import gsstartup
-from gsstartup import muster
+from gsstartup import muster2
 
 MUSTER_POOLS = []
 majorver = ''
@@ -40,15 +40,15 @@ class Submitter:
         self.imagesFolder = 'images'
 
         #try:
-        if os.path.getmtime(muster.MUSTERJSON) > time.time() - 60*5:    
-            with open(muster.MUSTERJSON, 'r') as f:
+        if os.path.getmtime(muster2.MUSTERJSON) > time.time() - 60*5:    
+            with open(muster2.MUSTERJSON, 'r') as f:
                 muster_json = json.load(f)
                 MUSTER_POOLS = muster_json['pools']
         else:         
-            MUSTER_POOLS = muster.get_pools()
+            MUSTER_POOLS = muster2.get_pools()
         #except WindowsError:
         #
-        #    MUSTER_POOLS = muster.get_pools()     
+        #    MUSTER_POOLS = muster2.get_pools()     
         #    print 'init submitter'
 
     def getCameras(self, *args):
@@ -130,10 +130,10 @@ class Submitter:
 
         musterflags = {}
         if majorver and minorver:
-            musterflags['-add']             = '-V %s -v %s --render \"-x %s -y %s' %(majorver, minorver, x, y)
+            musterflags['-add']             = '--package maya --major %s --minor %s --render -x %s -y %s' %(majorver, minorver, x, y)
         else:
-            musterflags['-add']             = '--render \"-x %s -y %s' %(x, y)
-        musterflags['-e']               = '1006'
+            musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
+        musterflags['-e']               = '1106'
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'
         musterflags['-group']           = self.M.projectName
@@ -174,12 +174,12 @@ class Submitter:
                     ascpupcmd = ascpupcmd + 'ascpgs render@nycbossman:%s %s;' %(src, dest)
                 ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
                 print ascpupflags
-                ascpupsubmit = muster.submit(ascpupflags)
+                ascpupsubmit = muster2.submit(ascpupflags)
                 i+=1
 
             if ascpupsubmit:
                 musterflags['-wait'] = ascpupsubmit
-                rendersubmit = muster.submit(musterflags)
+                rendersubmit = muster2.submit(musterflags)
                 if rendersubmit:
                     ascpdownflags = {}
                     ascpdownflags['-e']         = '43'
@@ -195,7 +195,7 @@ class Submitter:
                     dest = f
                     ascpdowncmd = ascpdowncmd + 'ascpgs %s render@nycbossman:%s;' %(src, dest)
                     ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
-                    ascpdownsubmit = muster.submit(ascpdownflags)
+                    ascpdownsubmit = muster2.submit(ascpdownflags)
 
                     if ascpdownsubmit:
                         print 'Jobs successfully submitted to Muster!'
@@ -206,7 +206,7 @@ class Submitter:
             else:
                 print 'There was an error submitting upload job to Muster.'
         else:
-            rendersubmit = muster.submit(musterflags)
+            rendersubmit = muster2.submit(musterflags)
             if rendersubmit:
                 print 'Job ID#%s successfully submitted to Muster!' %(rendersubmit)
             else:
@@ -302,7 +302,7 @@ class Submitter:
             # checkFlags['-add'] = ' '.join(addflags)
 
             # print 'Sending frame check job to Muster'
-            # checkJob = muster.submit(checkFlags)
+            # checkJob = muster2.submit(checkFlags)
             # if checkJob:
             #     print checkJob
             # else:
@@ -325,7 +325,7 @@ class Submitter:
                 exr2tiffFlags['-bf'] = '1'
                 exr2tiffFlags['-pk'] = '1'
 
-                exr2tiffJob = muster.submit(exr2tiffFlags)
+                exr2tiffJob = muster2.submit(exr2tiffFlags)
                 if exr2tiffJob:
                     print exr2tiffJob
                 else:

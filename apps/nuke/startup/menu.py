@@ -17,7 +17,7 @@ import RandomTile
 import mochaImport
 import TargetCamera
 import animatedSnap3D
-import zync_nuke
+#import zync_nuke
 import mari_bridge
 
 toolbar = nuke.toolbar("Nodes")
@@ -89,7 +89,7 @@ except:
 #Python
 m.addCommand('Auto Write', 'AutoWrite.dropAutoWrite()','ctrl+shift+w', icon='WriteNode.png')
 m.addCommand("Submit To Muster", 'musterSubmit.main()', "ctrl+shift+d", "")
-m.addCommand('Submit To Zync', 'zync_nuke.submit_dialog()')
+#m.addCommand('Submit To Zync', 'zync_nuke.submit_dialog()')
 m.addCommand('Command Line Render', 'CmdLineRender.CLrender(nuke.selectedNodes())', 'shift+c')
 m.addCommand('Make Read of Write', 'readwrites.readwrites()','ctrl+r', icon='ReadNode.png')
 m.addCommand("Make Write of Read (Mass Convert IMG)", 'makewritefromread.make_write_from_read()', '')

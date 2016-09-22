@@ -3,9 +3,8 @@ studiotools:
   show: false
   env:
     MODE: pub
-    GSCODEBASE: 'C:/code_ab/'
-    PYTHONPATH: '%GSBRANCH%/gs/python'
-    PATH: '%GSBRANCH%/gs/python'
+    GSCODEBASE: '//scholar/pipeline'
+    PYTHONPATH: '%GSBRANCH%/gs/python;%GSCODEBASE%/lib/python'
   versions:
     '1.0':
       path:
@@ -20,19 +19,6 @@ aftereffects:
   - conform
   - mix
   versions:
-    'CC':
-      name: After Effects CC
-      env:
-        ST_AE: 'CC'
-      modes:
-        ui:
-          linux: /
-          mac: /
-          win32: AfterFX.exe
-      path:
-        linux: /
-        mac: /
-        win32: 'C:\Program Files\Adobe\Adobe After Effects CC\Support Files'
     'CC 2014':
       name: After Effects CC 2014
       env:
@@ -205,7 +191,7 @@ nuke:
     NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
     NUKE_DISK_CACHE: 'C:/Nuke'
     NUKE_TEMP_DIR: 'C:/Nuke/Temp'
-    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
+    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
   show: true
   tasks:
   - comp
@@ -221,59 +207,19 @@ nuke:
           linux: /
           mac: /
           win32: Nuke9.0.exe
-        cmd:
+        cli:
           linux: /
           mac: /
           win32: Nuke9.0.exe
-      path:
-        linux: /
-        mac: /
-        win32: C:/Program Files/Foundry/Nuke/9.0v7
-nukex:
-  env:
-    RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
-    NUKE_DISK_CACHE: 'C:/Nuke'
-    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
-    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
-  show: true
-  tasks:
-  - comp
-  - light
-  - grade
-  - track
-  - roto
-  versions:
-    '9.0v7':
-      name: Nuke
-      modes:
-        ui:
+        render:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe
+        x:
           linux: /
           mac: /
           win32: Nuke9.0.exe --nukex
-      path:
-        linux: /
-        mac: /
-        win32: C:/Program Files/Foundry/Nuke/9.0v7
-nukestudio:
-  env:
-    RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
-    NUKE_DISK_CACHE: 'C:/Nuke'
-    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
-    PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python;%GSBRANCH%/apps/nuke/scripts;'
-  show: true
-  tasks:
-  - comp
-  - light
-  - grade
-  - track
-  - roto
-  versions:
-    '9.0v7':
-      name: Nuke
-      modes:
-        ui:
+        studio:
           linux: /
           mac: /
           win32: Nuke9.0.exe --studio
@@ -289,17 +235,6 @@ premiere:
   - conform
   - mix
   versions:
-    'CC':
-      name: Premiere
-      modes:
-        ui:
-          linux: /
-          mac: /
-          win32: Adobe Premiere Pro.exe
-      path:
-        linux: /
-        mac: /
-        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC
     'CC 2015':
       name: Premiere
       modes:
@@ -349,19 +284,6 @@ photoshop:
   - light
   - comp
   versions:
-    'CC':
-      name: Photoshop CC
-      env:
-        ST_PS: 'CC'
-      modes:
-        ui:
-          linux: /
-          mac: /
-          win32: ae_pipeline_init.bat
-      path:
-        linux: /
-        mac: /
-        win32: '%GSBRANCH%/apps/aftereffects'
     'CC 2015':
       name: Photoshop CC 2015
       env:

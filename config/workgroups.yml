@@ -58,6 +58,9 @@ default:
         jfDielectric: '1.0.5'
         vray: '3.30.01'
         advancedSkeleton: '4.0'
+        fumefx: '4.0.0'
+        soup: '2016.06.01'
+        zync: '1.0'
     houdini:
       version: '15.5.523'
     3dsmax:
@@ -80,8 +83,52 @@ default:
       version: 'CC 2015'
     photoshop:
       version: 'CC 2015'
-    softimage:
-      version: '2014'
+    indesign:
+      version: 'CC 2015'
+    illustrator:
+      version: 'CC 2015'
+  display_groups:
+    Design:
+    - photoshop
+    - illustrator
+    - indesign
+    - aftereffects
+    - cinema4d
+    - modo
+    generalist:
+    - maya
+    - cinema4d
+    - modo
+    - 3dsmax
+    - zbrush
+    - mudbox
+    - mari
+    - nuke
+    - aftereffects
+    - photoshop
+    - premiere
+    - houdini-indie
+    Compositing:
+    - nuke
+    - nuke-x
+    - nuke-studio
+    - aftereffects
+    - premiere
+    - photoshop
+    2D_Production:
+    - illustrator
+    - aftereffects
+    - premiere
+    - photoshop
+    3D_Production:
+    - maya
+    - modo
+    - houdini-indie
+    - zbrush
+    - mudbox
+    - mari
+    - nuke
+    - photoshop
   order:
   - maya
   - cinema4d

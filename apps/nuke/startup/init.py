@@ -2,29 +2,28 @@ import os
 import sys
 import socket
 import re
-
 import nuke
 
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except KeyError:
     GSCODEBASE = '//scholar/code'
-GSTOOLS = os.path.join(GSCODEBASE,'tools')
+GSTOOLS = os.path.join(GSCODEBASE,'base','apps')
 GSBIN = os.path.join(GSCODEBASE,'bin')
 
-sys.path.append(os.path.join(GSCODEBASE, 'general', 'scripts', 'python'))
-sys.path.append(os.path.join(GSCODEBASE, 'lib', 'python'))
-import gs
-from gs import muster
+#sys.path.append(os.path.join(GSCODEBASE, 'base', 'gs', 'python'))
+#sys.path.append(os.path.join(GSCODEBASE, 'lib', 'python'))
+import gsstartup
+from gsstartup import muster2
 
-hostname = gs.properties['hostname']
+hostname = gsstartup.properties['hostname']
 
 NKVERSION = nuke.NUKE_VERSION_STRING
 m = re.search('^(.*)v(.*)',NKVERSION)
 NKMAJVERSION = m.group(1)
 NKMINVERSION = m.group(2)
 GSNUKE = os.path.join(GSTOOLS, 'nuke')
-GSNUKEPLUGINS = os.path.join(GSBIN, 'plugins', 'nuke')
+GSNUKEPLUGINS = os.path.join(GSBIN, 'external', 'nuke','plugins')
 
 JOPSVERSION = {
         '10.0'  :   '0',

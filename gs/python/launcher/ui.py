@@ -163,22 +163,22 @@ class Launcher(QMainWindow):
         self.ui['lyt']['artist_lyt'].addWidget(self.ui['wdgt']['initials_grp'])
 
         # Workgroup Grp
-        self.ui['wdgt']['workgroup_grp'] = QGroupBox()
-        self.ui['wdgt']['workgroup_grp'].setObjectName('lblGroup')     
-        self.ui['lyt']['workgroup_lyt'] = QHBoxLayout(self.ui['wdgt']['workgroup_grp'])   
-        self.ui['lbl']['task'] = QLabel('Role  |')
-        self.ui['wdgt']['workgroup_combo'] = QComboBox()
-        font = self.ui['wdgt']['workgroup_combo'].font()
+        self.ui['wdgt']['dispgroup_grp'] = QGroupBox()
+        self.ui['wdgt']['dispgroup_grp'].setObjectName('lblGroup')     
+        self.ui['lyt']['dispgroup_lyt'] = QHBoxLayout(self.ui['wdgt']['dispgroup_grp'])   
+        self.ui['lbl']['task'] = QLabel('Group  |')
+        self.ui['wdgt']['dispgroup_combo'] = QComboBox()
+        font = self.ui['wdgt']['dispgroup_combo'].font()
         font.setPointSize(20)
         font.setStyleStrategy(QFont.PreferAntialias);
-        self.ui['wdgt']['workgroup_combo'].setFont(font)
-        self.ui['mdl']['workgroup_mdl'] = self.ui['wdgt']['workgroup_combo'].model()
-        self.ui['lyt']['workgroup_lyt'].addWidget(self.ui['lbl']['task'])
-        self.ui['lyt']['workgroup_lyt'].addWidget(self.ui['wdgt']['workgroup_combo'])
-        self.ui['lyt']['workgroup_lyt'].setStretchFactor(self.ui['wdgt']['workgroup_combo'], 1)
+        self.ui['wdgt']['dispgroup_combo'].setFont(font)
+        self.ui['mdl']['display_groups_mdl'] = self.ui['wdgt']['dispgroup_combo'].model()
+        self.ui['lyt']['dispgroup_lyt'].addWidget(self.ui['lbl']['task'])
+        self.ui['lyt']['dispgroup_lyt'].addWidget(self.ui['wdgt']['dispgroup_combo'])
+        self.ui['lyt']['dispgroup_lyt'].setStretchFactor(self.ui['wdgt']['dispgroup_combo'], 1)
         self.ui['lyt']['artist_lyt'].addSpacing(15)
-        self.ui['lyt']['artist_lyt'].addWidget(self.ui['wdgt']['workgroup_grp'])
-        self.ui['lyt']['artist_lyt'].setStretchFactor(self.ui['wdgt']['workgroup_grp'], 1)
+        self.ui['lyt']['artist_lyt'].addWidget(self.ui['wdgt']['dispgroup_grp'])
+        self.ui['lyt']['artist_lyt'].setStretchFactor(self.ui['wdgt']['dispgroup_grp'], 1)
 
         # SETUP APPS GROUP #####
         self.ui['wdgt']['buttons_grp'] = QGroupBox('Apps')
@@ -205,7 +205,7 @@ class Launcher(QMainWindow):
         # connect up signals
         self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stack_change)
         # self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.projChange)
-        self.ui['wdgt']['workgroup_combo'].currentIndexChanged.connect(self.workgroup_change)
+        self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.disp_grp_change)
 
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
 
@@ -215,7 +215,7 @@ class Launcher(QMainWindow):
     def update_ui(self):
         
         self.update_projects()
-        self.update_workgroups()
+        self.update_disp_groups()
         self.update_apps()
 
     def load_style(self):
@@ -250,45 +250,54 @@ class Launcher(QMainWindow):
         except:
             print ('Project: {0} not found'.format(project_name))
 
-    def update_workgroups(self, project='default'):
+    def update_disp_groups(self, workgroup='default', project='default'):
         # todo: after project is set, check for workgroups to merge
         # clear the item model and init a new one
-        self.ui['mdl']['workgroup_mdl'].clear()
+        self.ui['mdl']['display_groups_mdl'].clear()
         workgroup_list = WORKGRP
         if workgroup_list:
-            for j in sorted(workgroup_list,key=lambda v: v.upper()):
+            for j in sorted(workgroup_list[workgroup]['display_groups'],key=lambda v: v.upper()):
                 item = QStandardItem(j)
                 font = item.font()
                 font.setPointSize(20)
                 font.setStyleStrategy(QFont.PreferAntialias);
                 item.setFont(font)
-                self.ui['mdl']['workgroup_mdl'].appendRow(item)
+                self.ui['mdl']['display_groups_mdl'].appendRow(item)
         else:
             print("Could not Find Workgroups. Please check in config/workgroups.yml")
 
-    def set_workgroup(self, workgroup_name):
-        #print 'Setting to Workgroup: {0}'.format(workgroup_name)
+    def set_disp_grp(self, display_grp):
+        #print 'Setting to Workgroup: {0}'.format(display_grp)
         try:
-            index = self.ui['wdgt']['workgroup_combo'].findText(workgroup_name)
+            index = self.ui['wdgt']['dispgroup_combo'].findText(display_grp)
             if index > -1:
-                self.ui['wdgt']['workgroup_combo'].setCurrentIndex(index)
+                self.ui['wdgt']['dispgroup_combo'].setCurrentIndex(index)
         except:
-            print 'Workgroup: {0} not found'.format(workgroup_name)
+            print 'Display Group: {0} not found'.format(display_grp)
 
-    def update_apps(self, workgroup='generalist'):
+    def update_apps(self, workgroup='default', display_grp='generalist'):
         self.app_layouts.clear();
 
         # resize the launcher window based on the amount of apps to show
-        app_ct = len (WORKGRP[workgroup]['order'])
+        app_ct = len (WORKGRP[workgroup]['display_groups'][display_grp])
         app_rows = int(app_ct / 6.0 - .1)
         win_w = self.frameGeometry().width()
         win_h = 400 + (app_rows*105)
         self.resize(win_w, win_h)
         
         self.ui['wdgt']['buttons_grid'].clear()
-        for package in WORKGRP[workgroup]['order']:
+        for package_full in WORKGRP[workgroup]['display_groups'][display_grp]:
+            pkg_and_mode = package_full.split('-')
+            package = pkg_and_mode[0]
+            mode = 'ui'
+            title = package
+            if len(pkg_and_mode) > 1:
+                mode = pkg_and_mode[1]
+            if mode != 'ui':
+                title += ' {0}'.format(mode)
+
             if package in APPS and APPS[package]['show']:
-                self.app_layouts[package] = QListWidgetItem(package.title())  # QPushButton(package)
+                self.app_layouts[package_full] = QListWidgetItem(title.title())  # QPushButton(package)
 
                 tooltip = str(package+' '+WORKGRP[workgroup]['packages'][package]['version'])
                 if 'modules' in WORKGRP[workgroup]['packages'][package]:
@@ -296,13 +305,14 @@ class Launcher(QMainWindow):
                     for mod in WORKGRP[workgroup]['packages'][package]['modules']:
                         mod_ver = WORKGRP[workgroup]['packages'][package]['modules'][mod]
                         tooltip += '\n'+ mod.ljust(10) + '\t' + mod_ver
-                self.app_layouts[package].setToolTip(tooltip)
+                self.app_layouts[package_full].setToolTip(tooltip)
+
                 # pixmap caching
                 if os.path.exists(os.path.join(RES,(package+".png"))):
                     value = os.path.join(RES, (package+".png"))
                 else: 
                     value = os.path.join(RES, ("gs.png"))
-                #value = os.path.join(RES, (package+".png"))
+
                 key = "image:%s"% value
                 pixmap = QPixmap()
                 if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
@@ -310,19 +320,17 @@ class Launcher(QMainWindow):
                     QPixmapCache.insert(key, pixmap)
 
                 icon = QIcon(pixmap)
-                self.app_layouts[package].setIcon(icon)
+                self.app_layouts[package_full].setIcon(icon)
                 self.ui['wdgt']['buttons_grid'].setIconSize(self.icon_size)
-                # self.appLayouts[package].setIconSize(self.icon_size)
-                # self.connect(self.appLayouts[package], SIGNAL("clicked()"), self.launchApp)
-                # self.ui['wdgt']['buttons_grid'].addWidgetAuto(self.appLayouts[package])
-                self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package])
+
+                self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package_full])
                 version = WORKGRP[workgroup]['packages'][package]['version']
                 install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
 
                 # BUG: not working if app path has an env var that only exist during runtime
                 if not os.path.exists(install_path):
                     print ("Not Installed: "+install_path)
-                    self.app_layouts[package].setFlags(Qt.ItemIsEnabled)
+                    self.app_layouts[package_full].setFlags(Qt.ItemIsEnabled)
                     #self.appLayouts[package].setEnabled(False)
 
     def list_item_menu_clicked(self, QPos):
@@ -364,12 +372,12 @@ class Launcher(QMainWindow):
         self.update_ui()
         pass
 
-    def workgroup_change(self, i):
+    def disp_grp_change(self, i):
         # check for project config file and merge config if it exists
-        workgroup = str(self.ui['wdgt']['workgroup_combo'].currentText())
-        if workgroup == '':
-            workgroup = 'generalist'
-        self.update_apps(workgroup)
+        display_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
+        if display_grp == '':
+            display_grp = 'generalist'
+        self.update_apps(display_grp=display_grp)
         # clear widget layout
         pass
 
@@ -378,21 +386,27 @@ class Launcher(QMainWindow):
         page = str(sender.currentItem().text())
         self.ui['wdgt']['stack_widget'].setCurrentIndex(self.ui['lyt']['stack_layouts'][page].page_index)
 
-    def launch_app(self, item, app='', version=''):
+    def launch_app(self, item, app='', version='', mode='ui'):
+
 
         initials = str(self.ui['wdgt']['initials_le'].text())
         project = str(self.ui['wdgt']['project_combo'].currentText())
-        workgroup = str(self.ui['wdgt']['workgroup_combo'].currentText())
+        workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
+        #print ('item: {0} app:{1} version:{2} mode:{3}'.format(item, app, version,mode))
         for name, button in self.app_layouts.iteritems():
-            # print 'item:{0} button:{1}'.format(item, button)
+            #print 'item:{0} button:{1}'.format(item, button)
             if item == button:
-                app = name
+                print ("BUTTON FOUND")
+                pkg_and_mode = name.split('-')
+                app = pkg_and_mode[0]
+                if len(pkg_and_mode) > 1:
+                    mode = pkg_and_mode[1]
                 if version == '':
                     version = WORKGRP[workgroup]['packages'][app]['version']
         
         #print 'UI Launching {0} version: {1}'.format(app,version)
-        launcher.launch_app(app, version=version, mode='ui', wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
+        launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
 
         return
 
@@ -455,14 +469,14 @@ class Launcher(QMainWindow):
         try:
             initials = str(self.ui['wdgt']['initials_le'].text())
             project = str(self.ui['wdgt']['project_combo'].currentText())
-            workgroup = str(self.ui['wdgt']['workgroup_combo'].currentText())
+            display_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
             self.settings.setValue('prev_project4', self.settings.value('prev_project3'))
             self.settings.setValue('prev_project3', self.settings.value('prev_project2'))
             self.settings.setValue('prev_project2', self.settings.value('prev_project1'))
             self.settings.setValue('prev_project1', project)
             self.settings.setValue('initials', initials)
-            self.settings.setValue('role', workgroup)
+            self.settings.setValue('role', display_grp)
         except:
             print "Unable to save settings"
 
@@ -471,10 +485,10 @@ class Launcher(QMainWindow):
         try:
             initials = str(self.settings.value('initials',type=str))
             project = str(self.settings.value('prev_project1',type=str))
-            workgroup = str(self.settings.value('role',type=str))
+            display_grp = str(self.settings.value('role',type=str))
             self.set_project(project)
             self.ui['wdgt']['initials_le'].setText(initials)
-            self.set_workgroup(workgroup)
+            self.set_disp_grp(display_grp)
         except:
             "initializing settings"
             self.init_settings()

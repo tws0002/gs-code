@@ -138,7 +138,10 @@ class StudioEnvironment():
     def setEnv(self):
 
         for var, value in self.vars.iteritems():
-            os.environ[var] = value
+            if var != 'PATH':
+                os.environ[var] = value
+            else:
+                os.path.append(value)
 
     def parse_subst(self):
         trashvars = []

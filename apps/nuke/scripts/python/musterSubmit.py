@@ -14,8 +14,8 @@ except KeyError:
     GSCODEBASE = '//scholar/code'
 
 sys.path.append(os.path.join(GSCODEBASE, 'general', 'scripts', 'python'))
-import gs
-from gs import muster
+import gsstartup
+from gsstartup import muster
 
 MUSTER_POOLS = []
 m = re.search('^(.*)v(.*)',nuke.NUKE_VERSION_STRING)
@@ -27,7 +27,7 @@ def nuke_ui():
     
     panel = nuke.Panel( 'GS Render Submit' )
     panel.addSingleLineInput( 'Job Name', os.path.splitext(os.path.split(nuke.value('root.name'))[1])[0] )
-    if gs.properties['location'] == 'NYC':
+    if gsstartup.properties['location'] == 'NYC':
         panel.addBooleanCheckBox( 'Use LA Render Farm', 0 )
     panel.addSingleLineInput( 'Frame Range', '%s-%s' %(nuke.knob('first_frame'),nuke.knob('last_frame')) )
     panel.addSingleLineInput( 'Packet Size', 5 )
@@ -47,13 +47,13 @@ def nuke_ui():
         framerange = [int(value) for value in re.sub('[^0-9]',',',panel.value('Frame Range')).split(',')]
         
         musterflags = {}
-        musterflags['-add']     = '-V %s -v %s --render \"-writenodes \"%s\"' %(majorver, minorver, selected_write_nodes_string)
-        musterflags['-e']       = '1005'
+        musterflags['-add']     = '--major %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING, selected_write_nodes_string)
+        musterflags['-e']       = '1105'
         musterflags['-n']       = panel.value('Job Name')
         musterflags['-parent']  = '33409'
-        musterflags['-group']    = gs.get_project_from_path(newfile)
+        musterflags['-group']    = gsstartup.get_project_from_path(newfile)
         try:
-            if panel.value('Use LA Render Farm') or gs.properties['location'] == 'LAX':
+            if panel.value('Use LA Render Farm') or gsstartup.properties['location'] == 'LAX':
                 musterflags['-pool']    = 'NUKE'
             else:
                 musterflags['-pool']    = 'WKSTN-NY'
@@ -72,7 +72,7 @@ def nuke_ui():
             else:   
                 musterflags['-pk'] = panel.value('Packet Size')
 
-        if gs.properties['location'] == 'NYC' and musterflags['-pool'] != 'WKSTN-NY':
+        if gsstartup.properties['location'] == 'NYC' and musterflags['-pool'] != 'WKSTN-NY':
             newfileup = newfile.replace("\\", "/").replace(" ", "\ ").replace("//","/")
             newfiledest = os.path.split(newfileup)[0].replace("\\", "/").replace(" ", "\ ").replace("//","/")
             ascpupcmd = 'ascpgs render@nycbossman:%s %s;' %(newfileup, newfiledest)
@@ -81,7 +81,7 @@ def nuke_ui():
             ascpupflags['-e']       = '43'
             ascpupflags['-n']       = '%s Asset Upload' %(panel.value('Job Name'))
             ascpupflags['-parent']  = '33409'
-            ascpupflags['-group']    = gs.get_project_from_path(newfile)
+            ascpupflags['-group']    = gsstartup.get_project_from_path(newfile)
             ascpupflags['-pool']    = 'ASPERA'
             
             for r in get_read_nodes():
@@ -106,7 +106,7 @@ def nuke_ui():
                     ascpdownflags['-e']         = '43'
                     ascpdownflags['-n']         = '%s Render Download' %(panel.value('Job Name'))
                     ascpdownflags['-parent']    = '33409'
-                    ascpdownflags['-group']      = gs.get_project_from_path(newfile)
+                    ascpdownflags['-group']      = gsstartup.get_project_from_path(newfile)
                     ascpdownflags['-pool']      = 'ASPERA'
                     ascpdownflags['-wait']      = rendersubmit
                     
