@@ -15,9 +15,9 @@ try:
 except KeyError:
     GSCODEBASE = '//scholar/code'
 
-sys.path.append(os.path.join(GSCODEBASE, 'general', 'scripts', 'python'))
-import gs
-from gs import muster
+sys.path.append(os.path.join(GSCODEBASE, 'base', 'gs', 'python'))
+import gsstartup
+from gsstartup import muster
 
 MUSTER_POOLS = []
 
@@ -88,8 +88,9 @@ def submit():
         outputfileformatselected = FORMATS_DICT[FORMATS[int(lx.eval('user.value muster.outputfileformat ?'))]]
 
         musterflags = {}
-        musterflags['-add']     = '-V %s -v %s --render \"-rendergroup \"%s\" -outputpath \"%s\" -format \"%s\"' %(majorver, minorver, rendergroupselected, fulloutputpathselected.replace('\\','/'), outputfileformatselected)
-        musterflags['-e']       = '1004'
+        #musterflags['-add']     = '--major %s --render \"-rendergroup \"%s\" -outputpath \"%s\" -format \"%s\"' %(version, rendergroupselected, fulloutputpathselected.replace('\\','/'), outputfileformatselected)
+        musterflags['-add']     = '--major %s --render ' %(version)
+        musterflags['-e']       = '1104'
         musterflags['-n']       = cur_file_name
         musterflags['-parent']  = '33409'
         musterflags['-group']   = gs.get_project_from_path(new_file)

@@ -58,6 +58,7 @@ def init():
             #    version += ('.'+args.MINV)
 
         if args.cli:
+            add_args = ' '.join(pass_args)
             mode = 'cli'
 
         if args.args:
@@ -128,7 +129,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # create any necessary user variable folders if they don't exist
     # process_env.make_user_folders()
     
-    print executable
+    #print executable
     #if not os.path.isfile(executable.split(' ')[0]):
     #    print ("Could Not Run: {0}. Is it installed?").format(executable.split(' ')[0])
     #    return
@@ -138,29 +139,31 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #for key, value in env.iteritems():
     #    print (key+'='+value)
     #print '== END ENV VARS ==\n'
-    try:
-        si = subprocess.STARTUPINFO()
-        si.dwFlags = subprocess.STARTF_USESTDHANDLES
-        cmd = executable + ' ' + add_args
-        if mode == 'render':
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si, cwd=cwd)
-            p.communicate()
-            while True:
-                output = p.stdout.readline()
-                if output == '' and p.poll() is not None:
-                    break
-                if output:
-                    print output.strip()
-            rc = p.poll()
-        elif mode == 'cli':
-            executable = win_shell_safe(executable)
-            cmd = 'start '+ executable + ' ' + add_args
-            print cmd
-            p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd, shell=True)
-        else:
-            p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd)
-    except:
-        print (executable + " failed to open. Does it Exist?")
+    #try:
+    si = subprocess.STARTUPINFO()
+    si.dwFlags = subprocess.STARTF_USESTDHANDLES
+    cmd = executable + ' ' + add_args
+    if mode == 'render':
+        print cmd
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si, cwd=cwd)
+        while True:
+            output = p.stdout.readline()
+            if output == '' and p.poll() is not None:
+                break
+            if output:
+                print output.strip()
+        rc = p.poll()
+    elif mode == 'cli':
+        executable = win_shell_safe(executable)
+        cmd = 'start '+ executable + ' ' + add_args
+        print cmd
+        p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd, shell=True)
+    else:
+        print cmd
+        p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd)
+
+    #except:
+    #    print (executable + " failed to open. Does it Exist?")
 
     return
 

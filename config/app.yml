@@ -28,6 +28,10 @@ aftereffects:
           linux: /
           mac: /
           win32: AfterFX.exe
+        render:
+          linux: /
+          mac: /
+          win32: aerender.exe
       path:
         linux: /
         mac: /
@@ -41,6 +45,10 @@ aftereffects:
           linux: /
           mac: /
           win32: AfterFX.exe
+        render:
+          linux: /
+          mac: /
+          win32: aerender.exe
       path:
         linux: /
         mac: /
@@ -382,14 +390,18 @@ modo:
     '901_SP2':
       name: Modo
       env:
-        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_contnent/901/assets'
-        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
+        NEXUS_ASSET: '%GSROOT%bin/external/modo/modo_contnent/901/assets'
+        NEXUS_CONTENT: '%GSROOT%bin/external/modo/modo_content/901'
       modes:
         ui:
           linux: /
           mac: /
           win32: modo.exe
         cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+        render:
           linux: /
           mac: /
           win32: modo_cl.exe
