@@ -53,6 +53,23 @@ aftereffects:
         linux: /
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015\Support Files'
+    'CC 2015.3':
+      name: After Effects CC 2015.3
+      env:
+        ST_AE: 'CC 2015.3'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+        render:
+          linux: /
+          mac: /
+          win32: aerender.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015.3\Support Files'
 maya:
   env:
     LM_LICENSE_FILE: '27001@scholar-lic01'
@@ -243,7 +260,7 @@ premiere:
   - conform
   - mix
   versions:
-    'CC 2015':
+    'CC 2015.3':
       name: Premiere
       modes:
         ui:
@@ -253,7 +270,7 @@ premiere:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2015
+        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2015.3
 hiero:
   name: Hiero
   show: true
@@ -292,10 +309,10 @@ photoshop:
   - light
   - comp
   versions:
-    'CC 2015':
-      name: Photoshop CC 2015
+    'CC 2015.5':
+      name: Photoshop CC 2015.5
       env:
-        ST_PS: 'CC 2015'
+        ST_PS: 'CC 2015.5'
       modes:
         ui:
           linux: /
@@ -304,17 +321,17 @@ photoshop:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2015'
+        win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2015.5'
 illustrator:
   show: true
   tasks:
   - design
   - light
   versions:
-    'CC 2015':
-      name: Illustrator CC 2015
+    'CC 2015.3':
+      name: Illustrator CC 2015.3
       env:
-        ST_PS: 'CC 2015'
+        ST_PS: 'CC 2015.3'
       modes:
         ui:
           linux: /
@@ -323,7 +340,7 @@ illustrator:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2015'
+        win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2015.3'
 indesign:
   show: true
   tasks:
@@ -343,6 +360,24 @@ indesign:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe In Design CC 2015'
+animate:
+  show: true
+  tasks:
+  - design
+  versions:
+    'CC 2015.2':
+      name: Animate CC 2015.2
+      env:
+        ST_PS: 'CC 2015.2'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: animate.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Animate CC 2015.2'
 zbrush:
   show: true
   tasks:
@@ -378,7 +413,18 @@ cinema4d:
       path:
         linux: /
         mac: /
-        win32: 'C:\Program Files\Maxon\Cinema4D\R17.032'
+        win32: 'C:\Program Files\Maxon\Cinema4D\R17.048'
+    'R17.048':
+      name: Cinema 4D
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: 'CINEMA 4D.exe'
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Maxon\Cinema4D\R17.048'
 modo:
   show: true
   tasks:

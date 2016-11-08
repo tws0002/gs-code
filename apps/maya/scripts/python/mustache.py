@@ -46,7 +46,7 @@ try:
     print 'Using code repository: %s' %( GSCODEBASE )
 except:
     GSCODEBASE = '//scholar/code'
-GSTOOLS = os.path.join(GSCODEBASE,'tools')
+GSTOOLS = os.path.join(GSCODEBASE,'base','apps')
 GSBIN = os.path.join(GSCODEBASE,'bin')
 
 def init(*args):

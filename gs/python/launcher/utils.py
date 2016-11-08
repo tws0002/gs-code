@@ -34,13 +34,11 @@ def win_shell_safe (filepath):
         if i < len(split)-1:
             if len(split[i].split(' ')) > 1:
                 split[i] = ('"'+split[i]+'"')
-
     for i in range(len(split)):
         if i == 0:
             resultpath += split[i]
         else:
             resultpath +=  '\\' + split[i]
-
     return resultpath
 
 

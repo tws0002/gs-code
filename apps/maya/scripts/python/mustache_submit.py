@@ -130,15 +130,10 @@ class Submitter:
 
         musterflags = {}
         if majorver and minorver:
-<<<<<<< HEAD
             musterflags['-add']             = '--package maya --major %s --minor %s --render -x %s -y %s' %(majorver, minorver, x, y)
         else:
             musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
-=======
-            musterflags['-add']             = '--package maya --major %s --minor %s --render \"-x %s -y %s' %(majorver, minorver, x, y)
-        else:
-            musterflags['-add']             = '--package maya --render \"-x %s -y %s' %(x, y)
->>>>>>> c0ede999133127c2c40d94d8794dc9cda2bf8c88
+
         musterflags['-e']               = '1106'
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'

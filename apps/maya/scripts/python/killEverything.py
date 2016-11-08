@@ -70,6 +70,14 @@ class KillEverythingUI():
             pass
         return deathCount
 
+    def killRefs(self,*args):
+        deadRefs = []
+        refs = cmds.file(q=1,r=1)
+        for ref in refs:
+            cmds.file(ref, rr=1)
+            deadRefs.append(ref)
+        return deadRefs
+
     def killImportedLayers(self,*args):
         """ remove useless duplicate render layers that have been imported from a reference. """
         deadLayers = []
@@ -233,7 +241,7 @@ class KillEverythingUI():
             lights = self.killNode(type=lightTypes)
             resultStr = resultStr + '---LIGHTS REMOVED---\n' + '\n'.join(lights) + '\n\n'
         if refs == True:
-            refs = self.killNode(type='reference',xform=0)
+            refs = self.killRefs()
             resultStr = resultStr + '---REFERENCES REMOVED---\n' + '\n'.join(refs) + '\n\n'
         if layers == True:
             layers = self.killImportedLayers()

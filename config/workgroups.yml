@@ -14,7 +14,7 @@ generalist:
     3dsmax:
       version: '2016'
     cinema4d:
-      version: 'R17'
+      version: 'R17.048'
     modo:
       version: '901_SP2'
     zbrush:
@@ -47,26 +47,19 @@ generalist:
   - premiere
   - houdini
 
-default:
+default_2017:
   title: 'Default'
   packages:
     maya:
-      version: '2015'
+      version: '2017'
       modules:
-        arnold: '1.1.0.4'
-        crate: '1.1.148'
-        jfDielectric: '1.0.5'
-        vray: '3.30.01'
-        advancedSkeleton: '4.0'
-        fumefx: '4.0.0'
-        soup: '2016.06.01'
-        zync: '1.0'
+        vray: '3.40.04'
     houdini:
       version: '15.5.523'
     3dsmax:
       version: '2016'
     cinema4d:
-      version: 'R17'
+      version: 'R17.048'
     modo:
       version: '901_SP2'
     zbrush:
@@ -80,13 +73,15 @@ default:
     aftereffects:
       version: 'CC 2015'
     premiere:
-      version: 'CC 2015'
+      version: 'CC 2015.3'
     photoshop:
-      version: 'CC 2015'
+      version: 'CC 2015.5'
+    animate:
+      version: 'CC 2015.2'
     indesign:
       version: 'CC 2015'
     illustrator:
-      version: 'CC 2015'
+      version: 'CC 2015.3'
   display_groups:
     Design:
     - photoshop
@@ -120,6 +115,106 @@ default:
     - aftereffects
     - premiere
     - photoshop
+    - animate
+    3D_Production:
+    - maya
+    - modo
+    - houdini-indie
+    - zbrush
+    - mudbox
+    - mari
+    - nuke
+    - photoshop
+  order:
+  - maya
+  - cinema4d
+  - modo
+  - 3dsmax
+  - zbrush
+  - mudbox
+  - mari
+  - nuke
+  - aftereffects
+  - photoshop
+  - premiere
+  - houdini
+
+default:
+  title: 'Default'
+  packages:
+    maya:
+      version: '2015'
+      modules:
+        arnold: '1.1.0.4'
+        crate: '1.1.148'
+        jfDielectric: '1.0.5'
+        vray: '3.30.01'
+        advancedSkeleton: '4.0'
+        fumefx: '4.0.0'
+        soup: '2016.06.01'
+        zync: '1.0'
+    houdini:
+      version: '15.5.523'
+    3dsmax:
+      version: '2016'
+    cinema4d:
+      version: 'R17.048'
+    modo:
+      version: '901_SP2'
+    zbrush:
+      version: '4R7'
+    mudbox:
+      version: '2016'
+    mari:
+      version: '2.6v5'
+    nuke:
+      version: '9.0v7'
+    aftereffects:
+      version: 'CC 2015'
+    premiere:
+      version: 'CC 2015.3'
+    photoshop:
+      version: 'CC 2015.5'
+    animate:
+      version: 'CC 2015.2'
+    indesign:
+      version: 'CC 2015'
+    illustrator:
+      version: 'CC 2015.3'
+  display_groups:
+    Design:
+    - photoshop
+    - illustrator
+    - indesign
+    - aftereffects
+    - cinema4d
+    - modo
+    generalist:
+    - maya
+    - cinema4d
+    - modo
+    - 3dsmax
+    - zbrush
+    - mudbox
+    - mari
+    - nuke
+    - aftereffects
+    - photoshop
+    - premiere
+    - houdini-indie
+    Compositing:
+    - nuke
+    - nuke-x
+    - nuke-studio
+    - aftereffects
+    - premiere
+    - photoshop
+    2D_Production:
+    - illustrator
+    - aftereffects
+    - premiere
+    - photoshop
+    - animate
     3D_Production:
     - maya
     - modo

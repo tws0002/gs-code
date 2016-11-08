@@ -297,6 +297,8 @@ class Launcher(QMainWindow):
                 title += ' {0}'.format(mode)
 
             if package in APPS and APPS[package]['show']:
+
+
                 self.app_layouts[package_full] = QListWidgetItem(title.title())  # QPushButton(package)
 
                 tooltip = str(package+' '+WORKGRP[workgroup]['packages'][package]['version'])
@@ -325,7 +327,10 @@ class Launcher(QMainWindow):
 
                 self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package_full])
                 version = WORKGRP[workgroup]['packages'][package]['version']
-                install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
+                try:
+                    install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
+                except KeyError:
+                    print 'Could not locate App:{0} Version:{1} in app.yml'.format(package, version)
 
                 # BUG: not working if app path has an env var that only exist during runtime
                 if not os.path.exists(install_path):
@@ -404,7 +409,6 @@ class Launcher(QMainWindow):
                     mode = pkg_and_mode[1]
                 if version == '':
                     version = WORKGRP[workgroup]['packages'][app]['version']
-        
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
 

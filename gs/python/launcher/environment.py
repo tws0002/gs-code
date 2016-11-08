@@ -15,7 +15,8 @@ class StudioEnvironment():
         self.workgroup_data = {}
         self.module_data = {}
         self.app_data = {}
-        self.add('PYTHONPATH',os.environ['PYTHONPATH'])
+        if 'PYTHONPATH' in os.environ:
+            self.add('PYTHONPATH',os.environ['PYTHONPATH'])
         return
 
 

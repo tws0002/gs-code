@@ -128,6 +128,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     
     # create any necessary user variable folders if they don't exist
     # process_env.make_user_folders()
+
     
     #print executable
     #if not os.path.isfile(executable.split(' ')[0]):
@@ -140,6 +141,9 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #    print (key+'='+value)
     #print '== END ENV VARS ==\n'
     #try:
+
+    #utils.updatePipelineFavorites()
+
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args

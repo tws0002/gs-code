@@ -257,6 +257,7 @@ class AssetManager:
             saveFile = cmds.file(save=1, type='mayaBinary')
         else:
             saveFile = cmds.file(save=1, type='mayaAscii')
+        print (self.M.binDir + 'imf_copy.exe ' + screenPath + ' ' + screenPath[:-4] + '.jpg')
         convertProc = subprocess.Popen(self.M.binDir + 'imf_copy.exe ' + screenPath + ' ' + screenPath[:-4] + '.jpg', stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = convertProc.communicate()
         os.remove(screenPath)
