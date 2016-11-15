@@ -7,7 +7,7 @@ generalist:
         arnold: '1.1.0.4'
         crate: '1.1.148'
         jfDielectric: '1.0.5'
-        vray: '3.30.01'
+        vray: '3.40.04'
         advancedSkeleton: '4.0'
     houdini:
       version: '15.5.523'
@@ -47,7 +47,7 @@ generalist:
   - premiere
   - houdini
 
-default_2017:
+default:
   title: 'Default'
   packages:
     maya:
@@ -139,7 +139,7 @@ default_2017:
   - premiere
   - houdini
 
-default:
+default_2015:
   title: 'Default'
   packages:
     maya:

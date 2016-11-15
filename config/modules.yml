@@ -138,11 +138,21 @@ vray:
   name: VRay
   show: false
   env:
-    VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/config'
+    VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/config'
   packages:
     maya:
       env:
-        MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+        VRAY_ROOT: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+        PATH: '%VRAY_ROOT%/maya_bin'
+        MAYA_RENDER_DESC_PATH: '%VRAY_ROOT%/maya_bin'
+        VRAY_FOR_MAYA2017_MAIN_x64: '%VRAY_ROOT%'
+        VRAY_FOR_MAYA2017_PLUGINS_x64: '%VRAY_ROOT%/vrayplugins'
+        VRAY_PLUGINS_x64: '%VRAY_ROOT%/vrayplugins'
+        MAYA_PLUG_IN_PATH: '%VRAY_ROOT%/plug-ins'
+        XBMLANGPATH: '%VRAY_ROOT%/icons'
+        MAYA_SCRIPT_PATH: '%VRAY_ROOT%/scripts'
+        PYTHONPATH: '%VRAY_ROOT%/scripts'
+        XGEN_CONFIG_PATH: '%VRAY_ROOT%/plug-ins/xgen/presets'
       versions:
         '2.40.01':
           env:

@@ -315,6 +315,14 @@ def autoInitMustacheProject():
     else:
         print ("Mustache non Initialized yet. Cannot run Auto Init in userSetup.py")
 
+def gs_autoload():
+    plugins = os.environ.get('GS_MAYA_AUTOLOAD').split(';')
+    for p in plugins:
+        try:
+            cmds.loadPlugin(p)
+        except:
+            print ("Could not load plugin {0}".format(p))
+
 def init():
     #initLogo()
     initPhx()
@@ -331,5 +339,6 @@ def init():
     initMustache()
     autoInitMustacheProject()
 
+    gs_autoload()
 if __name__ == '__main__':
     init()

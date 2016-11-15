@@ -33,7 +33,8 @@ aftereffects:
           mac: /
           win32: aerender.exe
       path:
-        linux: /
+        linux: /+
+        
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2014\Support Files'
     'CC 2015':
@@ -136,6 +137,7 @@ maya:
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.0
+        GS_MAYA_AUTOLOAD: 'fbxmaya;OpenEXRLoader;quatNodes;tiffFloatReader;objExport;AbcImport;AbcExport;deformerEvaluator;curveWarp;MASH;vrayformaya'
       modes:
         ui:
           linux: /
