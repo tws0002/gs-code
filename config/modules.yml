@@ -63,6 +63,15 @@ arnold:
             win32: /
           versions:
           - '2015'
+        1.3.0.0:
+          env:
+            ST_MTOA: '1.3.0.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
     softimage:
       versions:
         3.2.0:
@@ -138,21 +147,11 @@ vray:
   name: VRay
   show: false
   env:
-    VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/config'
+    VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/config'
   packages:
     maya:
       env:
-        VRAY_ROOT: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
-        PATH: '%VRAY_ROOT%/maya_bin'
-        MAYA_RENDER_DESC_PATH: '%VRAY_ROOT%/maya_bin'
-        VRAY_FOR_MAYA2017_MAIN_x64: '%VRAY_ROOT%'
-        VRAY_FOR_MAYA2017_PLUGINS_x64: '%VRAY_ROOT%/vrayplugins'
-        VRAY_PLUGINS_x64: '%VRAY_ROOT%/vrayplugins'
-        MAYA_PLUG_IN_PATH: '%VRAY_ROOT%/plug-ins'
-        XBMLANGPATH: '%VRAY_ROOT%/icons'
-        MAYA_SCRIPT_PATH: '%VRAY_ROOT%/scripts'
-        PYTHONPATH: '%VRAY_ROOT%/scripts'
-        XGEN_CONFIG_PATH: '%VRAY_ROOT%/plug-ins/xgen/presets'
+        MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
       versions:
         '2.40.01':
           env:
@@ -173,9 +172,9 @@ vray:
           versions:
           - '2015'
           - '2016'
-        '3.40.04':
+        '3.40.06':
           env:
-            ST_MAYA_VRAY: '3.40.04'
+            ST_MAYA_VRAY: '3.40.06'
           path:
             linux: /
             mac: /
@@ -271,21 +270,22 @@ houdiniEngine:
           - '2013'
           - '2014'
           - '2015'
-realflowMaya:
-  name: realflowMaya
+realflow:
+  name: realflow
   show: false
   packages:
     maya:
       versions:
-        '14.8.012':
+        '2015.0.0.9':
           env:
-            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/realflow/win/14.8.012/Maya2015'
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/realflow/2015.0.0.9/win/%ST_MAYA%'
           path:
             linux: /
             mac: /
             win32: /
           versions:
           - '2015'
+          - '2017'
 rfrk:
   name: realflowrenderkit
   show: false
@@ -338,10 +338,10 @@ zync:
   packages:
     maya:
       versions:
-        '1.0':
+        '1.2.5':
           env:
-            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/zync/win/1.0/%ST_MAYA%'
-            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/zync/win/1.0/%ST_MAYA%/shelves'
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/zync/1.2.5/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/zync/1.2.5/win/%ST_MAYA%/shelves'
           path:
             linux: /
             mac: /
@@ -350,10 +350,22 @@ zync:
           - '2017'
 advancedSkeleton:
   name: advancedSkeleton
-  show: false
+  show: true
   packages:
     maya:
       versions:
+        '5.240':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/5.240/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/5.240/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
         '4.0':
           env:
             MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/4.0/win/%ST_MAYA%'
@@ -386,10 +398,22 @@ soup:
           - '2017'
 fumefx:
   name: fumefx
-  show: false
+  show: true
   packages:
     maya:
       versions:
+        '4.0.3':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fumefx/4.0.3/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fumefx/4.0.3/win/%ST_MAYA%/shelves'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016'
+          - '2017'
         '4.0.0':
           env:
             MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fumefx/4.0.0/win/%ST_MAYA%'
@@ -404,14 +428,27 @@ fumefx:
           - '2017'
 fracturefx:
   name: fracturefx
-  show: false
+  show: true
   packages:
     maya:
       versions:
+        '1.9.6':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.6/win/%ST_MAYA%'
+            MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.6/win/%ST_MAYA%/shelves'
+            FX_LCN_FILE: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.6/win/%ST_MAYA%/config/fxlcn'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
         '1.9.1':
           env:
             MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.1/win/%ST_MAYA%'
             MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.1/win/%ST_MAYA%/shelves'
+            FX_LCN_FILE: '%GSROOT%/bin/external/maya/modules/fracturefx/1.9.1/win/%ST_MAYA%/config/fxlcn'
           path:
             linux: /
             mac: /
@@ -437,4 +474,103 @@ krakatoa:
           versions:
           - '2015'
           - '2016'
+          - '2017'
+bonustools:
+  name: bonustools
+  show: true
+  packages:
+    maya:
+      versions:
+        '17.0.1':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/bonustools/17.0.1/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
+ideform:
+  name: ideform
+  show: true
+  packages:
+    maya:
+      versions:
+        '1.5.1':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/ideform/1.5.1/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
+        '1.5.0':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/ideform/1.5.0/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
+        '1.0.0':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/ideform/1.0.0/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
+partio:
+  name: partio
+  show: true
+  packages:
+    maya:
+      versions:
+        '0.9.6':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/partio/0.9.6/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+phoenixfd:
+  name: phoenixfd
+  show: true
+  packages:
+    maya:
+      versions:
+        '2.25.8':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/phoenixfd/2.25.8/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
+nimbletools:
+  name: nimbletools
+  show: true
+  packages:
+    maya:
+      versions:
+        '1.2':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/nimbletools/1.2/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
           - '2017'

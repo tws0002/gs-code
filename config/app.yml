@@ -33,8 +33,7 @@ aftereffects:
           mac: /
           win32: aerender.exe
       path:
-        linux: /+
-        
+        linux: /
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2014\Support Files'
     'CC 2015':
@@ -73,7 +72,7 @@ aftereffects:
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015.3\Support Files'
 maya:
   env:
-    LM_LICENSE_FILE: '27001@scholar-lic01'
+    LM_LICENSE_FILE: '27001@laxlic01'
     AUTODESK_ADLM_THINCLIENT_ENV: '//scholar/apps/Autodesk/adlm/AdlmThinClientCustomEnv.xml'
     MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
     MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
@@ -136,8 +135,7 @@ maya:
       env:
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
-        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.0
-        GS_MAYA_AUTOLOAD: 'fbxmaya;OpenEXRLoader;quatNodes;tiffFloatReader;objExport;AbcImport;AbcExport;deformerEvaluator;curveWarp;MASH;vrayformaya'
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.1
       modes:
         ui:
           linux: /
@@ -154,7 +152,7 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2017.0.0/bin
+        win32: C:/Program Files/Autodesk/Maya/2017.0.1/bin
   tasks:
   - model
   - shade
