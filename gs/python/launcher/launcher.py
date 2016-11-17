@@ -8,7 +8,6 @@ from utils import *
 from ui import *
 from environment import *
 import core.project
-from PyQt4.QtCore import *
 
 def build_render_cmd(args):
     p = argparse.ArgumentParser(description='Render command handler')
@@ -149,7 +148,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     cmd = executable + ' ' + add_args
     if mode == 'render':
         print cmd
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si, cwd=cwd)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si)
         while True:
             output = p.stdout.readline()
             if output == '' and p.poll() is not None:
@@ -161,10 +160,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         executable = win_shell_safe(executable)
         cmd = 'start '+ executable + ' ' + add_args
         print cmd
-        p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd, shell=True)
+        p = subprocess.Popen(cmd, env=env, startupinfo=si, shell=True)
     else:
         print cmd
-        p = subprocess.Popen(cmd, env=env, startupinfo=si, cwd=cwd)
+        p = subprocess.Popen(cmd, env=env, startupinfo=si)
 
     #except:
     #    print (executable + " failed to open. Does it Exist?")
