@@ -149,7 +149,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     cmd = executable + ' ' + add_args
     if mode == 'render':
         print cmd
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env, startupinfo=si)
+        p = subprocess.Popen(cmd,bufsize=0, stdout=subprocess.PIPE, env=env, startupinfo=si)
         while True:
             output = p.stdout.readline()
             if output == '' and p.poll() is not None:

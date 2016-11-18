@@ -134,10 +134,11 @@ maya:
     '2017':
       name: Autodesk Maya
       env:
-        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;deformerEvaluator;GPUBuiltInDeformer;modelingToolkit;objExport;OneClick;renderSetup;tiffFloatReader;Unfold3D;fbxmaya'
+        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.1
+        MAYA_DISABLE_CLIC_IPM: '1'
       modes:
         ui:
           linux: /
@@ -250,6 +251,10 @@ nuke:
           linux: /
           mac: /
           win32: Nuke9.0.exe --studio
+        assist:
+          linux: /
+          mac: /
+          win32: Nuke9.0.exe --nukeassist
       path:
         linux: /
         mac: /

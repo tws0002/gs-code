@@ -118,12 +118,11 @@ default_2017:
     - animate
     3D_Production:
     - maya
+    - nuke
     - modo
-    - houdini-indie
     - zbrush
     - mudbox
     - mari
-    - nuke
     - photoshop
   order:
   - maya
@@ -212,6 +211,7 @@ default:
     - nuke
     - nuke-x
     - nuke-studio
+    - nuke-assist
     - aftereffects
     - premiere
     - photoshop
@@ -223,12 +223,12 @@ default:
     - animate
     3D_Production:
     - maya
+    - nuke-assist
+    - nuke
     - modo
-    - houdini-indie
     - zbrush
     - mudbox
     - mari
-    - nuke
     - photoshop
   order:
   - maya
