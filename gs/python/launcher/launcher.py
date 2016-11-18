@@ -147,9 +147,15 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
+
+
     if mode == 'render':
         print cmd
-        p = subprocess.Popen(cmd,bufsize=0, stdout=subprocess.PIPE, env=env, startupinfo=si)
+        try:
+            p = subprocess.Popen(cmd,bufsize=1, stdout=subprocess.PIPE, env=env, startupinfo=si)
+        except WindowsError:
+            print "\n\nError: GS Launcher Process: {0} failed to execute. \n\nDoes program exist?".format(cmd)
+            sys.exit(-1)
         while True:
             output = p.stdout.readline()
             if output == '' and p.poll() is not None:
@@ -157,11 +163,13 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             if output:
                 print output.strip()
         rc = p.poll()
+
     elif mode == 'cli':
         executable = win_shell_safe(executable)
         cmd = 'start '+ executable + ' ' + add_args
         print cmd
         p = subprocess.Popen(cmd, env=env, startupinfo=si, shell=True)
+
     else:
         print cmd
         p = subprocess.Popen(cmd, env=env, startupinfo=si)
