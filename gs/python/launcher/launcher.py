@@ -135,6 +135,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #    return
 
     env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
+    env['PATH'] = os.environ['PATH']
     #print '\n== ENV VARS =='
     #for key, value in env.iteritems():
     #    print (key+'='+value)

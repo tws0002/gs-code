@@ -315,8 +315,15 @@ def autoInitMustacheProject():
     else:
         print ("Mustache non Initialized yet. Cannot run Auto Init in userSetup.py")
 
+def gs_restore_pwd():
+    #cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')")
+    os.chdir('C:\Windows\System32')
+
 def gs_autoload():
-    plugins = os.environ.get('GS_MAYA_AUTOLOAD').split(';')
+    var = os.environ.get('GS_MAYA_AUTOLOAD')
+    plugins = []
+    if var != None:
+        plugins = var.split(';')
     for p in plugins:
         try:
             cmds.loadPlugin(p)
@@ -325,20 +332,21 @@ def gs_autoload():
 
 def init():
     #initLogo()
-    initPhx()
-    #initVray()
-    #initMtoa()
-    #initMr()
-    initFumeFX()
-    initRealflow()
-    initFractureFX()
-    initKrakatoa()
-    initPartio()
-    initUninstancer()
-    initBonusTools()
+    #initPhx()
+    ##initVray()
+    ##initMtoa()
+    ##initMr()
+    #initFumeFX()
+    #initRealflow()
+    #initFractureFX()
+    #initKrakatoa()
+    #initPartio()
+    #initUninstancer()
+    #initBonusTools()
     initMustache()
     autoInitMustacheProject()
 
     gs_autoload()
+    gs_restore_pwd()
 if __name__ == '__main__':
     init()
