@@ -174,8 +174,9 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         print cmd
         p = subprocess.Popen(cmd, env=env, startupinfo=si)
 
-    #except:
-    #    print (executable + " failed to open. Does it Exist?")
+
+    if p.returncode != None and p.returncode != 0:
+        sys.exit(p.returncode)
 
     return
 
