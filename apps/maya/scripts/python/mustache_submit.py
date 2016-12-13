@@ -361,6 +361,10 @@ class Submitter:
             else:
                 newPrefix = newPrefix + frameSuffix
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+        
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.exrForceMultilayer', True)
+        
         timestamp = str(int(time.time()))
         cmds.file(rename=os.path.join(renderScenesDir, fixedName + '_T_' + timestamp + '.mb'))
         new_file = cmds.file(s=1, f=1)
@@ -460,6 +464,7 @@ class Submitter:
             cmds.setAttr('vraySettings.fileNamePadding', int(framePadding))
         else:
             cmds.setAttr('defaultRenderGlobals.extensionPadding', int(framePadding))
+
         return True
 
     def parseRenderSuffix(self, sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args):
