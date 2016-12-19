@@ -217,8 +217,8 @@ nuke:
   env:
     RLM_LICENSE: '4101@laxlic01'
     NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
-    NUKE_DISK_CACHE: 'C:/Nuke'
-    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
+    NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
+    NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
   show: true
   tasks:
@@ -228,6 +228,33 @@ nuke:
   - track
   - roto
   versions:
+    '10.0v5':
+      name: Nuke
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        cli:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        render:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        x:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe --nukex
+        studio:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe --studio
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Foundry/Nuke/10.0v5
     '9.0v7':
       name: Nuke
       modes:
@@ -403,7 +430,7 @@ zbrush:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Pixologic/ZBrush 4R7'
+        win32: 'C:/Program Files (x86)/Pixologic/ZBrush 4R7'
 cinema4d:
   show: true
   tasks:
@@ -467,7 +494,32 @@ mari:
   tasks:
   - design
   - texture
+  env:
+        RLM_LICENSE: '4101@laxlic01'
+        MARI_SCRIPT_PATH: '%GSROOT%/base/apps/mari/scripts'
   versions:
+    '3.1v3':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari3.1v3.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\3.1v3\Bundle\bin'
+    '3.0v3':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari3.0v3.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\3.0v3\Bundle\bin'
     '2.6v5':
       name: Mari
       modes:
@@ -499,6 +551,17 @@ mudbox:
         linux: /
         mac: /
         win32: 'C:\Program Files\Autodesk\Mudbox\2016.0.0'
+    '2015':
+      name: Mudbox
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: mudbox.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Autodesk\Mudbox\2015.0.0'
 3dsmax:
   show: true
   env:
