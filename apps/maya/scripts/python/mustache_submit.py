@@ -795,10 +795,10 @@ class Submitter:
         rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 1 GPU per frame. (Recommended)')
         rs2GpuCtrl = cmds.radioButton(l='2 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 2 GPUs per frame.')
         rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 4 GPUs per frame.')
-        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
-            cmds.radioButton(rs1GpuCtrl, e=1, en=1)
-            cmds.radioButton(rs2GpuCtrl, e=1, en=1)
-            cmds.radioButton(rs4GpuCtrl, e=1, en=1)
+        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+        #    cmds.radioButton(rs1GpuCtrl, e=1, en=1)
+        #    cmds.radioButton(rs2GpuCtrl, e=1, en=1)
+        #    cmds.radioButton(rs4GpuCtrl, e=1, en=1)
         gpuButtonSpacing = 60
         cmds.formLayout(rsSettingsLayout, e=1, attachForm=[(rsSettingsLabel, 'top', tm1),
          (rsSettingsLabel, 'left', lm1),
