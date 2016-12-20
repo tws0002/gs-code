@@ -123,7 +123,7 @@ class Submitter:
         files = self.getImageOutputPath()
         return files.replace('\\','/')
 
-    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, *args):
+    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, rsGpus = 0, *args):
         nameNoStamp = name
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
@@ -150,7 +150,7 @@ class Submitter:
         musterflags['-logerrtype']      = '1'
         if depend: musterflags['-wait'] = depend
         if notes: musterflags['-info']  = notes
-
+            
         if gsstartup.properties['location'] == 'NYC' and pool != 'WKSTN-NY':
             ascpupsubmit=''
             upfile = file.replace(" ", "\ ").replace("//","/")
@@ -180,7 +180,37 @@ class Submitter:
 
             if ascpupsubmit:
                 musterflags['-wait'] = ascpupsubmit
-                rendersubmit = muster2.submit(musterflags)
+                if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                    if rsGpus == 1:
+                        rsGpuString = ['{0}', '{1}', '{2}', '{3}']
+                        i=0
+                        for g in rsGpuString:
+                            rsmusterflags = musterflags.copy()
+                            rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                            rsmusterflags['-sf'] = str(int(start)+i)
+                            rsmusterflags['-bf'] = str(len(rsGpuString))
+                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                            print rsmusterflags
+                            rendersubmit = muster2.submit(rsmusterflags)
+                            i+=1
+                    if rsGpus == 2:
+                        rsGpuString = ['{0,1}', '{2,3}']
+                        i=0
+                        for g in rsGpuString:
+                            rsmusterflags = musterflags.copy()
+                            rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                            rsmusterflags['-sf'] = str(int(start)+i)
+                            rsmusterflags['-bf'] = str(len(rsGpuString))
+                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                            print rsmusterflags
+                            rendersubmit = muster2.submit(rsmusterflags)
+                            i+=1
+                    if rsGpus == 4:
+                        rendersubmit = muster2.submit(musterflags)
+                else:
+                    rendersubmit = muster2.submit(musterflags)
                 if rendersubmit:
                     ascpdownflags = {}
                     ascpdownflags['-e']         = '43'
@@ -207,7 +237,37 @@ class Submitter:
             else:
                 print 'There was an error submitting upload job to Muster.'
         else:
-            rendersubmit = muster2.submit(musterflags)
+            if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                if rsGpus == 1:
+                    rsGpuString = ['{0}', '{1}', '{2}', '{3}']
+                    i=0
+                    for g in rsGpuString:
+                        rsmusterflags = musterflags.copy()
+                        rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                        rsmusterflags['-sf'] = str(int(start)+i)
+                        rsmusterflags['-bf'] = str(len(rsGpuString))
+                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                        print rsmusterflags
+                        rendersubmit = muster2.submit(rsmusterflags)
+                        i+=1
+                if rsGpus == 2:
+                    rsGpuString = ['{0,1}', '{2,3}']
+                    i=0
+                    for g in rsGpuString:
+                        rsmusterflags = musterflags.copy()
+                        rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                        rsmusterflags['-sf'] = str(int(start)+i)
+                        rsmusterflags['-bf'] = str(len(rsGpuString))
+                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                        print rsmusterflags
+                        rendersubmit = muster2.submit(rsmusterflags)
+                        i+=1
+                if rsGpus == 4:
+                    rendersubmit = muster2.submit(musterflags)
+            else:
+                rendersubmit = muster2.submit(musterflags)
             if rendersubmit:
                 print 'Job ID#%s successfully submitted to Muster!' %(rendersubmit)
             else:
@@ -488,9 +548,8 @@ class Submitter:
         imgString = imageDir + imgString.replace('<Scene>', scene + ssuff) + fsuff + '.' + paddingStr + '.' + extension
         cmds.text(framePreviewCtrl, e=1, l=imgString)
 
-    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, *args):
+    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, rsGpus = 0, *args):
         origFile = cmds.file(q=1, sn=1)
-
         self.sceneRenderPrep(renderCam, renderLayers, imgPlanes, imageType, framePadding, memLimit, displaceLimit)
         prepassID = '0'
         if prepassBeautyLayer:
@@ -503,7 +562,7 @@ class Submitter:
             if not prepassID:
                 cmds.error('Error submitting prepass!')
         finalScene = self.save_render_file(suffix, endSuffix)
-        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff)
+        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, rsGpus)
         if finalScene == False:
             cmds.confirmDialog(title='Error submitting render!', message='Muster has found an ERROR. Check the script editor.', button="Please Resubmit")
         else:
@@ -519,7 +578,7 @@ class Submitter:
         windowTitle = '}MUSTACHE{ - SUBMIT RENDER'
         if cmds.window(windowName, q=1, exists=1):
             cmds.deleteUI(windowName)
-        window = cmds.window(windowName, title=windowTitle, w=600, h=800)
+        window = cmds.window(windowName, title=windowTitle, w=600, h=900)
         wrapperForm = cmds.formLayout(parent=window)
         mayaGlobalSettings = cmds.formLayout(parent=wrapperForm)
         lm1 = 5
@@ -682,6 +741,7 @@ class Submitter:
          (imagePlanesCtrl, 'left', lm3),
          (exr2tiffCtrl, 'top', tm5 + lineHeight * 3),
          (exr2tiffCtrl, 'left', lm3)])
+        #####################################
         vraySettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(vraySettingsLayout, 'top', 450)])
         vraySettingsLabel = cmds.text(l='VRAY SPECIFIC SETTINGS', fn='boldLabelFont', parent=vraySettingsLayout)
@@ -726,8 +786,35 @@ class Submitter:
          (memLimitCtrl, 'left', lm2),
          (displaceLimitCtrl, 'top', tm3 + lineHeight),
          (displaceLimitCtrl, 'left', lm2)])
+        #####################################
+        rsSettingsLayout = cmds.formLayout(parent=wrapperForm)
+        cmds.formLayout(wrapperForm, e=1, attachForm=[(rsSettingsLayout, 'top', 570)])
+        rsSettingsLabel = cmds.text(l='REDSHIFT SPECIFIC SETTINGS', fn='boldLabelFont', parent=rsSettingsLayout)
+        rsGpuLabel = cmds.text(l='GPUs per Frame:', parent=rsSettingsLayout)
+        rsGpuRadioColCtrl = cmds.radioCollection(parent=rsSettingsLayout)
+        rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 1 GPU per frame. (Recommended)')
+        rs2GpuCtrl = cmds.radioButton(l='2 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 2 GPUs per frame.')
+        rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 4 GPUs per frame.')
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.radioButton(rs1GpuCtrl, e=1, en=1)
+            cmds.radioButton(rs2GpuCtrl, e=1, en=1)
+            cmds.radioButton(rs4GpuCtrl, e=1, en=1)
+        gpuButtonSpacing = 60
+        cmds.formLayout(rsSettingsLayout, e=1, attachForm=[(rsSettingsLabel, 'top', tm1),
+         (rsSettingsLabel, 'left', lm1),
+         (rsGpuLabel, 'top', tm2),
+         (rsGpuLabel, 'left', lm1),
+         (rs1GpuCtrl, 'top', tm2),
+         (rs1GpuCtrl, 'left', lm2),
+         (rs2GpuCtrl, 'top', tm2),
+         (rs2GpuCtrl, 'left', lm2 + gpuButtonSpacing),
+         (rs4GpuCtrl, 'top', tm2),
+         (rs4GpuCtrl, 'left', lm2 + gpuButtonSpacing * 2)])
+        rsButtonDict = {'radioButton1': 1, 'radioButton2': 2, 'radioButton3': 4}
+        print rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
+        #####################################
         musterSettingsLayout = cmds.formLayout(parent=wrapperForm)
-        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 570)])
+        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 640)])
         musterSettingsLabel = cmds.text(l='MUSTER SETTINGS', fn='boldLabelFont', parent=musterSettingsLayout)
         priorityLabel = cmds.text(l='Priority:', parent=musterSettingsLayout, ann='Priority of the job. 100 is highest. Folder priority will determine the overall priority against other projects.')
         packetLabel = cmds.text(l='Packet size:', parent=musterSettingsLayout, ann="Number of frames to submit at a time. The more memory-intensive the scene, the smaller the size you should use. If you're not sure, use 1.")
@@ -739,16 +826,42 @@ class Submitter:
         minSizeCtrl = cmds.textField(w=smallInputWidth, tx='2')
         notesCtrl = cmds.textField(w=largeInputWidth)
         emailsCtrl = cmds.textField(w=largeInputWidth)
-
 #        for f in musterFolders:
 #            cmds.menuItem(l=f[0])
-
         poolCtrl = cmds.optionMenu(l='Muster pool:     ', parent=musterSettingsLayout, bgc=[1.0, 0.6, 0.7], cc=lambda *x: self.setImportantCtrl(poolCtrl, cameraCtrl, poolCtrl, prepassCtrl, prepassLayerCtrl, submitBtn), ann="The pool of computers dedicated to rendering your job. If you don't know which one to use, ask a supervisor.")
         pools = list(MUSTER_POOLS)
         for p in pools:
             cmds.menuItem(l=p)
-
-        submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout, c=lambda *x: self.userSubmit( cmds.optionMenu(poolCtrl, q=1, v=1), cmds.textField(priorityCtrl, q=1, tx=1), cmds.textField(startCtrl, q=1, tx=1), cmds.textField(endCtrl, q=1, tx=1), cmds.textField(stepCtrl, q=1, tx=1), cmds.textField(packetCtrl, q=1, tx=1), cmds.textField(sizeXCtrl, q=1, tx=1), cmds.textField(sizeYCtrl, q=1, tx=1), '', cmds.textField(notesCtrl, q=1, tx=1), cmds.textField(emailsCtrl, q=1, tx=1), 1, cmds.textField(minSizeCtrl, q=1, tx=1), cmds.optionMenu(cameraCtrl, q=1, v=1), cmds.checkBox(imagePlanesCtrl, q=1, v=1), cmds.textField(sceneSuffixCtrl, q=1, tx=1), cmds.textField(frameSuffixCtrl, q=1, tx=1), self.getEnabledRenderLayers(renderLayerControls), cmds.optionMenu(prepassLayerCtrl, q=1, v=1), '0', cmds.textField(paddingCtrl, q=1, tx=1), cmds.optionMenu(imageTypeCtrl, q=1, v=1), cmds.textField(memLimitCtrl, q=1, tx=1), cmds.textField(displaceLimitCtrl, q=1, tx=1), cmds.checkBox(exr2tiffCtrl, q=1, v=1)))
+        #####################################
+        submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout,
+            c=lambda *x: self.userSubmit( pool = cmds.optionMenu(poolCtrl, q=1, v=1),
+                priority = cmds.textField(priorityCtrl, q=1, tx=1),
+                start = cmds.textField(startCtrl, q=1, tx=1),
+                end = cmds.textField(endCtrl, q=1, tx=1),
+                step = cmds.textField(stepCtrl, q=1, tx=1),
+                packet = cmds.textField(packetCtrl, q=1, tx=1),
+                x = cmds.textField(sizeXCtrl, q=1, tx=1),
+                y = cmds.textField(sizeYCtrl, q=1, tx=1),
+                flags = '',
+                notes = cmds.textField(notesCtrl, q=1, tx=1),
+                emails = cmds.textField(emailsCtrl, q=1, tx=1),
+                framecheck = 1,
+                minsize = cmds.textField(minSizeCtrl, q=1, tx=1),
+                renderCam = cmds.optionMenu(cameraCtrl, q=1, v=1),
+                imgPlanes = cmds.checkBox(imagePlanesCtrl, q=1, v=1),
+                suffix = cmds.textField(sceneSuffixCtrl, q=1, tx=1),
+                endSuffix = cmds.textField(frameSuffixCtrl, q=1, tx=1),
+                renderLayers = self.getEnabledRenderLayers(renderLayerControls),
+                prepassBeautyLayer = cmds.optionMenu(prepassLayerCtrl, q=1, v=1),
+                depend = '0',
+                framePadding = cmds.textField(paddingCtrl, q=1, tx=1),
+                imageType = cmds.optionMenu(imageTypeCtrl, q=1, v=1),
+                memLimit = cmds.textField(memLimitCtrl, q=1, tx=1),
+                displaceLimit = cmds.textField(displaceLimitCtrl, q=1, tx=1),
+                exr2tiff = cmds.checkBox(exr2tiffCtrl, q=1, v=1),
+                rsGpus = rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
+                )
+            )
         resetBtn = cmds.button(l='Reset to default', w=150, h=60, parent=musterSettingsLayout, c=lambda x: self.submitUI())
         closeBtn = cmds.button(l='Close window', w=150, h=60, parent=musterSettingsLayout, c=lambda x: cmds.deleteUI(window))
         cmds.formLayout(musterSettingsLayout, e=1, attachForm=[(musterSettingsLabel, 'top', tm1),

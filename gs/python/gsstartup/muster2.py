@@ -49,6 +49,12 @@ def _build_muster_cmd(flags):
             except KeyError:
                 print 'Missing required flag: %s' %(a)
 
+            if flags.get('-gpupool'):
+                gpupool = flags.pop('-gpupool')
+                pools_members = get_pools_members()
+                new_pool_string = ','.join(pools_members[gpupool])
+                flags['-pool'] = new_pool_string
+
             for k,v in flags.items():
                 if isinstance(v, list):
                     for i in v:
@@ -87,6 +93,24 @@ def get_pools():
     pools = [x for x in sorted(list(set(pools))) if x]
 
     return pools
+
+def get_pools_members():
+    cmd = CONNECT_CMD + ['-q', 'p', '-H', '0', '-pf', 'parent,name']
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout,stderr = proc.communicate()
+
+    entries = [x for x in stdout.replace('\r','').split('\n') if x]
+
+    pool_members = {}
+    for item in entries:
+        itemSplit = item.split('|')
+        try:
+            pool_members[itemSplit[0].replace('\t','').strip()].append([itemSplit[1].replace('\t','').strip()])
+        except Exception as error:
+            print error
+            pool_members[itemSplit[0].replace('\t','').strip()] = [itemSplit[1].replace('\t','').strip()]
+
+    return pool_members
 
 def get_pools_count():
     cmd = CONNECT_CMD + ['-q', 'p', '-H', '0', '-S', '0', '-pf', 'parent']
@@ -252,7 +276,7 @@ def main():
     parser = argparse.ArgumentParser(description='GS Maya launcher.')
     parser.add_argument('-j', '--jsoncmd', dest='jsoncmd', help='If specified, will take a dictionary of Muster flags to be submitted.')
     args = parser.parse_args()
-    
+
     if args.jsoncmd:
         jsoncmd = args.jsoncmd
         output = submit(json.loads(jsoncmd))
@@ -261,6 +285,8 @@ def main():
         MUSTERDICT['pools'] = get_pools()
         with open(MUSTERJSON, 'w') as f:
             json.dump(MUSTERDICT, f)
+
+    get_pools_members()
 
 
 if __name__ == '__main__':
