@@ -8,6 +8,7 @@ import time
 import random
 import json
 import glob
+import shutil
 import remote_render
 
 try:
@@ -396,6 +397,7 @@ class Submitter:
 
     def save_render_file(self, sceneSuffix = '', frameSuffix = '', *args):
         shot = self.M.SM.checkedShot
+        fullPath = cmds.file(q=1, sn=1)
         oldName = os.path.splitext(cmds.file(q=1, sn=1, shn=1))[0]
         fixedName = oldName
         if '_T_' in oldName:
@@ -429,6 +431,21 @@ class Submitter:
         cmds.file(rename=os.path.join(renderScenesDir, fixedName + '_T_' + timestamp + '.mb'))
         new_file = cmds.file(s=1, f=1)
         cmds.file(rts=1)
+
+        if cmds.pluginInfo('xgenToolkit.mll', q=1, l=1):
+            xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
+            abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
+            for x in xgenFiles:
+                search = '(%s)(.+\.xgen)$' %(oldName)
+                m = re.search(search, x)
+                if m:
+                    shutil.copy2(x, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+            for a in abcFiles:
+                search = '(%s)(.+\.abc)$' %(oldName)
+                m = re.search(search, a)
+                if m:
+                    shutil.copy2(a, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+
         return new_file
 
     def setRenderPrefix(self, *args):
