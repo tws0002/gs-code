@@ -810,8 +810,7 @@ class Submitter:
          (rs2GpuCtrl, 'left', lm2 + gpuButtonSpacing),
          (rs4GpuCtrl, 'top', tm2),
          (rs4GpuCtrl, 'left', lm2 + gpuButtonSpacing * 2)])
-        rsButtonDict = {'radioButton1': 1, 'radioButton2': 2, 'radioButton3': 4}
-        print rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
+        rsButtonDict = {cmds.radioButton(rs1GpuCtrl, q=1, fpn=1).split('|')[-1]: 1, cmds.radioButton(rs2GpuCtrl, q=1, fpn=1).split('|')[-1]: 2, cmds.radioButton(rs4GpuCtrl, q=1, fpn=1).split('|')[-1]: 4}
         #####################################
         musterSettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 640)])
