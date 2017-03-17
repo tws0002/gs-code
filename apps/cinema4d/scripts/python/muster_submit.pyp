@@ -2,19 +2,12 @@ import os
 import sys
 import subprocess
 import time
+import json
 import c4d
 from c4d import gui, plugins, bitmaps, documents
 
-try:
-    GSCODEBASE = os.environ['GSCODEBASE']
-except KeyError:
-    GSCODEBASE = '//scholar/code'
-GSTOOLS = os.path.join(GSCODEBASE,'tools')
-GSBIN = os.path.join(GSCODEBASE,'bin')
-
-sys.path.append(os.path.join(GSTOOLS, 'general', 'scripts', 'python'))
-import gs
-from gs import muster
+import gsstartup
+from gsstartup import muster2
 
 MUSTER_POOLS = []
 PLUGIN_ID = 1000000 # Test ID
@@ -83,25 +76,26 @@ class SubmitDialog(gui.GeDialog):
                 minorver = c4d_ver[2:len(c4d_ver)]
 
                 musterflags = {}
-                musterflags['-add']     = '-V %s -v %s --render \"' %(majorver, minorver)
-                musterflags['-e']       = '1007'
+                musterflags['-add']     = '--package cinema4d --major %s --minor %s' %(majorver, minorver)
+                musterflags['-e']       = '1107'
                 musterflags['-n']       = os.path.splitext(cur_file_name)[0]
                 musterflags['-parent']  = '33409'
-                musterflags['-group']   = gs.get_project_from_path(new_file)
+                musterflags['-group']   = gsstartup.get_project_from_path(new_file)
                 musterflags['-pool']    = pool
                 musterflags['-sf']      = frame_start
                 musterflags['-ef']      = frame_end
                 musterflags['-bf']      = '1'
                 musterflags['-pk']      = packet_sz
                 musterflags['-pr']      = priority
+                musterflags['-eca']     = 'C:\Python27\python.exe //scholar/code/general/scripts/python/sensu/post_chunk_action.py'
                 musterflags['-f']       = '%s' %(new_file.replace('\\','/'))
 
-                if gs.properties['location'] == 'NYC' and musterflags['-pool'] != 'WKSTN-NY':
+                if gsstartup.properties['location'] == 'NYC' and musterflags['-pool'] != 'WKSTN-NY':
                     ascpupflags = {}
                     ascpupflags['-e']       = '43'
                     ascpupflags['-n']       = '%s: Asset Upload' %(cur_file_name)
                     ascpupflags['-parent']  = '33409'
-                    ascpupflags['-group']    = gs.get_project_from_path(new_file)
+                    ascpupflags['-group']    = gsstartup.get_project_from_path(new_file)
                     ascpupflags['-pool']    = 'ASPERA'
                     
                     src = new_file.replace("\\", "/").replace(" ", "\ ").replace("//", "/")
@@ -110,17 +104,17 @@ class SubmitDialog(gui.GeDialog):
                     ascpupcmd = 'ascp -p -d -v -k 1 -i ~/.ssh/id_rsa -l 1G render@nycbossman:%s %s;' %(src, dest)
                     ascpupcmd = ascpupcmd + 'mkdir -p %s' %(outputpathselected.replace("\\","/").replace(" ", "\ ").replace("//","/"))
                     ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
-                    ascpupsubmit = muster.submit(ascpupflags)
+                    ascpupsubmit = muster2.submit(ascpupflags)
 
                     if ascpupsubmit:
                         musterflags['-wait'] = ascpupsubmit
-                        rendersubmit = muster.submit(musterflags)
+                        rendersubmit = muster2.submit(musterflags)
                         if rendersubmit:
                             ascpdownflags = {}
                             ascpdownflags['-e']         = '43'
                             ascpdownflags['-n']         = '%s: Render Download' %(cur_file_name)
                             ascpdownflags['-parent']    = '33409'
-                            ascpdownflags['-group']      = gs.get_project_from_path(new_file)
+                            ascpdownflags['-group']      = gsstartup.get_project_from_path(new_file)
                             ascpdownflags['-pool']      = 'ASPERA'
                             ascpdownflags['-wait']      = rendersubmit
                             
@@ -130,7 +124,7 @@ class SubmitDialog(gui.GeDialog):
                             dest = f
                             ascpdowncmd = ascpdowncmd + 'ascp -p -d -v -k 1 --remove-after-transfer -i ~/.ssh/id_rsa -l 1G %s render@nycbossman:%s;' %(src, dest)
                             ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
-                            ascpdownsubmit = muster.submit(ascpdownflags)
+                            ascpdownsubmit = muster2.submit(ascpdownflags)
 
                             if ascpdownsubmit:
                                 message = 'Jobs successfully submitted to Muster!'
@@ -141,7 +135,7 @@ class SubmitDialog(gui.GeDialog):
                     else:
                         message = 'There was an error submitting upload job to Muster.'
                 else:
-                    rendersubmit = muster.submit(musterflags)
+                    rendersubmit = muster2.submit(musterflags)
                     if rendersubmit:
                         message = 'Job ID %s successfully submitted to Muster!' %(rendersubmit)
                     else:
@@ -231,14 +225,14 @@ def save_render_file(cur_file):
 
 if __name__ == '__main__':
     try:
-        if os.path.getmtime(muster.MUSTERJSON) > time.time() - 60*5:
-            with open(muster.MUSTERJSON, 'r') as f:
+        if os.path.getmtime(muster2.MUSTERJSON) > time.time() - 60*5:
+            with open(muster2.MUSTERJSON, 'r') as f:
                 muster_json = json.load(f)
                 MUSTER_POOLS = muster_json['pools']
         else:
-            MUSTER_POOLS = muster.get_pools()
+            MUSTER_POOLS = muster2.get_pools()
     except WindowsError:
-        MUSTER_POOLS = muster.get_pools()
+        MUSTER_POOLS = muster2.get_pools()
 
     path, fn = os.path.split(__file__)
     bmp = bitmaps.BaseBitmap()

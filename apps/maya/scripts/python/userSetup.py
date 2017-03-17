@@ -3,6 +3,7 @@
 import os
 import maya.cmds as cmds
 import mustache
+import time
 
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
@@ -15,9 +16,14 @@ def initLogo():
     print txt_opn.read()
 
 def initMustache():
+    start_time = time.time()
     mustache.init()
+    autoInitMustacheProject()
+    elapsed_time = time.time() - start_time
+    print("// GS: Mustache loaded in {0} sec".format(elapsed_time))
 
 def autoInitMustacheProject():
+    
     if mustache.M != None:
         if 'GSINITIALS' in os.environ:
             mustache.M.user = os.environ['GSINITIALS']
@@ -29,9 +35,18 @@ def autoInitMustacheProject():
             mustache.M.sceneTemplate = os.path.join(mustache.M.project, 'scenes', 'TEMPLATE.mb')
     else:
         print ("Mustache non Initialized yet. Cannot run Auto Init in userSetup.py")
+    
 
 def gs_restore_pwd():
     cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')", lowestPriority=True)
+
+def gs_pluginLoad(plugin=''):
+    start_time = time.time()
+    if plugin != '':
+        cmds.loadPlugin(plugin)
+    elapsed_time = time.time() - start_time
+    print("// GS: '{0}' loaded in {1} sec".format(plugin,elapsed_time))
+
 
 def gs_autoload():
     var = os.environ.get('GS_MAYA_AUTOLOAD')
@@ -40,16 +55,15 @@ def gs_autoload():
         plugins = var.split(';')
     for p in plugins:
         try:
-            cmds.evalDeferred("cmds.loadPlugin('{0}')".format(p))
+            cmds.evalDeferred("gs_pluginLoad('{0}')".format(p), lowestPriority=True)
         except:
             print ("Could not load plugin {0}".format(p))
 
+
 def init():
     #initLogo()
-    initMustache()
-    autoInitMustacheProject()
-
     gs_autoload()
     gs_restore_pwd()
+    cmds.evalDeferred("initMustache()", lowestPriority=True)
 if __name__ == '__main__':
     init()

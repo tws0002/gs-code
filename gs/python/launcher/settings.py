@@ -19,17 +19,17 @@ os.environ['GSROOT'] = ROOT.replace('\\','/')
 os.environ['GSBRANCH'] = BRANCH.replace('\\','/')
 os.environ['GSCONFIG'] = CONFIG.replace('\\','/')
 
-##### import the proper version of PYQT
-##### need to look at a better way of sourcing pyqt / pyside
-####PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
-####
-#####os.environ['PATH'] += (';'+pyQTPath)
-#####print ('setting PYQTPATH to '+PYQTPATH)
-####try:
-####    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
-####except:
-####    os.environ['PYTHONPATH'] = (PYQTPATH)
-####sys.path.append(PYQTPATH)
+# import the proper version of PYQT
+# need to look at a better way of sourcing pyqt / pyside
+PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
+
+#os.environ['PATH'] += (';'+pyQTPath)
+#print ('setting PYQTPATH to '+PYQTPATH)
+try:
+    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
+except:
+    os.environ['PYTHONPATH'] = (PYQTPATH)
+sys.path.append(PYQTPATH)
 
 ## print os.environ['PYTHONPATH']
 ## print sys.path

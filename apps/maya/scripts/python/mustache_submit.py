@@ -29,8 +29,13 @@ if m:
     fullver = m.group(1)
     n = re.search('(\d*)\.(\d*\.\d*)', fullver)
     if n:
-        majorver = n.group(1)
-        minorver = n.group(2)
+        o = re.search('^5\.(\d*)', n.group(2))
+        if o:
+            majorver = n.group(1)+'.5'
+            minorver = o.group(1)
+        else:
+            majorver = n.group(1)
+            minorver = n.group(2)
 
 class Submitter:
 
@@ -175,7 +180,6 @@ class Submitter:
                     dest = os.path.split(src)[0]
                     ascpupcmd = ascpupcmd + 'ascpgs render@nycbossman:%s %s;' %(src, dest)
                 ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
-                print ascpupflags
                 ascpupsubmit = muster2.submit(ascpupflags)
                 i+=1
 
@@ -192,7 +196,6 @@ class Submitter:
                             rsmusterflags['-bf'] = str(len(rsGpuString))
                             rsmusterflags['-gpupool'] = 'GPU-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            print rsmusterflags
                             rendersubmit = muster2.submit(rsmusterflags)
                             i+=1
                     if rsGpus == 2:
@@ -205,7 +208,6 @@ class Submitter:
                             rsmusterflags['-bf'] = str(len(rsGpuString))
                             rsmusterflags['-gpupool'] = 'GPU-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            print rsmusterflags
                             rendersubmit = muster2.submit(rsmusterflags)
                             i+=1
                     if rsGpus == 4:
@@ -249,7 +251,6 @@ class Submitter:
                         rsmusterflags['-bf'] = str(len(rsGpuString))
                         rsmusterflags['-gpupool'] = 'GPU-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        print rsmusterflags
                         rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 2:
@@ -262,12 +263,12 @@ class Submitter:
                         rsmusterflags['-bf'] = str(len(rsGpuString))
                         rsmusterflags['-gpupool'] = 'GPU-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        print rsmusterflags
                         rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 4:
                     rendersubmit = muster2.submit(musterflags)
             else:
+                print musterflags
                 rendersubmit = muster2.submit(musterflags)
             if rendersubmit:
                 print 'Job ID#%s successfully submitted to Muster!' %(rendersubmit)
@@ -422,10 +423,13 @@ class Submitter:
                 newPrefix = newPrefix[:-1] + frameSuffix + '.'
             else:
                 newPrefix = newPrefix + frameSuffix
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+            try:
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+            except:
+                pass
         
-        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
-            cmds.setAttr('redshiftOptions.exrForceMultilayer', True)
+        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+        #    cmds.setAttr('redshiftOptions.exrForceMultilayer', True)
         
         timestamp = str(int(time.time()))
         cmds.file(rename=os.path.join(renderScenesDir, fixedName + '_T_' + timestamp + '.mb'))
@@ -440,11 +444,13 @@ class Submitter:
                 m = re.search(search, x)
                 if m:
                     shutil.copy2(x, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+                    shutil.copy2(x, os.path.join(renderScenesDir))
             for a in abcFiles:
                 search = '(%s)(.+\.abc)$' %(oldName)
                 m = re.search(search, a)
                 if m:
                     shutil.copy2(a, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+                    shutil.copy2(a, os.path.join(renderScenesDir))
 
         return new_file
 
@@ -455,7 +461,10 @@ class Submitter:
                 imagePrefix = imagePrefix + '.'
             cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
         else:
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+            try:
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+            except:
+                pass
 
     def vray_prepassSetup(self, beautyLayer, *args):
         sceneName = cmds.file(q=1, sn=1)
@@ -535,6 +544,7 @@ class Submitter:
             cmds.setAttr(l + '.renderable', 0)
 
         for l in layers:
+            print l
             cmds.setAttr(l + '.renderable', 1)
 
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
@@ -744,7 +754,6 @@ class Submitter:
                 if index == str(cmds.getAttr('defaultRenderGlobals.imageFormat')):
                     formatIndex = cmds.optionMenu(imageTypeCtrl, q=1, ni=1)
 
-        print formatIndex
         cmds.optionMenu(imageTypeCtrl, e=1, sl=formatIndex)
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(layersLabel, 'top', tm5),
          (layersLabel, 'left', lm1),

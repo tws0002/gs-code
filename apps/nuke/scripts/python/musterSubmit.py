@@ -11,7 +11,7 @@ import nukescripts
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except KeyError:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 
 sys.path.append(os.path.join(GSCODEBASE, 'general', 'scripts', 'python'))
 import gsstartup
@@ -22,10 +22,18 @@ m = re.search('^(.*)v(.*)',nuke.NUKE_VERSION_STRING)
 majorver = m.group(1)
 minorver = m.group(2)
 
+
+
+try:
+    PROJ_NAME = os.environ['GSPROJECT']
+except KeyError:
+    PROJ_NAME = ""
+
 def nuke_ui():       
-    allWriteNodes = [node for node in nuke.allNodes() if node.Class() == 'Write']
+    allWriteNodes = [node for node in nuke.allNodes() if node.Class() == 'Write' or node.Class() == 'DeepWrite']
     
     panel = nuke.Panel( 'GS Render Submit' )
+    panel.addSingleLineInput( 'Project', PROJ_NAME)
     panel.addSingleLineInput( 'Job Name', os.path.splitext(os.path.split(nuke.value('root.name'))[1])[0] )
     if gsstartup.properties['location'] == 'NYC':
         panel.addBooleanCheckBox( 'Use LA Render Farm', 0 )
@@ -47,7 +55,7 @@ def nuke_ui():
         framerange = [int(value) for value in re.sub('[^0-9]',',',panel.value('Frame Range')).split(',')]
         
         musterflags = {}
-        musterflags['-add']     = '--major %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING, selected_write_nodes_string)
+        musterflags['-add']     = '--major %s --job %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING,panel.value('Project'), selected_write_nodes_string)
         musterflags['-e']       = '1105'
         musterflags['-n']       = panel.value('Job Name')
         musterflags['-parent']  = '33409'

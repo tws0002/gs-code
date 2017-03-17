@@ -105,7 +105,7 @@ def get_pools_members():
     for item in entries:
         itemSplit = item.split('|')
         try:
-            pool_members[itemSplit[0].replace('\t','').strip()].append([itemSplit[1].replace('\t','').strip()])
+            pool_members[itemSplit[0].replace('\t','').strip()].append(itemSplit[1].replace('\t','').strip())
         except Exception as error:
             print error
             pool_members[itemSplit[0].replace('\t','').strip()] = [itemSplit[1].replace('\t','').strip()]
@@ -280,14 +280,10 @@ def main():
     if args.jsoncmd:
         jsoncmd = args.jsoncmd
         output = submit(json.loads(jsoncmd))
-        print output
     else:
         MUSTERDICT['pools'] = get_pools()
         with open(MUSTERJSON, 'w') as f:
             json.dump(MUSTERDICT, f)
-
-    get_pools_members()
-
 
 if __name__ == '__main__':
     main()

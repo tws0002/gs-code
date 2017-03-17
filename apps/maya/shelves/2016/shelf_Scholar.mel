@@ -14,9 +14,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "save plus" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "save plus" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -40,9 +45,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "Vray Globals" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "VrayGlobals" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -66,9 +76,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "select all child nodes of current selection" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "SelectChild" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -92,9 +107,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "copy selected channels from clipboard" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Python Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -118,9 +138,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "paste channels from clipboard to selected objects" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Python Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -144,9 +169,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "press this for turbosquid" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Check Component Shading" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 1 1 1 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -170,9 +200,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "split component shading into shells" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Split Component Shading" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -196,9 +231,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "remove per-face shading connections without splitting" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Repair Bad Shading" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -222,9 +262,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined MEL command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "XferUV" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -248,9 +293,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined MEL command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "namespacey" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -274,9 +324,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined MEL command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "cometRename" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -300,9 +355,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "select two objects to attach one to the other" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "DjRivet" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -326,9 +386,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "store shading information to sets" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -352,9 +417,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "export animation" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "EXP" 
         -overlayLabelColor 0 0 0 
@@ -379,9 +449,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "import animation" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "IMP" 
         -overlayLabelColor 0 0 0 
@@ -406,9 +481,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "playblast half-res" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "50%" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -433,9 +513,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "playblast full-res" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "100%" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -460,9 +545,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "get all controllers under a namespace" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "SEL" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -487,9 +577,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined MEL command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -513,9 +608,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "make some pretty controls" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -539,9 +639,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "automatic control setup" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -565,9 +670,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "massCopyWeight" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "massCopyWeight" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -591,9 +701,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "lock/unlock all non-NURBS transforms" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0 
@@ -617,9 +732,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "convert all file textures above 9.0 MB (default) to tiled EXR. run convertTex2EXR.convertTex2EXR(x.x) for a different MB limit" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Python Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -imageOverlayLabel "EXR" 
         -overlayLabelColor 0.8 0.8 0.8 
@@ -644,9 +764,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "bake stuff to world space and export FBX for max" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -670,9 +795,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "asset cleanup" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "asset cleanup" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -696,9 +826,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "auto gamma correct selected shaders to 0.455" 
         -enableBackground 1
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Auto Gamma" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -722,9 +857,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined Python command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "multimatte builder" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -748,9 +888,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined Python command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "vray subdiv UI" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -774,9 +919,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "create fast vray pass setups" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "Python Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -800,9 +950,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "remove stupid shading edits to references" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.2 
@@ -826,9 +981,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "User-defined MEL command" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "MEL Command" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -852,9 +1012,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "Fixesrender layer outAdjustment problems." 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "fixRenderLayerOutAdjustmentErrors" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -878,9 +1043,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "abxRenderLayers" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "abxRenderLayers" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -904,9 +1074,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "emfxClouds" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "emfxClouds" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -930,9 +1105,14 @@ global proc shelf_Scholar () {
         -preventOverride 0
         -annotation "spPaint3d" 
         -enableBackground 0
+        -highlightColor 0.321569 0.521569 0.65098 
         -align "center" 
         -label "spPaint3d" 
         -labelOffset 0
+        -rotation 0
+        -flipX 0
+        -flipY 0
+        -useAlpha 1
         -font "plainLabelFont" 
         -overlayLabelColor 0.8 0.8 0.8 
         -overlayLabelBackColor 0 0 0 0.25 
@@ -946,4 +1126,5 @@ global proc shelf_Scholar () {
         -commandRepeatable 1
         -flat 1
     ;
+
 } 

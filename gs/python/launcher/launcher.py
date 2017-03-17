@@ -5,7 +5,7 @@ import sys, urllib2, subprocess, argparse
 
 from settings import *
 from utils import *
-from ui import *
+#from ui import *
 from environment import *
 import core.project
 
@@ -163,6 +163,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             if output:
                 print output.strip()
         rc = p.poll()
+        if p.returncode != None:
+            print ("GS Launcher: Render Process Ended with exit code {0}".format(p.returncode))
+        else:
+            print ("GS Launcher: Render Process Ended. No exit code reported.")
 
     elif mode == 'cli':
         executable = win_shell_safe(executable)
@@ -201,6 +205,7 @@ if __name__ == '__main__':
 
 
     if not args.app:
+        from ui import *
         app = QApplication(sys.argv)
         wind = Launcher()
         wind.setWindowTitle('Gentleman Scholar Launcher')
