@@ -124,6 +124,17 @@ def initGSEnv():
     for p in pluginpaths:
         nuke.pluginAddPath(os.path.join(GSNUKE, p))
 
+def load_plugins():
+    var = os.environ.get('ST_NUKE_PLUGINS')
+    plugins = []
+    if var != None:
+        plugins = var.split(';')
+    for p in plugins:
+        try:
+            nuke.pluginAddPath(p)
+        except:
+            print ("Could not load plugin path {0}".format(p))
+
 def init():
     print "Loading Gentleman Scholar Nuke preferences..."
     initGSEnv()

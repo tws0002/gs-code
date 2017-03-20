@@ -77,12 +77,12 @@ maya:
     MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
     MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
     MAYA_MODULE_PATH: '%MAYA_STTOOLS%/modules/%ST_MAYA%'
-    MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%'
+    MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/plug-ins'
     MAYA_PRESET_PATH: '%MAYA_STTOOLS%/presets'
-    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar'
-    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%'
-    XBMLANGPATH: '%MAYA_STTOOLS%/icons'
-    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python'
+    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
+    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/shelves/%ST_MAYA%'
+    XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/icons'
+    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
   show: true
   versions:
     '2015':
@@ -108,12 +108,13 @@ maya:
         linux: /
         mac: /
         win32: C:/Program Files/Autodesk/Maya/2015.0.5/bin
-    '2016':
+    '2016.5':
       name: Autodesk Maya
       env:
+        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
-        ST_MAYA: '2016'
-        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.4
+        ST_MAYA: '2016.5'
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1
       modes:
         ui:
           linux: /
@@ -130,14 +131,14 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2016.0.4/bin
+        win32: C:/Program Files/Autodesk/Maya/2016.5.1/bin
     '2017':
       name: Autodesk Maya
       env:
         GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
-        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.1
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
         MAYA_DISABLE_CLIC_IPM: '1'
       modes:
         ui:
@@ -155,7 +156,7 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2017.0.1/bin
+        win32: C:/Program Files/Autodesk/Maya/2017.0.3/bin
   tasks:
   - model
   - shade
@@ -216,9 +217,9 @@ softimage:
 nuke:
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '%GSBRANCH%/apps/nuke/startup'
-    NUKE_DISK_CACHE: 'C:/Nuke'
-    NUKE_TEMP_DIR: 'C:/Nuke/Temp'
+    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
+    NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
+    NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
   show: true
   tasks:
@@ -228,8 +229,43 @@ nuke:
   - track
   - roto
   versions:
+    '10.0v5':
+      name: Nuke
+      env:
+        ST_NUKE: '10.0'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        cli:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        render:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe
+        x:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe --nukex
+        studio:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe --studio
+        assist:
+          linux: /
+          mac: /
+          win32: Nuke10.0.exe --nukeassist
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Foundry/Nuke/10.0v5
     '9.0v7':
       name: Nuke
+      env:
+        ST_NUKE: '9.0'
       modes:
         ui:
           linux: /
@@ -403,31 +439,54 @@ zbrush:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Pixologic/ZBrush 4R7'
+        win32: 'C:/Program Files (x86)/Pixologic/ZBrush 4R7'
 cinema4d:
   show: true
   tasks:
   - design
   - model
+  env:
+    C4D_PLUGINS_DIR: '%GSROOT%/base/apps/cinema4d/scripts/python'
+    C4D_BROWSERLIBS: '%GSROOT%/bin/external/cinema4d/browserlib/%ST_C4D%'
   versions:
-    'R17':
+    'R18':
       name: Cinema 4D
+      env:
+        ST_C4D: 'R18'
       modes:
         ui:
           linux: /
           mac: /
           win32: 'CINEMA 4D.exe'
+        cli:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
+        render:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
       path:
         linux: /
         mac: /
-        win32: 'C:\Program Files\Maxon\Cinema4D\R17.048'
-    'R17.048':
+        win32: 'C:\Program Files\Maxon\Cinema4D\R18.020'
+    'R17':
       name: Cinema 4D
+      env:
+        ST_C4D: 'R17'
       modes:
         ui:
           linux: /
           mac: /
           win32: 'CINEMA 4D.exe'
+        cli:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
+        render:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
       path:
         linux: /
         mac: /
@@ -467,7 +526,32 @@ mari:
   tasks:
   - design
   - texture
+  env:
+        RLM_LICENSE: '4101@laxlic01'
+        MARI_SCRIPT_PATH: '%GSROOT%/base/apps/mari/scripts'
   versions:
+    '3.1v3':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari3.1v3.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\3.1v3\Bundle\bin'
+    '3.0v3':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari3.0v3.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\3.0v3\Bundle\bin'
     '2.6v5':
       name: Mari
       modes:
@@ -499,6 +583,17 @@ mudbox:
         linux: /
         mac: /
         win32: 'C:\Program Files\Autodesk\Mudbox\2016.0.0'
+    '2015':
+      name: Mudbox
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: mudbox.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Autodesk\Mudbox\2015.0.0'
 3dsmax:
   show: true
   env:

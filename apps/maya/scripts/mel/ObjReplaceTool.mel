@@ -1,0 +1,85 @@
+global proc Xf_Replace_data(){
+   
+   global string $SlA[];
+   string $SlA[] = `ls -sl`;
+   int $SlAnb = `size($SlA)`;
+   if($SlAnb >0){
+   print ("Objects has been Specify as"+$SlA[0]+"...");
+   }else{
+       error "Not selected objects";
+       }
+}
+
+global proc Xf_Replace(){
+   
+   string $SlB[] = `ls -sl`;
+   int $SlBnb = `size($SlB)`;
+   if($SlBnb >0){
+      for($SlC in $SlB){
+          global string $SlA[];
+          //Copy
+          select -r $SlA[0] ;
+          Duplicate;
+          string $SlD[] = `ls -sl`;
+          select $SlD[0];
+          rename ($SlC+"_xfqwerRe");
+          //Position
+          select -r $SlC ;
+          select -add ($SlC+"_xfqwerRe");
+          string $pCon[] = `pointConstraint`;
+          string $findpCon[] = `listRelatives -type pointConstraint`;
+          delete $findpCon[0];
+
+          string $rCon[] = `orientConstraint`;
+          string $findrCon[] = `listRelatives -type orientConstraint`;
+          delete $findrCon[0];
+          
+          string $sCon[] = `scaleConstraint`;
+          string $findsCon[] = `listRelatives -type scaleConstraint`;
+          delete $findsCon[0];
+
+          select -r $SlC ;
+          doDelete;
+                        } 
+                 }else{
+    
+                error "Not selected objects";
+                      };
+
+         searchReplaceNames "_xfqwerRe" " " "all";
+         
+         global string $SlA[];
+         print ("Replace object has been selected as the reference object"+$SlA[0]+"...");
+
+}
+global proc ObjReplaceTool(){
+//Windows
+if(`window -ex Xf_Replace_Window`)
+deleteUI Xf_Replace_Window;
+window  -t "Objects Replace Tool" Xf_Replace_Window ;
+
+
+columnLayout -adj 1;
+text -label "                     ";
+text -label "To specify a base object first and Replace!";
+text -label "                     ";
+text -label "                     ";
+separator;separator;
+button -label "Base Obj" -command Xf_Replace_data;
+text -label "                     ";
+button -label " Replace " -command Xf_Replace;
+text -label "                     ";
+text -label "                     ";
+text -label "                     ";
+
+
+separator;
+button -label "Close" -command ("deleteUI -window Xf_Replace_Window");
+separator;
+
+
+showWindow Xf_Replace_Window;
+
+window -e -wh 250 185 Xf_Replace_Window;
+}
+ObjReplaceTool;

@@ -30,7 +30,7 @@ except KeyError:
     PROJ_NAME = ""
 
 def nuke_ui():       
-    allWriteNodes = [node for node in nuke.allNodes() if node.Class() == 'Write']
+    allWriteNodes = [node for node in nuke.allNodes() if node.Class() == 'Write' or node.Class() == 'DeepWrite']
     
     panel = nuke.Panel( 'GS Render Submit' )
     panel.addSingleLineInput( 'Project', PROJ_NAME)

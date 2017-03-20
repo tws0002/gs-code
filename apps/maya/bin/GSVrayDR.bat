@@ -1,10 +1,10 @@
 @echo off
 
 if not defined GSCODEBASE (
-	set GSCODEBASE=\\scholar\code
+	set GSCODEBASE=\\scholar\pipeline
 )
-set GSTOOLS=%GSCODEBASE%\tools)
-set GSBIN=%GSCODEBASE%\bin)
+
+set GSBIN=%GSCODEBASE%\bin
 
 echo Using %GSCODEBASE% as repository.
 
@@ -19,24 +19,24 @@ if not "%2"=="" (
 
 :startvraydr
 echo Setting up environment...
-set VRAY_MAIN=%GSBIN%\vray\vrayformaya\%VRAYVER%\win\%MAYAVER%
+set VRAY_MAIN=%GSBIN%\external\maya\modules\vrayformaya\%VRAYVER%\win\%MAYAVER%
 set PATH=%PATH%;%VRAY_MAIN%\maya_bin
-set MAYA_PLUG_IN_PATH=%VRAY_MAIN%
+set MAYA_PLUG_IN_PATH=%VRAY_MAIN%\plug-ins
 set MAYA_SCRIPT_PATH=%VRAY_MAIN%\scripts
 set XBMLANGPATH=%VRAY_MAIN%\icons
 set MAYA_RENDER_DESC_PATH=%VRAY_MAIN%\maya_bin\rendererDesc
 set PYTHONPATH=%PYTHONPATH%;%VRAY_MAIN%\scripts
 set XGEN_CONFIG_PATH=%VRAY_MAIN%\plug-ins\xgen\presets
 set VRAY_FOR_MAYA%MAYAVER%_MAIN_x64=%VRAY_MAIN%
-set VRAY_FOR_MAYA%MAYAVER%_PLUGINS_x64=%VRAY_MAIN%\Vrayplugins
+set VRAY_FOR_MAYA%MAYAVER%_PLUGINS_x64=%VRAY_MAIN%\vrayplugins
 set VRAY_AUTH_CLIENT_FILE_PATH=%VRAY_MAIN%\conf
 set VRAY_PLUGINS_x64=%VRAY_MAIN%\vrayplugins
 set VRAY_TOOLS_MAYA%MAYAVER%_x64=%VRAY_MAIN%\bin
-set LM_LICENSE_FILE=@scholar-lic01;@scholar-lic02
-set RLM_LICENSE=4101@scholar-lic01
+set LM_LICENSE_FILE=@laxlic01
+set RLM_LICENSE=4101@laxlic01
 
-echo Running \\scholar\code\tools\maya\modules\%MAYAVER%\vray\%VRAYVER%\bin\vray.exe...
-\\scholar\code\tools\maya\modules\%MAYAVER%\vray\%VRAYVER%\bin\vray.exe -server -portNumber=20207
+echo Running %GSBIN%\external\maya\modules\vrayformaya\%VRAYVER%\win\%MAYAVER%...
+%GSBIN%\external\maya\modules\vrayformaya\%VRAYVER%\win\%MAYAVER%\bin\vray.exe -server -portNumber=20207
 
 :end
 exit

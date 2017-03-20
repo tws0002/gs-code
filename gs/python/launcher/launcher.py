@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
 
     if not args.app:
-	from ui import *
+        from ui import *
         app = QApplication(sys.argv)
         wind = Launcher()
         wind.setWindowTitle('Gentleman Scholar Launcher')
