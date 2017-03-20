@@ -327,6 +327,7 @@ class Launcher(QMainWindow):
 
                 self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package_full])
                 version = WORKGRP[workgroup]['packages'][package]['version']
+                install_path = ""
                 try:
                     install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
                 except KeyError:
@@ -402,7 +403,7 @@ class Launcher(QMainWindow):
         for name, button in self.app_layouts.iteritems():
             #print 'item:{0} button:{1}'.format(item, button)
             if item == button:
-                print ("BUTTON FOUND")
+                #print ("BUTTON FOUND")
                 pkg_and_mode = name.split('-')
                 app = pkg_and_mode[0]
                 if len(pkg_and_mode) > 1:

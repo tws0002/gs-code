@@ -43,7 +43,7 @@ global proc scholarBlast(int $outputPercent) {
 	string $fileNameBuffer[];
 	tokenize $fileNameExt "." $fileNameBuffer;
 	string $fileName = $fileNameBuffer[0];
-	string $writeDir = ("/\/scholar/projects/"+$projName+"/05_dailies/"+$year+$month2+$day);
+	string $writeDir = ("/\/scholar/projects/"+$projName+"/05_dailies/"+$year+"-"+$month2+"-"+$day+"/playblast");
 	print $writeDir;
 	// does path exist?
 

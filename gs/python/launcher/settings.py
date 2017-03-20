@@ -19,17 +19,17 @@ os.environ['GSROOT'] = ROOT.replace('\\','/')
 os.environ['GSBRANCH'] = BRANCH.replace('\\','/')
 os.environ['GSCONFIG'] = CONFIG.replace('\\','/')
 
-##### import the proper version of PYQT
-##### need to look at a better way of sourcing pyqt / pyside
-####PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
-####
-#####os.environ['PATH'] += (';'+pyQTPath)
-#####print ('setting PYQTPATH to '+PYQTPATH)
-####try:
-####    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
-####except:
-####    os.environ['PYTHONPATH'] = (PYQTPATH)
-####sys.path.append(PYQTPATH)
+# import the proper version of PYQT
+# need to look at a better way of sourcing pyqt / pyside
+PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
+
+#os.environ['PATH'] += (';'+pyQTPath)
+#print ('setting PYQTPATH to '+PYQTPATH)
+#try:
+#    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
+#except:
+#    os.environ['PYTHONPATH'] = (PYQTPATH)
+sys.path.append(PYQTPATH)
 
 ## print os.environ['PYTHONPATH']
 ## print sys.path
@@ -48,31 +48,19 @@ SHARES = {
     'home' : 'personal',
     'assets' : 'lib',
 }
-#DRIVE_MAP = {
-#    'prod' : 'P:',
-#    'sys' : 'T:',
-#    'user' : 'W:',
-#    'lib' : 'R:',
-#    'job' : 'Z:'
-#}
 
-
-#RES = 'E:\\temp\\res'
 #load the apps dictionary
 f = open(CONFIG+"/app.yml")
-# use safe_load instead load
 APPS = yaml.safe_load(f)
 f.close()
 
 #load the modules dictionary
 f = open(CONFIG+"/modules.yml")
-# use safe_load instead load
 MODULES = yaml.safe_load(f)
 f.close()
 
 #load the workgroups dictionary
 f = open(CONFIG+"/workgroups.yml")
-# use safe_load instead load
 WORKGRP = yaml.safe_load(f)
 f.close()
 
@@ -81,4 +69,3 @@ from environment import *
 STUDIO_ENV = StudioEnvironment()
 STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
 STUDIO_ENV.setEnv()
-#STUDIO_ENV.printout()

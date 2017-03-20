@@ -5,9 +5,11 @@ import sys, urllib2, subprocess, argparse
 
 from settings import *
 from utils import *
-from ui import *
+# from ui import *
 from environment import *
 import core.project
+
+#PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
 
 def build_render_cmd(args):
     p = argparse.ArgumentParser(description='Render command handler')
@@ -94,7 +96,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
     process_env.load_app_config_file(filepath=app_config)
 
-    process_env.printout()
+    #process_env.printout()
 
     # validate data from config
     # TODO work this into the studio environment funcs validate_config(key, value)
@@ -135,7 +137,13 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #    return
 
     env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
+    
+    # need to clear out pyqt from path and pythonpath
+    # these need to be handled on an app by app basis
+
     env['PATH'] = os.environ['PATH']
+    env['PATH'].replace('{0};'.format(PYQTPATH), '')
+    env['PYTHONPATH'].replace('{0};'.format(PYQTPATH), '')
     #print '\n== ENV VARS =='
     #for key, value in env.iteritems():
     #    print (key+'='+value)
@@ -163,6 +171,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             if output:
                 print output.strip()
         rc = p.poll()
+        if p.returncode != None:
+            print ("GS Launcher: Render Process Ended with exit code {0}".format(p.returncode))
+        else:
+            print ("GS Launcher: Render Process Ended. No exit code reported.")
 
     elif mode == 'cli':
         executable = win_shell_safe(executable)
@@ -201,6 +213,7 @@ if __name__ == '__main__':
 
 
     if not args.app:
+	from ui import *
         app = QApplication(sys.argv)
         wind = Launcher()
         wind.setWindowTitle('Gentleman Scholar Launcher')

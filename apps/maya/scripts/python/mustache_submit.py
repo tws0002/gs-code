@@ -8,6 +8,7 @@ import time
 import random
 import json
 import glob
+import shutil
 import remote_render
 
 try:
@@ -28,8 +29,13 @@ if m:
     fullver = m.group(1)
     n = re.search('(\d*)\.(\d*\.\d*)', fullver)
     if n:
-        majorver = n.group(1)
-        minorver = n.group(2)
+        o = re.search('^5\.(\d*)', n.group(2))
+        if o:
+            majorver = n.group(1)+'.5'
+            minorver = o.group(1)
+        else:
+            majorver = n.group(1)
+            minorver = n.group(2)
 
 class Submitter:
 
@@ -77,9 +83,22 @@ class Submitter:
         if not imagePrefix:
             return False
         imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
-        projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, imagePrefix)
+        # subst <Scene>
+        fullPath = cmds.file(q=1, sn=1)
+        oldName = os.path.splitext(cmds.file(q=1, sn=1, shn=1))[0]
+        fixedName = oldName
+        if '_T_' in oldName:
+            fixedName = oldName.split('_T_')[0]
+        newPrefix = imagePrefix.replace('<Scene>', fixedName)
+
+        # if <Layer> is in path, parse the active render layers
+
+        # if <Version> is in path
+
+        # if <Camera> is in path
+
+        projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, newPrefix)
         normalizedFolder = projectImgFolder.replace('/', '\\')
-        print '\nimageOutputPath: %s' % normalizedFolder
         return normalizedFolder
 
     def getUploadFiles(self):
@@ -117,13 +136,25 @@ class Submitter:
         for seq in seq_list_final:
             files_final.append(seq)
 
+        # xgen
+
+        #fullPath = cmds.file(q=1, sn=1)
+        #xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
+        #for x in xgenFiles:
+        #    files_final.append(x)
+        #abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
+        #for a in abcFiles:
+        #    files_final.append(a)
+#
+
         return list(set(files_final))
+
 
     def getDownloadFiles(self):
         files = self.getImageOutputPath()
         return files.replace('\\','/')
 
-    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, *args):
+    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, rsGpus = 0, *args):
         nameNoStamp = name
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
@@ -150,7 +181,7 @@ class Submitter:
         musterflags['-logerrtype']      = '1'
         if depend: musterflags['-wait'] = depend
         if notes: musterflags['-info']  = notes
-
+            
         if gsstartup.properties['location'] == 'NYC' and pool != 'WKSTN-NY':
             ascpupsubmit=''
             upfile = file.replace(" ", "\ ").replace("//","/")
@@ -174,13 +205,40 @@ class Submitter:
                     dest = os.path.split(src)[0]
                     ascpupcmd = ascpupcmd + 'ascpgs render@nycbossman:%s %s;' %(src, dest)
                 ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
-                print ascpupflags
                 ascpupsubmit = muster2.submit(ascpupflags)
                 i+=1
 
             if ascpupsubmit:
                 musterflags['-wait'] = ascpupsubmit
-                rendersubmit = muster2.submit(musterflags)
+                if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                    if rsGpus == 1:
+                        rsGpuString = ['{0}', '{1}', '{2}', '{3}']
+                        i=0
+                        for g in rsGpuString:
+                            rsmusterflags = musterflags.copy()
+                            rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                            rsmusterflags['-sf'] = str(int(start)+i)
+                            rsmusterflags['-bf'] = str(len(rsGpuString))
+                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                            rendersubmit = muster2.submit(rsmusterflags)
+                            i+=1
+                    if rsGpus == 2:
+                        rsGpuString = ['{0,1}', '{2,3}']
+                        i=0
+                        for g in rsGpuString:
+                            rsmusterflags = musterflags.copy()
+                            rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                            rsmusterflags['-sf'] = str(int(start)+i)
+                            rsmusterflags['-bf'] = str(len(rsGpuString))
+                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                            rendersubmit = muster2.submit(rsmusterflags)
+                            i+=1
+                    if rsGpus == 4:
+                        rendersubmit = muster2.submit(musterflags)
+                else:
+                    rendersubmit = muster2.submit(musterflags)
                 if rendersubmit:
                     ascpdownflags = {}
                     ascpdownflags['-e']         = '43'
@@ -207,7 +265,36 @@ class Submitter:
             else:
                 print 'There was an error submitting upload job to Muster.'
         else:
-            rendersubmit = muster2.submit(musterflags)
+            if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                if rsGpus == 1:
+                    rsGpuString = ['{0}', '{1}', '{2}', '{3}']
+                    i=0
+                    for g in rsGpuString:
+                        rsmusterflags = musterflags.copy()
+                        rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                        rsmusterflags['-sf'] = str(int(start)+i)
+                        rsmusterflags['-bf'] = str(len(rsGpuString))
+                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                        rendersubmit = muster2.submit(rsmusterflags)
+                        i+=1
+                if rsGpus == 2:
+                    rsGpuString = ['{0,1}', '{2,3}']
+                    i=0
+                    for g in rsGpuString:
+                        rsmusterflags = musterflags.copy()
+                        rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
+                        rsmusterflags['-sf'] = str(int(start)+i)
+                        rsmusterflags['-bf'] = str(len(rsGpuString))
+                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
+                        rendersubmit = muster2.submit(rsmusterflags)
+                        i+=1
+                if rsGpus == 4:
+                    rendersubmit = muster2.submit(musterflags)
+            else:
+                print musterflags
+                rendersubmit = muster2.submit(musterflags)
             if rendersubmit:
                 print 'Job ID#%s successfully submitted to Muster!' %(rendersubmit)
             else:
@@ -336,6 +423,7 @@ class Submitter:
 
     def save_render_file(self, sceneSuffix = '', frameSuffix = '', *args):
         shot = self.M.SM.checkedShot
+        fullPath = cmds.file(q=1, sn=1)
         oldName = os.path.splitext(cmds.file(q=1, sn=1, shn=1))[0]
         fixedName = oldName
         if '_T_' in oldName:
@@ -360,21 +448,66 @@ class Submitter:
                 newPrefix = newPrefix[:-1] + frameSuffix + '.'
             else:
                 newPrefix = newPrefix + frameSuffix
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+            try:
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+            except:
+                pass
+        
+        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+        #    cmds.setAttr('redshiftOptions.exrForceMultilayer', True)
+        
         timestamp = str(int(time.time()))
         cmds.file(rename=os.path.join(renderScenesDir, fixedName + '_T_' + timestamp + '.mb'))
         new_file = cmds.file(s=1, f=1)
         cmds.file(rts=1)
-        return new_file
 
-    def setRenderPrefix(self, *args):
-        imagePrefix = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
+        # restore image prefix without <scene> substitution
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
-                imagePrefix = imagePrefix + '.'
             cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
         else:
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+
+        if cmds.pluginInfo('xgenToolkit.mll', q=1, l=1):
+            xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
+            abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
+            for x in xgenFiles:
+                search = '(%s)(.+\.xgen)$' %(oldName)
+                m = re.search(search, x)
+                if m:
+                    shutil.copy2(x, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+                    shutil.copy2(x, os.path.join(renderScenesDir))
+            for a in abcFiles:
+                search = '(%s)(.+\.abc)$' %(oldName)
+                m = re.search(search, a)
+                if m:
+                    shutil.copy2(a, os.path.join(renderScenesDir, fixedName+'_T_'+timestamp+m.group(2)))
+                    shutil.copy2(a, os.path.join(renderScenesDir))
+
+        return new_file
+
+    def setRenderPrefix(self, imagePrefix, *args):
+        if imagePrefix == '':
+            imagePrefix = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
+
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+            #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
+                #imagePrefix = imagePrefix + '.'
+            cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+        else:
+            try:
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+            except:
+                pass
+
+    def getRenderPrefix(self, *args):
+        imagePrefix = ''
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+            imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
+        else:
+            imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+        #imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
+
+        return imagePrefix
 
     def vray_prepassSetup(self, beautyLayer, *args):
         sceneName = cmds.file(q=1, sn=1)
@@ -454,12 +587,14 @@ class Submitter:
             cmds.setAttr(l + '.renderable', 0)
 
         for l in layers:
+            print l
             cmds.setAttr(l + '.renderable', 1)
 
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             cmds.setAttr('vraySettings.fileNamePadding', int(framePadding))
         else:
             cmds.setAttr('defaultRenderGlobals.extensionPadding', int(framePadding))
+
         return True
 
     def parseRenderSuffix(self, sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args):
@@ -472,7 +607,8 @@ class Submitter:
         padding = int(cmds.textField(paddingCtrl, q=1, tx=1))
         paddingStr = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            imgString = cmds.getAttr('vraySettings.fileNamePrefix').strip('.')
+            prf = str(cmds.getAttr('vraySettings.fileNamePrefix'))
+            imgString = prf.strip('.')
         else:
             imgString = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         if not imgString:
@@ -480,12 +616,20 @@ class Submitter:
         for x in range(0, padding):
             paddingStr = paddingStr + '#'
 
-        imgString = imageDir + imgString.replace('<Scene>', scene + ssuff) + fsuff + '.' + paddingStr + '.' + extension
+        # commented out because we only want to parse <scene> when saving temp renderscene
+        #imgString = imageDir + imgString.replace('<Scene>', scene + ssuff) + fsuff + '.' + paddingStr + '.' + extension
+        imgString = imageDir + imgString + fsuff + '.' + paddingStr + '.' + extension
         cmds.text(framePreviewCtrl, e=1, l=imgString)
+        
 
-    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, *args):
+    def parseImagePrefix(self, imagePrefixCtrl, sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args):
+        imagePrefix = cmds.textField(imagePrefixCtrl, q=1, tx=1)
+        self.setRenderPrefix(imagePrefix)
+        self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args)
+
+
+    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, rsGpus = 0, *args):
         origFile = cmds.file(q=1, sn=1)
-
         self.sceneRenderPrep(renderCam, renderLayers, imgPlanes, imageType, framePadding, memLimit, displaceLimit)
         prepassID = '0'
         if prepassBeautyLayer:
@@ -498,13 +642,12 @@ class Submitter:
             if not prepassID:
                 cmds.error('Error submitting prepass!')
         finalScene = self.save_render_file(suffix, endSuffix)
-        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff)
+        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, rsGpus)
         if finalScene == False:
             cmds.confirmDialog(title='Error submitting render!', message='Muster has found an ERROR. Check the script editor.', button="Please Resubmit")
         else:
             cmds.confirmDialog(title='Submission successful.', message='Successfully submitted Job#%s to Muster.' %(finalScene), button='OK')
         cmds.file(rename=origFile)
-        self.setRenderPrefix()
         cmds.file(rts=1)
 
     def submitUI(self, *args):
@@ -514,7 +657,7 @@ class Submitter:
         windowTitle = '}MUSTACHE{ - SUBMIT RENDER'
         if cmds.window(windowName, q=1, exists=1):
             cmds.deleteUI(windowName)
-        window = cmds.window(windowName, title=windowTitle, w=600, h=800)
+        window = cmds.window(windowName, title=windowTitle, w=600, h=900)
         wrapperForm = cmds.formLayout(parent=window)
         mayaGlobalSettings = cmds.formLayout(parent=wrapperForm)
         lm1 = 5
@@ -541,6 +684,7 @@ class Submitter:
         paddingLabel = cmds.text(l='Padding:', ann='Number of leading zeroes used to pad the frame number. Default is 4.', parent=mayaGlobalSettings)
         sceneSuffixLabel = cmds.text(l='Scene suffix:', ann='Filename text added after each instance of the scene name for each rendered frame.', parent=mayaGlobalSettings)
         frameSuffixLabel = cmds.text(l='Frame suffix:', ann='Filename text added just before the frame number of each rendered frame.', parent=mayaGlobalSettings)
+        renderPrefixLabel = cmds.text(l='FileName Prefix', ann='Image Naming Pattern (from Render Globals).', parent=mayaGlobalSettings)
         frameExampleLabel = cmds.text(l='Image files will be named:', fn='obliqueLabelFont', parent=mayaGlobalSettings)
         frameExample = cmds.text(l='', fn='smallPlainLabelFont', parent=mayaGlobalSettings)
         engineString = 'render engine is ' + cmds.getAttr('defaultRenderGlobals.currentRenderer').upper()
@@ -558,6 +702,7 @@ class Submitter:
             cmds.textField(paddingCtrl, e=1, tx=cmds.getAttr('vraySettings.fileNamePadding'))
         sceneSuffixCtrl = cmds.textField(tx='', w=150, parent=mayaGlobalSettings, cc=lambda *x: self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
         frameSuffixCtrl = cmds.textField(tx='', w=150, parent=mayaGlobalSettings, cc=lambda *x: self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
+        renderPrefixCtrl = cmds.textField(tx=self.getRenderPrefix(), w=largeInputWidth, parent=mayaGlobalSettings, cc=lambda *x: self.parseImagePrefix(renderPrefixCtrl,sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(mayaLabel, 'top', tm1),
          (mayaLabel, 'left', lm1),
          (sceneLabel, 'top', tm2),
@@ -580,7 +725,9 @@ class Submitter:
          (sceneSuffixLabel, 'left', lm1),
          (frameSuffixLabel, 'top', tm4 + lineHeight),
          (frameSuffixLabel, 'left', lm1),
-         (frameExampleLabel, 'top', tm4 + lineHeight * 2 + 10),
+         (renderPrefixLabel, 'top', tm4 + lineHeight*2),
+         (renderPrefixLabel, 'left', lm1),
+         (frameExampleLabel, 'top', tm4 + lineHeight * 3),
          (frameExampleLabel, 'left', lm1)])
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(sceneCtrl, 'top', tm2),
          (sceneCtrl, 'left', lm2),
@@ -602,7 +749,9 @@ class Submitter:
          (sceneSuffixCtrl, 'left', lm2),
          (frameSuffixCtrl, 'top', tm4 + lineHeight),
          (frameSuffixCtrl, 'left', lm2),
-         (frameExample, 'top', tm4 + lineHeight * 3),
+         (renderPrefixCtrl, 'top', tm4 + lineHeight*2),
+         (renderPrefixCtrl, 'left', lm2),
+         (frameExample, 'top', tm4 + lineHeight * 3+10),
          (frameExample, 'left', lm1),
          (mustacheCtrl, 'left', lm5),
          (mustacheCtrl, 'top', tm2),
@@ -663,7 +812,6 @@ class Submitter:
                 if index == str(cmds.getAttr('defaultRenderGlobals.imageFormat')):
                     formatIndex = cmds.optionMenu(imageTypeCtrl, q=1, ni=1)
 
-        print formatIndex
         cmds.optionMenu(imageTypeCtrl, e=1, sl=formatIndex)
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(layersLabel, 'top', tm5),
          (layersLabel, 'left', lm1),
@@ -677,6 +825,7 @@ class Submitter:
          (imagePlanesCtrl, 'left', lm3),
          (exr2tiffCtrl, 'top', tm5 + lineHeight * 3),
          (exr2tiffCtrl, 'left', lm3)])
+        #####################################
         vraySettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(vraySettingsLayout, 'top', 450)])
         vraySettingsLabel = cmds.text(l='VRAY SPECIFIC SETTINGS', fn='boldLabelFont', parent=vraySettingsLayout)
@@ -721,8 +870,34 @@ class Submitter:
          (memLimitCtrl, 'left', lm2),
          (displaceLimitCtrl, 'top', tm3 + lineHeight),
          (displaceLimitCtrl, 'left', lm2)])
+        #####################################
+        rsSettingsLayout = cmds.formLayout(parent=wrapperForm)
+        cmds.formLayout(wrapperForm, e=1, attachForm=[(rsSettingsLayout, 'top', 570)])
+        rsSettingsLabel = cmds.text(l='REDSHIFT SPECIFIC SETTINGS', fn='boldLabelFont', parent=rsSettingsLayout)
+        rsGpuLabel = cmds.text(l='GPUs per Frame:', parent=rsSettingsLayout)
+        rsGpuRadioColCtrl = cmds.radioCollection(parent=rsSettingsLayout)
+        rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 1 GPU per frame. (Recommended)')
+        rs2GpuCtrl = cmds.radioButton(l='2 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 2 GPUs per frame.')
+        rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 4 GPUs per frame.')
+        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+        #    cmds.radioButton(rs1GpuCtrl, e=1, en=1)
+        #    cmds.radioButton(rs2GpuCtrl, e=1, en=1)
+        #    cmds.radioButton(rs4GpuCtrl, e=1, en=1)
+        gpuButtonSpacing = 60
+        cmds.formLayout(rsSettingsLayout, e=1, attachForm=[(rsSettingsLabel, 'top', tm1),
+         (rsSettingsLabel, 'left', lm1),
+         (rsGpuLabel, 'top', tm2),
+         (rsGpuLabel, 'left', lm1),
+         (rs1GpuCtrl, 'top', tm2),
+         (rs1GpuCtrl, 'left', lm2),
+         (rs2GpuCtrl, 'top', tm2),
+         (rs2GpuCtrl, 'left', lm2 + gpuButtonSpacing),
+         (rs4GpuCtrl, 'top', tm2),
+         (rs4GpuCtrl, 'left', lm2 + gpuButtonSpacing * 2)])
+        rsButtonDict = {cmds.radioButton(rs1GpuCtrl, q=1, fpn=1).split('|')[-1]: 1, cmds.radioButton(rs2GpuCtrl, q=1, fpn=1).split('|')[-1]: 2, cmds.radioButton(rs4GpuCtrl, q=1, fpn=1).split('|')[-1]: 4}
+        #####################################
         musterSettingsLayout = cmds.formLayout(parent=wrapperForm)
-        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 570)])
+        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 640)])
         musterSettingsLabel = cmds.text(l='MUSTER SETTINGS', fn='boldLabelFont', parent=musterSettingsLayout)
         priorityLabel = cmds.text(l='Priority:', parent=musterSettingsLayout, ann='Priority of the job. 100 is highest. Folder priority will determine the overall priority against other projects.')
         packetLabel = cmds.text(l='Packet size:', parent=musterSettingsLayout, ann="Number of frames to submit at a time. The more memory-intensive the scene, the smaller the size you should use. If you're not sure, use 1.")
@@ -734,16 +909,42 @@ class Submitter:
         minSizeCtrl = cmds.textField(w=smallInputWidth, tx='2')
         notesCtrl = cmds.textField(w=largeInputWidth)
         emailsCtrl = cmds.textField(w=largeInputWidth)
-
 #        for f in musterFolders:
 #            cmds.menuItem(l=f[0])
-
         poolCtrl = cmds.optionMenu(l='Muster pool:     ', parent=musterSettingsLayout, bgc=[1.0, 0.6, 0.7], cc=lambda *x: self.setImportantCtrl(poolCtrl, cameraCtrl, poolCtrl, prepassCtrl, prepassLayerCtrl, submitBtn), ann="The pool of computers dedicated to rendering your job. If you don't know which one to use, ask a supervisor.")
         pools = list(MUSTER_POOLS)
         for p in pools:
             cmds.menuItem(l=p)
-
-        submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout, c=lambda *x: self.userSubmit( cmds.optionMenu(poolCtrl, q=1, v=1), cmds.textField(priorityCtrl, q=1, tx=1), cmds.textField(startCtrl, q=1, tx=1), cmds.textField(endCtrl, q=1, tx=1), cmds.textField(stepCtrl, q=1, tx=1), cmds.textField(packetCtrl, q=1, tx=1), cmds.textField(sizeXCtrl, q=1, tx=1), cmds.textField(sizeYCtrl, q=1, tx=1), '', cmds.textField(notesCtrl, q=1, tx=1), cmds.textField(emailsCtrl, q=1, tx=1), 1, cmds.textField(minSizeCtrl, q=1, tx=1), cmds.optionMenu(cameraCtrl, q=1, v=1), cmds.checkBox(imagePlanesCtrl, q=1, v=1), cmds.textField(sceneSuffixCtrl, q=1, tx=1), cmds.textField(frameSuffixCtrl, q=1, tx=1), self.getEnabledRenderLayers(renderLayerControls), cmds.optionMenu(prepassLayerCtrl, q=1, v=1), '0', cmds.textField(paddingCtrl, q=1, tx=1), cmds.optionMenu(imageTypeCtrl, q=1, v=1), cmds.textField(memLimitCtrl, q=1, tx=1), cmds.textField(displaceLimitCtrl, q=1, tx=1), cmds.checkBox(exr2tiffCtrl, q=1, v=1)))
+        #####################################
+        submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout,
+            c=lambda *x: self.userSubmit( pool = cmds.optionMenu(poolCtrl, q=1, v=1),
+                priority = cmds.textField(priorityCtrl, q=1, tx=1),
+                start = cmds.textField(startCtrl, q=1, tx=1),
+                end = cmds.textField(endCtrl, q=1, tx=1),
+                step = cmds.textField(stepCtrl, q=1, tx=1),
+                packet = cmds.textField(packetCtrl, q=1, tx=1),
+                x = cmds.textField(sizeXCtrl, q=1, tx=1),
+                y = cmds.textField(sizeYCtrl, q=1, tx=1),
+                flags = '',
+                notes = cmds.textField(notesCtrl, q=1, tx=1),
+                emails = cmds.textField(emailsCtrl, q=1, tx=1),
+                framecheck = 1,
+                minsize = cmds.textField(minSizeCtrl, q=1, tx=1),
+                renderCam = cmds.optionMenu(cameraCtrl, q=1, v=1),
+                imgPlanes = cmds.checkBox(imagePlanesCtrl, q=1, v=1),
+                suffix = cmds.textField(sceneSuffixCtrl, q=1, tx=1),
+                endSuffix = cmds.textField(frameSuffixCtrl, q=1, tx=1),
+                renderLayers = self.getEnabledRenderLayers(renderLayerControls),
+                prepassBeautyLayer = cmds.optionMenu(prepassLayerCtrl, q=1, v=1),
+                depend = '0',
+                framePadding = cmds.textField(paddingCtrl, q=1, tx=1),
+                imageType = cmds.optionMenu(imageTypeCtrl, q=1, v=1),
+                memLimit = cmds.textField(memLimitCtrl, q=1, tx=1),
+                displaceLimit = cmds.textField(displaceLimitCtrl, q=1, tx=1),
+                exr2tiff = cmds.checkBox(exr2tiffCtrl, q=1, v=1),
+                rsGpus = rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
+                )
+            )
         resetBtn = cmds.button(l='Reset to default', w=150, h=60, parent=musterSettingsLayout, c=lambda x: self.submitUI())
         closeBtn = cmds.button(l='Close window', w=150, h=60, parent=musterSettingsLayout, c=lambda x: cmds.deleteUI(window))
         cmds.formLayout(musterSettingsLayout, e=1, attachForm=[(musterSettingsLabel, 'top', tm1),
@@ -778,8 +979,8 @@ class Submitter:
          (resetBtn, 'left', lm5),
          (closeBtn, 'top', tm2 + lineHeight * 6),
          (closeBtn, 'left', lm5)])
-        self.setRenderPrefix()
         self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
+        self.parseImagePrefix(renderPrefixCtrl,sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
         mustacheDir = '//scholar/code/maya/icons/mustaches'
         if os.path.exists(mustacheDir):
             mustaches = [ f for f in os.listdir(mustacheDir) if os.path.splitext(f)[-1] == '.jpg' ]

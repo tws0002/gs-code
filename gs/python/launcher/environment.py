@@ -139,10 +139,13 @@ class StudioEnvironment():
     def setEnv(self):
 
         for var, value in self.vars.iteritems():
-            if var != 'PATH':
-                os.environ[var] = value
-            else:
-                os.path.append(value)
+            os.environ[var] = value
+
+            # lets not add PATH variables just yet, we should pass them through to subprocess only
+            #if var != 'PATH':
+            #    os.environ[var] = value
+            #else:
+            #    os.path.append(value)
 
     def parse_subst(self):
         trashvars = []
