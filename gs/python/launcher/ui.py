@@ -219,7 +219,19 @@ class Launcher(QMainWindow):
         self.update_apps()
 
     def load_style(self):
-        ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+        branch = 'base'
+        try:
+            print ("GSBRANCH={0}".format(os.environ['GSBRANCH'].split('/')[-1]))
+            branch = os.environ['GSBRANCH'].split('/')[-1]
+        except:
+            pass
+
+        if branch == 'dev':
+            print ("Launching DEV UI")
+            ssh_file = '/'.join([os.path.dirname(__file__),'res','dev.qss'])
+        else:
+            ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+
         fh = open(ssh_file,"r")
         qstr = QString(fh.read())
         self.setStyleSheet(qstr)
