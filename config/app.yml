@@ -111,10 +111,11 @@ maya:
     '2016.5':
       name: Autodesk Maya
       env:
-        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
+        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;OneClick;objExport;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2016.5'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1
+        MAYA_DISABLE_CLIC_IPM: '1'
       modes:
         ui:
           linux: /
@@ -625,10 +626,10 @@ houdini:
   - light
   - anim
   versions:
-    '15.5.523':
+    '15.5.607':
       name: Houdini
       env:
-        ST_HOU: '15.5.523'
+        ST_HOU: '15.5.607'
       modes:
         ui:
           linux: /
@@ -657,4 +658,4 @@ houdini:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.523/bin'
+        win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'

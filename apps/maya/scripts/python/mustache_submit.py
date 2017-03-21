@@ -14,7 +14,7 @@ import remote_render
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except KeyError:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 
 import gsstartup
 from gsstartup import muster2
@@ -50,8 +50,8 @@ class Submitter:
             with open(muster2.MUSTERJSON, 'r') as f:
                 muster_json = json.load(f)
                 MUSTER_POOLS = muster_json['pools']
-        else:         
-            MUSTER_POOLS = muster2.get_pools()
+        #else:         
+        #    MUSTER_POOLS = muster2.get_pools()
         #except WindowsError:
         #
         #    MUSTER_POOLS = muster2.get_pools()     

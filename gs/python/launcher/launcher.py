@@ -40,6 +40,7 @@ def build_render_cmd(args):
 def init():
     if args.app:
         project = ''
+        # hard coded workgroup 'default'
         workgroup = 'default'
         version = ''
         initials = ''
@@ -206,6 +207,8 @@ if __name__ == '__main__':
     parser.add_argument('--job', dest='job', help='Specify Target Job ')
     parser.add_argument('--prompt', dest='cli', action='store_true', help='Specify to use command line input')
     parser.add_argument('--config', dest='configfile', help='Specify alternate pipeline config to load')
+    parser.add_argument('--wrkgrp', dest='workgroup', help='Specify workgroup to load within config, defaults to "default"')
+
     #args = parser.parse_args()
     parsed_args = parser.parse_known_args()
     args = parsed_args[0]

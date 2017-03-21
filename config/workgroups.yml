@@ -142,7 +142,7 @@ default:
   title: 'Default'
   packages:
     maya:
-      version: '2015'
+      version: '2016.5'
       modules:
         advancedSkeleton: '5.250'
         animschoolpicker: '1.4.6'
@@ -167,7 +167,7 @@ default:
         soup: '2016.10.08'
         zync: '1.2.5'
     houdini:
-      version: '15.5.523'
+      version: '15.5.607'
     3dsmax:
       version: '2016'
     cinema4d:
