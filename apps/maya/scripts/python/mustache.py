@@ -45,7 +45,7 @@ try:
     GSCODEBASE = os.environ['GSCODEBASE']
     print 'Using code repository: %s' %( GSCODEBASE )
 except:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 GSTOOLS = os.path.join(GSCODEBASE,'base','apps')
 GSBIN = os.path.join(GSCODEBASE,'bin')
 

@@ -45,13 +45,23 @@ class Submitter:
         self.M = ''
         self.imagesFolder = 'images'
 
+
+        # if not the base branch, the local branch cache prob isn't getting updated so we'll copy it from base branch
+        if os.environ['GSBRANCH'].split('/')[-1] != 'base':
+            base_mp_cache = os.path.join(os.environ['GSROOT'],'base','gs','python','gsstartup','muster.json')
+            local_mp_cache = os.path.join(os.environ['GSBRANCH'],'gs','python','gsstartup','muster.json')
+            if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
+                shutil.copy2(base_mp_cache,local_mp_cache)
+
+        # if the mod date is more recent than 5 min ago load it, otherwise query muster
         #try:
         if os.path.getmtime(muster2.MUSTERJSON) > time.time() - 60*5:    
             with open(muster2.MUSTERJSON, 'r') as f:
                 muster_json = json.load(f)
                 MUSTER_POOLS = muster_json['pools']
-        #else:         
-        #    MUSTER_POOLS = muster2.get_pools()
+        else:
+            MUSTER_POOLS = muster2.get_pools()
+          
         #except WindowsError:
         #
         #    MUSTER_POOLS = muster2.get_pools()     
@@ -149,6 +159,19 @@ class Submitter:
 
         return list(set(files_final))
 
+    def get_gs_musterId(self,package):
+        mId = 1100
+        if package == 'maya':
+            mId += 6
+
+        # if running dev branch, increment the mId by 1000
+        branch = os.environ['GSBRANCH'].split('/')[-1]
+        if branch == 'dev':
+            mId += 100
+        print ('Detected Branch:{0} Using muster template id:{1}'.format(branch,mId))
+        return mId
+
+
 
     def getDownloadFiles(self):
         files = self.getImageOutputPath()
@@ -156,6 +179,7 @@ class Submitter:
 
     def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, rsGpus = 0, *args):
         nameNoStamp = name
+        mtid = self.get_gs_musterId('maya');
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
 
@@ -165,7 +189,7 @@ class Submitter:
         else:
             musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
 
-        musterflags['-e']               = '1106'
+        musterflags['-e']               = str(mtid)
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'
         musterflags['-group']           = self.M.projectName

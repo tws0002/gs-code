@@ -14,7 +14,7 @@ except:
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except KeyError:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 
 USER        =   getpass.getuser()
 SERVER      =   "dispatch.studio.gentscholar.com"
@@ -24,6 +24,7 @@ MUSTEREXE   =   {
                 'Linux'     :   "/usr/local/muster7/mrtool",
                 }
 PRODUCTION_ID = '33409'
+
 JOB_ENGINE = {
         'ae': '1102',
         'modo': '1104',
@@ -31,6 +32,17 @@ JOB_ENGINE = {
         'maya': '1106',
         'c4d': '1107',
     }
+
+if (os.environ['GSBRANCH'].split('/')[-1]) == 'dev':
+    JOB_ENGINE = {
+        'ae': '1202',
+        'modo': '1204',
+        'nuke': '1205',
+        'maya': '1206',
+        'c4d': '1207',
+    }
+
+
 MUSTERDICT  =   {}
 MUSTERJSON  =   os.path.join(os.path.dirname(os.path.realpath(__file__)), 'muster.json')
 
