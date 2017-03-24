@@ -82,8 +82,24 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     print cwd
 
     if not os.path.isfile(wrkgrp_config):
-        wrkgrp_config = CONFIG+'/workgroups.yml'
-        app_config = CONFIG+'/app.yml'
+        job_wrkgrp_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","workgroups.yml")
+        if os.path.isfile(job_wrkgrp_config):
+            wrkgrp_config = job_wrkgrp_config
+            app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
+            #print ("GS Launcher: loading local project workgroup config:{0}").format(job_wrkgrp_config)
+        else:
+            wrkgrp_config = CONFIG+'/workgroups.yml'
+            #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
+
+    if not os.path.isfile(app_config):
+        job_app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
+        if os.path.isfile(job_app_config):
+            app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
+            #print ("GS Launcher: loading local project app config:{0}").format(job_app_config)
+        else:
+            app_config = CONFIG+'/app.yml'
+            #print ("GS Launcher: loading studio app config:{0}").format(app_config)
+
         
     print 'Launching {0} version: {1}'.format(app,version)
 
@@ -122,6 +138,12 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if mode not in a_data[app]['versions'][version]['modes']:
         print ('Mode: {0} not found in package {1} in current workgroup config: {2}'.format(mode,app,wrkgrp_config))
         return
+
+    # check if shell mode is enabled
+    if 'shell' in a_data[app]:
+        #print ("shell mode detected {0}".format(a_data[app]['shell'] ))
+        if a_data[app]['shell'] == True:
+            mode = 'cli'
 
     executable = os.path.join(a_data[app]['versions'][version]['path'][sys.platform], a_data[app]['versions'][version]['modes'][mode][sys.platform])
     
@@ -186,7 +208,6 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     else:
         print cmd
         p = subprocess.Popen(cmd, env=env, startupinfo=si)
-
 
     if p.returncode != None and p.returncode != 0:
         sys.exit(p.returncode)

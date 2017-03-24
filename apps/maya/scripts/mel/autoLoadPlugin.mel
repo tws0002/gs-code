@@ -1,0 +1,66 @@
+// GS: THIS IS AN OVERRIDE OF THE BUILT IN SCRIPT FOUND INT MAYAINTALL/scripts/startup/autoLoadPlugin.mel
+// The intention is to add a flag to catch autoloads from happening even at maya init. (the current autodesk implement doesn't currently do this)
+// - adam@gentscholar.com
+
+
+// ===========================================================================
+// Copyright 2016 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+global proc autoLoadPlugin(
+	string $userName,
+	string $pluginName,
+	string $plugin)
+//
+//	Description:
+//		This procedure is called from pluginPrefs.mel for the purposes of 
+//		auto-loading plugins at startup.
+//
+//	Notes:
+//		By creating this procedure to load a plugin we can
+//		invoke it from an "evalDeferred" command in userPrefs.mel. By 
+//		using evalDeferred we are able to delay the loading of plugins and 
+//		the	OpenMaya library until after our other libraries are loaded.
+//
+{
+	if (getenv("GS_MAYA_NO_INITIAL_AUTOLOAD") == ""){
+		if (`pluginInfo -q -loaded $pluginName` )
+			return;
+
+		if ("" == $userName) {
+			string $name = $pluginName;
+			if ( endsWith( $plugin, ".py" ) ) {
+				$name = $plugin;
+			}
+			if (!catch(`loadPlugin -quiet $name`)) {
+				if (`pluginInfo -q -loaded $name` )
+					pluginInfo -edit -autoload true $name;
+				
+				else if (`pluginInfo -q -loaded $plugin` )
+					pluginInfo -edit -autoload true $plugin;
+			}
+			// BRTA-1003 workaround:
+			// If the OneClick plugin experiences a failure while loading, it will
+			// not be put on the autoload list. We don't want this to happen, so
+			// make sure it is always put on the list.
+			//
+			if($name == "OneClick") {
+				if (!`pluginInfo -q -loaded $name`)
+					loadPlugin -quiet $name;
+				pluginInfo -edit -autoload true $name;
+			}
+		} else {
+			string $name = $pluginName;
+			if ( endsWith( $plugin, ".py" ) ) {
+				$name = $plugin;
+			}
+			if (!catch(`loadPlugin -quiet -name $userName $name`)) {
+				if (`pluginInfo -q -loaded $name` )
+					pluginInfo -edit -autoload true $plugin;
+			}
+		}
+	}
+}

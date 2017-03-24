@@ -148,13 +148,15 @@ QListWidget::item:selected {
     font: 20pt "Courier";
     color:#484848;
     outline:none;
+    background-color: #f62375;
+    border-radius: 5px;
     border-bottom-width: 3px;
     border-bottom-style: solid;
     border-bottom-color: #f62375;
 
 }
 QListWidget::item:disabled {
-    background-color: black;
+
 
 }
 QListWidget::item::pressed  {

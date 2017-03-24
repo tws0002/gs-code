@@ -116,6 +116,9 @@ maya:
         ST_MAYA: '2016.5'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1
         MAYA_DISABLE_CLIC_IPM: '1'
+        GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
+        GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
+        GS_MAYA_LAYERMODE: 'legacy'
       modes:
         ui:
           linux: /
@@ -141,6 +144,9 @@ maya:
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
         MAYA_DISABLE_CLIC_IPM: '1'
+        GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
+        GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
+        GS_MAYA_LAYERMODE: 'legacy'
       modes:
         ui:
           linux: /
@@ -216,6 +222,7 @@ softimage:
   - muscle
   - light
 nuke:
+  shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
     NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
@@ -262,7 +269,7 @@ nuke:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Foundry/Nuke/10.0v5
+        win32: "C:/Program Files/Foundry/Nuke/10.0v5"
     '9.0v7':
       name: Nuke
       env:

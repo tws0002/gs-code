@@ -84,6 +84,7 @@ class Submitter:
         finalCams = [ f for f in camXforms if f not in defaultCams ]
         return finalCams
 
+    # used by aspera to get image prefixes
     def getImageOutputPath(self, *args):
         imagePrefix = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
@@ -457,6 +458,7 @@ class Submitter:
             os.makedirs(renderScenesDir)
         imagePrefix = ''
         sceneName = cmds.file(q=1, sn=1, shn=1)
+
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
@@ -510,28 +512,36 @@ class Submitter:
         return new_file
 
     def setRenderPrefix(self, imagePrefix, *args):
-        if imagePrefix == '':
-            imagePrefix = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
+
+        if 'GS_MAYA_REND_PREFIX' in os.environ:
+            imagePrefix = os.environ['GS_MAYA_REND_PREFIX']
+            result = imagePrefix.replace("<gs_shot>",self.M.SM.checkedShot)
+        else:
+            result = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
 
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
                 #imagePrefix = imagePrefix + '.'
-            cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+            cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
         else:
             try:
-                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
             except:
                 pass
 
     def getRenderPrefix(self, *args):
         imagePrefix = ''
-        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
-        else:
-            imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
-        #imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
 
-        return imagePrefix
+        #imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
+        if 'GS_MAYA_REND_PREFIX' in os.environ:
+            imagePrefix = os.environ['GS_MAYA_REND_PREFIX']
+            result = imagePrefix.replace("<gs_shot>",self.M.SM.checkedShot)
+        else:
+            if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+                result = cmds.getAttr('vraySettings.fileNamePrefix')
+            else:
+                result = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+        return result
 
     def vray_prepassSetup(self, beautyLayer, *args):
         sceneName = cmds.file(q=1, sn=1)
@@ -708,7 +718,7 @@ class Submitter:
         paddingLabel = cmds.text(l='Padding:', ann='Number of leading zeroes used to pad the frame number. Default is 4.', parent=mayaGlobalSettings)
         sceneSuffixLabel = cmds.text(l='Scene suffix:', ann='Filename text added after each instance of the scene name for each rendered frame.', parent=mayaGlobalSettings)
         frameSuffixLabel = cmds.text(l='Frame suffix:', ann='Filename text added just before the frame number of each rendered frame.', parent=mayaGlobalSettings)
-        renderPrefixLabel = cmds.text(l='FileName Prefix', ann='Image Naming Pattern (from Render Globals).', parent=mayaGlobalSettings)
+        renderPrefixLabel = cmds.text(l='Image Prefix', ann='Image Naming Pattern (from Render Globals).', parent=mayaGlobalSettings)
         frameExampleLabel = cmds.text(l='Image files will be named:', fn='obliqueLabelFont', parent=mayaGlobalSettings)
         frameExample = cmds.text(l='', fn='smallPlainLabelFont', parent=mayaGlobalSettings)
         engineString = 'render engine is ' + cmds.getAttr('defaultRenderGlobals.currentRenderer').upper()

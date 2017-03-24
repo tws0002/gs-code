@@ -69,11 +69,25 @@ def gs_autoload():
         except:
             print ("Could not load plugin {0}".format(p))
 
+def gs_set_renderlayer_mode():
+
+    mode = 'legacy'
+    try:
+        mode = os.environ['GS_MAYA_LAYERMODE']
+    except:
+        pass
+
+    if mode == 'rendersetup':
+        cmds.optionVar(iv=('renderSetupEnable', 1))
+    else:
+        cmds.optionVar(iv=('renderSetupEnable', 0))
+
 
 def init():
     #initLogo()
     gs_autoload()
     gs_restore_pwd()
     cmds.evalDeferred("initMustache()", lowestPriority=True)
+    gs_set_renderlayer_mode()
 if __name__ == '__main__':
     init()
