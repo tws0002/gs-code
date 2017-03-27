@@ -169,7 +169,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     #print '== END ENV VARS ==\n'
     #try:
 
-    #utils.updatePipelineFavorites()
+    utils.updatePipelineFavorites()
 
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES

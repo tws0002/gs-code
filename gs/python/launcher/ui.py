@@ -201,8 +201,9 @@ class Launcher(QMainWindow):
         # self.ui['wdgt']['jobs_list_box']  = QListWidget()
 
         # setup context menu
-        self.ui['wdgt']['buttons_grid'].setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'],SIGNAL("customContextMenuRequested(QPoint)" ), self.list_item_menu_clicked)
+        if isAdmin():
+            self.ui['wdgt']['buttons_grid'].setContextMenuPolicy(Qt.CustomContextMenu)
+            self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'],SIGNAL("customContextMenuRequested(QPoint)" ), self.list_item_menu_clicked)
 
         # connect up signals
         self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stack_change)
@@ -567,6 +568,16 @@ class Launcher(QMainWindow):
         except:
             "initializing settings"
             self.init_settings()
+
+        print ("checking active directory for initials")
+        #try:
+        act_user = loadActiveUser()
+        full_name = str(act_user.get_attribute('name')[-1])
+        initials = get_initials(full_name)
+        self.ui['wdgt']['initials_le'].setText(initials)
+       #except:
+       #    print ("could not connect to active directory")
+       #    pass
 
     def close_event(self, event):
         #print ('Running close event')
