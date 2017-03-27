@@ -85,8 +85,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         job_wrkgrp_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","workgroups.yml")
         if os.path.isfile(job_wrkgrp_config):
             wrkgrp_config = job_wrkgrp_config
-            app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
-            #print ("GS Launcher: loading local project workgroup config:{0}").format(job_wrkgrp_config)
+            print ("GS Launcher: loading local project workgroup config:{0}").format(job_wrkgrp_config)
         else:
             wrkgrp_config = CONFIG+'/workgroups.yml'
             #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
@@ -94,8 +93,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if not os.path.isfile(app_config):
         job_app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
         if os.path.isfile(job_app_config):
-            app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
-            #print ("GS Launcher: loading local project app config:{0}").format(job_app_config)
+            app_config = job_app_config
+            print ("GS Launcher: loading local project app config:{0}").format(job_app_config)
         else:
             app_config = CONFIG+'/app.yml'
             #print ("GS Launcher: loading studio app config:{0}").format(app_config)
@@ -111,9 +110,11 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
-    process_env.load_app_config_file(filepath=app_config)
+    process_env.load_app_config_file(filepath=app_config, app=app, version=version)
 
-    #process_env.printout()
+    if 'GSBRANCH' in os.environ:
+        if os.environ['GSBRANCH'].split('/')[-1] != 'base':
+            process_env.printout()
 
     # validate data from config
     # TODO work this into the studio environment funcs validate_config(key, value)
@@ -139,11 +140,6 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         print ('Mode: {0} not found in package {1} in current workgroup config: {2}'.format(mode,app,wrkgrp_config))
         return
 
-    # check if shell mode is enabled
-    if 'shell' in a_data[app]:
-        #print ("shell mode detected {0}".format(a_data[app]['shell'] ))
-        if a_data[app]['shell'] == True:
-            mode = 'cli'
 
     executable = os.path.join(a_data[app]['versions'][version]['path'][sys.platform], a_data[app]['versions'][version]['modes'][mode][sys.platform])
     
@@ -179,6 +175,11 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
 
+    # check if shell mode is enabled
+    if 'shell' in a_data[app]:
+        #print ("shell mode detected {0}".format(a_data[app]['shell'] ))
+        if a_data[app]['shell'] == True:
+            mode = 'cli'
 
     if mode == 'render':
         print cmd

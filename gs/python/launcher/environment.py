@@ -21,19 +21,20 @@ class StudioEnvironment():
 
 
     def load_app_config_file(self, filepath, app=None, version=None):
+        print ("Loading file path {0}".format(filepath))
         dataMap = self.get_config_file(filepath)
         self.app_data = dataMap
-        self.load_app_config(dataMap, app, version)
+        self.load_app_config(self.app_data, app, version)
 
     def load_module_config_file(self, filepath, module, version):
         dataMap = self.get_config_file(filepath)
         self.module_data = dataMap
-        self.load_module_config(dataMap, module, version)
+        self.load_module_config(self.module_data, module, version)
 
     def load_workgroup_config_file(self, filepath, workgroup=None, app=None, version=''):
         dataMap = self.get_config_file(filepath)
         self.workgroup_data = dataMap
-        self.load_workgroup_config(dataMap, workgroup, app, version)
+        self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
 
     def get_config_file(self,filepath):
         f = open(filepath)
@@ -43,6 +44,7 @@ class StudioEnvironment():
         return dataMap
 
     def load_app_config(self, dataMap, app='studiotools', version='1.0'):
+
         if app in dataMap:
             for key, value in dataMap.iteritems():
                 if key == app:
@@ -56,6 +58,17 @@ class StudioEnvironment():
                                     self.add(var, val)
 
         #if dataMap[]
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
+        self.parse_subst()
         self.parse_subst()
         return
 
@@ -107,7 +120,8 @@ class StudioEnvironment():
                                 if 'version' in dataMap[key]['packages'][package]:
                                     if version == '':
                                         version = dataMap[key]['packages'][package]['version']
-                                    self.load_app_config(dataMap=APPS, app=package, version=version)
+                                    # was causing double load of app data
+                                    #self.load_app_config(dataMap=APPS, app=package, version=version)
 
                                 if 'modules' in dataMap[key]['packages'][package]:
                                     for m, mv in dataMap[key]['packages'][package]['modules'].iteritems():

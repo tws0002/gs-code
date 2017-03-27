@@ -83,6 +83,8 @@ maya:
     MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/shelves/%ST_MAYA%'
     XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/icons'
     PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
+    GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
+    MAYA_DISABLE_CLIC_IPM: '1'
   show: true
   versions:
     '2015':
@@ -91,6 +93,8 @@ maya:
         GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya'
         ST_MAYA: '2015'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.5
+        GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
+        GS_MAYA_LAYERMODE: 'legacy'
       modes:
         ui:
           linux: /
@@ -115,8 +119,6 @@ maya:
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2016.5'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1
-        MAYA_DISABLE_CLIC_IPM: '1'
-        GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
         GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
         GS_MAYA_LAYERMODE: 'legacy'
       modes:
@@ -143,8 +145,6 @@ maya:
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
-        MAYA_DISABLE_CLIC_IPM: '1'
-        GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
         GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
         GS_MAYA_LAYERMODE: 'legacy'
       modes:
@@ -666,3 +666,38 @@ houdini:
         linux: /
         mac: /
         win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
+pythonshell:
+  name: Python Shell
+  show: true
+  shell: true
+  versions:
+    '2.7':
+      name: python
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: python.exe
+        cli:
+          linux: /
+          mac: /
+          win32: python.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Python27'
+muster:
+  name: Muster
+  show: true
+  versions:
+    '7.0':
+      name: muster
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Console.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Virtual Vertex/Muster 7'

@@ -72,10 +72,8 @@ def gs_autoload():
 def gs_set_renderlayer_mode():
 
     mode = 'legacy'
-    try:
+    if 'GS_MAYA_LAYERMODE' in os.environ:
         mode = os.environ['GS_MAYA_LAYERMODE']
-    except:
-        pass
 
     if mode == 'rendersetup':
         cmds.optionVar(iv=('renderSetupEnable', 1))

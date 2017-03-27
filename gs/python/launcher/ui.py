@@ -27,6 +27,8 @@ class Launcher(QMainWindow):
 
     
     #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
+    a_data = APPS
+    w_data = WORKGRP
     
     def __init__(self, parent=None):
 
@@ -259,7 +261,7 @@ class Launcher(QMainWindow):
         job_wrkgrp_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","workgroups.yml")
         if os.path.isfile(job_wrkgrp_config):
             wrkgrp_config = job_wrkgrp_config
-            #print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
+            print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
         else:
             wrkgrp_config = CONFIG+'/workgroups.yml'
             #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
@@ -267,26 +269,27 @@ class Launcher(QMainWindow):
         job_app_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","app.yml")
         if os.path.isfile(job_app_config):
             app_config = job_app_config
-            #print ("GS Launcher: loading local project app config:{0}").format(app_config)
+            print ("GS Launcher: loading local project app config:{0}").format(app_config)
         else:
             app_config = CONFIG+'/app.yml'
             #print ("GS Launcher: loading studio app config:{0}").format(app_config)
 
         #load the apps dictionary
         f = open(wrkgrp_config)
-        APPS = yaml.safe_load(f)
+        self.w_data = None
+        self.w_data = yaml.safe_load(f)
         f.close()
-
+        
         ###load the modules dictionary
         ##f = open(CONFIG+"/modules.yml")
         ##MODULES = yaml.safe_load(f)
         ##f.close()
-
+        
         #load the workgroups dictionary
         f = open(app_config)
-        WORKGRP = yaml.safe_load(f)
+        self.a_data = None
+        self.a_data = yaml.safe_load(f)
         f.close()
-
 
     def set_project(self, project_name):
         try:
@@ -308,7 +311,7 @@ class Launcher(QMainWindow):
         # get the current value for restoring value after refresh
         
         self.ui['mdl']['display_groups_mdl'].clear()
-        workgroup_list = WORKGRP
+        workgroup_list = self.w_data
         if workgroup_list:
             for j in sorted(workgroup_list[workgroup]['display_groups'],key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -334,14 +337,14 @@ class Launcher(QMainWindow):
         self.app_layouts.clear();
 
         # resize the launcher window based on the amount of apps to show
-        app_ct = len (WORKGRP[workgroup]['display_groups'][display_grp])
+        app_ct = len (self.w_data[workgroup]['display_groups'][display_grp])
         app_rows = int(app_ct / 6.0 - .1)
         win_w = self.frameGeometry().width()
         win_h = 400 + (app_rows*105)
         self.resize(win_w, win_h)
         
         self.ui['wdgt']['buttons_grid'].clear()
-        for package_full in WORKGRP[workgroup]['display_groups'][display_grp]:
+        for package_full in self.w_data[workgroup]['display_groups'][display_grp]:
             pkg_and_mode = package_full.split('-')
             package = pkg_and_mode[0]
             mode = 'ui'
@@ -351,16 +354,16 @@ class Launcher(QMainWindow):
             if mode != 'ui':
                 title += ' {0}'.format(mode)
 
-            if package in APPS and APPS[package]['show']:
+            if package in self.a_data and self.a_data[package]['show']:
 
                 self.app_layouts[package_full] = QListWidgetItem(title.title())  # QPushButton(package)
 
                 # set the tooltip to show version and modules configured
-                tooltip = str(package+' '+WORKGRP[workgroup]['packages'][package]['version'])
-                if 'modules' in WORKGRP[workgroup]['packages'][package]:
+                tooltip = str(package+' '+self.w_data[workgroup]['packages'][package]['version'])
+                if 'modules' in self.w_data[workgroup]['packages'][package]:
                     tooltip += '\n\nMODULES:'
-                    for mod in WORKGRP[workgroup]['packages'][package]['modules']:
-                        mod_ver = WORKGRP[workgroup]['packages'][package]['modules'][mod]
+                    for mod in self.w_data[workgroup]['packages'][package]['modules']:
+                        mod_ver = self.w_data[workgroup]['packages'][package]['modules'][mod]
                         tooltip += '\n'+ mod.ljust(10) + '\t' + mod_ver
                 self.app_layouts[package_full].setToolTip(tooltip)
 
@@ -381,10 +384,10 @@ class Launcher(QMainWindow):
                 self.ui['wdgt']['buttons_grid'].setIconSize(self.icon_size)
 
                 self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package_full])
-                version = WORKGRP[workgroup]['packages'][package]['version']
+                version = self.w_data[workgroup]['packages'][package]['version']
                 install_path = ""
                 try:
-                    install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
+                    install_path = os.path.expandvars(os.path.join(self.a_data[package]['versions'][version]['path'][sys.platform]))
                 except KeyError:
                     print 'Could not locate App:{0} Version:{1} in app.yml'.format(package, version)
 
@@ -407,7 +410,7 @@ class Launcher(QMainWindow):
         #menu_item['config'] = self.item_menu.addAction("Config")
 
         # add alt versions
-        for ver in sorted(APPS[package]['versions'],key=lambda v: v.upper()):
+        for ver in sorted(self.a_data[package]['versions'],key=lambda v: v.upper()):
             menu_item[(package+"_"+ver)] = self.ver_menu.addAction(ver)
             self.connect(menu_item[(package+"_"+ver)], SIGNAL("triggered()"), functools.partial(self.menu_item_clicked,'launch',package,ver))
 
@@ -475,7 +478,7 @@ class Launcher(QMainWindow):
                 if len(pkg_and_mode) > 1:
                     mode = pkg_and_mode[1]
                 if version == '':
-                    version = WORKGRP[workgroup]['packages'][app]['version']
+                    version = self.w_data[workgroup]['packages'][app]['version']
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
