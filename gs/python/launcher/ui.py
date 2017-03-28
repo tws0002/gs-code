@@ -571,10 +571,11 @@ class Launcher(QMainWindow):
 
         print ("checking active directory for initials")
         #try:
-        act_user = loadActiveUser()
-        full_name = str(act_user.get_attribute('name')[-1])
-        initials = get_initials(full_name)
-        self.ui['wdgt']['initials_le'].setText(initials)
+        if (HAS_PYAD):
+            act_user = loadActiveUser()
+            full_name = str(act_user.get_attribute('name')[-1])
+            initials = get_initials(full_name)
+            self.ui['wdgt']['initials_le'].setText(initials)
        #except:
        #    print ("could not connect to active directory")
        #    pass

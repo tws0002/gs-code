@@ -25,10 +25,10 @@ PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
 
 #os.environ['PATH'] += (';'+pyQTPath)
 #print ('setting PYQTPATH to '+PYQTPATH)
-#try:
-#    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
-#except:
-#    os.environ['PYTHONPATH'] = (PYQTPATH)
+try:
+    os.environ['PYTHONPATH'] += (';'+os.path.join(ROOT,'lib','python'))
+except:
+    os.environ['PYTHONPATH'] = (os.path.join(ROOT,'lib','python'))
 sys.path.append(PYQTPATH)
 
 ## print os.environ['PYTHONPATH']
@@ -69,14 +69,3 @@ from environment import *
 STUDIO_ENV = StudioEnvironment()
 STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
 STUDIO_ENV.setEnv()
-
-
-AD_DNS_NAME = 'studio.gentscholar.com'
-AD_NT4_DOMAIN = 'STUDIO' # This is the NT4/Samba domain name
-#AD_SEARCH_DN = 'dc=pandapanther.pandapanther.com,dc=local'
-AD_SEARCH_DN = 'dc=gentscholar,dc=studio,dc=com'
-#AD_SEARCH_DN = 'CN=Users,dc=pandapanther,dc=com'
-# this default port causes a failure in backends.py when getting user login info (email, givenname, sirname)
-#AD_LDAP_PORT = 389
-# this port fixes it according to googling AD django troubleshooting
-AD_LDAP_PORT = 389
