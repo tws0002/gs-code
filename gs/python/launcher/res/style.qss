@@ -154,7 +154,6 @@ QListWidget::item:selected {
 
 }
 QListWidget::item:disabled {
-    background-color: black;
 
 }
 QListWidget::item::pressed  {
