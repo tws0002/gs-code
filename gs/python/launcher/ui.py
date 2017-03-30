@@ -41,8 +41,8 @@ class Launcher(QMainWindow):
         self.lastLaunch = ''
 
         # animation init
-        self.timeline = QTimeLine(1000)
-        self.timeline.setFrameRange(0,100)
+        #self.timeline = QTimeLine(1000)
+        #self.timeline.setFrameRange(0,100)
 
         # pyQT settings framework (stores in user registry)
         self.settings = QSettings('gs', 'launcher')
@@ -51,8 +51,8 @@ class Launcher(QMainWindow):
         # sStyleSheet = StyleSheet().styleSheet(1)
         # self.setStyleSheet(sStyleSheet)
 
-        pixmap_icon = QPixmap(os.path.join(RES, "pink.ico"))
-        self.setWindowIcon(QIcon(pixmap_icon))
+        #pixmap_icon = QPixmap(os.path.join(RES, "pink.ico"))
+        #self.setWindowIcon(QIcon(pixmap_icon))
 
         # parent.setMargin(50)
 
@@ -463,17 +463,22 @@ class Launcher(QMainWindow):
         page = str(sender.currentItem().text())
         self.ui['wdgt']['stack_widget'].setCurrentIndex(self.ui['lyt']['stack_layouts'][page].page_index)
 
+    def toggle_launch_stat(self, widget, text):
+        widget.setText(text)
+
     def launch_app(self, item, app='', version='', mode='ui'):
 
         initials = str(self.ui['wdgt']['initials_le'].text())
         project = str(self.ui['wdgt']['project_combo'].currentText())
         workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
+        button = ''
+        button_name = ''
 
         #print ('item: {0} app:{1} version:{2} mode:{3}'.format(item, app, version,mode))
         for name, button in self.app_layouts.iteritems():
             #print 'item:{0} button:{1}'.format(item, button)
             if item == button:
-                #print ("BUTTON FOUND")
+                button_name = name
                 pkg_and_mode = name.split('-')
                 app = pkg_and_mode[0]
                 if len(pkg_and_mode) > 1:
@@ -484,34 +489,11 @@ class Launcher(QMainWindow):
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
 
+        text = str(self.app_layouts[button_name].text())
+        self.app_layouts[button_name].setText("Starting...")
+        test_timer = QTimer()
+        test_timer.singleShot(3000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
 
-        s = self.sender()
-        
-        # show animation UI
-        #anim = QPropertyAnimation(self.sender(),"color")
-        #anim.setDuration(2000)
-        #anim.setStartValue(QColor(0, 0, 10))
-        #anim.setEndValue(QColor(250, 250, 100))
-        #
-        #anim.start();
-
-        return
-
-    def launch_util(self, util=None, version=None):
-        #sender = self.sender()
-        #
-        #for name, button in self.utilLayouts.iteritems():
-        #    if sender == button:
-        #        util = name
-        #        version = UTILITIES[util]['versions'].keys()[0]
-        #
-        #executable = os.path.join(UTILITIES[util]['versions'][version]['path'][sys.platform], UTILITIES[util]['versions'][version]['modes']['ui'][sys.platform])
-        #print executable
-        #env = dict(os.environ.items() + self.studio_env.vars.items())
-        #
-        #si = subprocess.STARTUPINFO()
-        #si.dwFlags = subprocess.STARTF_USESTDHANDLES
-        #subprocess.Popen(executable, env=env, startupinfo=si)
         return
 
     def install_app(self):
