@@ -85,6 +85,7 @@ maya:
     PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
     GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
     MAYA_DISABLE_CLIC_IPM: '1'
+    MAYA_DISABLE_CIP: '1'
   show: true
   versions:
     '2015':

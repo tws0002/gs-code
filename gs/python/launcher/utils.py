@@ -134,13 +134,19 @@ def loadActiveUser():
 #        print ("Unable to connect to AD server, please ask a systems admin for help")
 #    return result
 
-def get_initials(fullname):
+def get_initials():
+    fullname = ''
     initials = ''
-    if HAS_PYWIN:
-        xs = (fullname)
-        name_list = xs.split()
-
-        for name in name_list:  # go through each name
-          initials += name[0].upper()  # append the initial
+    #if HAS_PYWIN:
+    #    if (HAS_PYAD):
+    #        act_user = loadActiveUser()
+    #        fullname = str(act_user.get_attribute('name')[-1])
+    #    xs = (fullname)
+    #    name_list = xs.split()
+    #
+    #    for name in name_list:  # go through each name
+    #      initials += name[0].upper()  # append the initial
+    #else:
+    initials = os.environ['USERNAME'][:2]
 
     return initials

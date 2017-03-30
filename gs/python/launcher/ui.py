@@ -484,6 +484,17 @@ class Launcher(QMainWindow):
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
 
+
+        s = self.sender()
+        
+        # show animation UI
+        #anim = QPropertyAnimation(self.sender(),"color")
+        #anim.setDuration(2000)
+        #anim.setStartValue(QColor(0, 0, 10))
+        #anim.setEndValue(QColor(250, 250, 100))
+        #
+        #anim.start();
+
         return
 
     def launch_util(self, util=None, version=None):
@@ -571,11 +582,8 @@ class Launcher(QMainWindow):
 
         print ("checking active directory for initials")
         #try:
-        if (HAS_PYAD):
-            act_user = loadActiveUser()
-            full_name = str(act_user.get_attribute('name')[-1])
-            initials = get_initials(full_name)
-            self.ui['wdgt']['initials_le'].setText(initials)
+        initials = get_initials()
+        self.ui['wdgt']['initials_le'].setText(initials)
        #except:
        #    print ("could not connect to active directory")
        #    pass

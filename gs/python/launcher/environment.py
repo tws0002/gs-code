@@ -60,16 +60,6 @@ class StudioEnvironment():
         #if dataMap[]
         self.parse_subst()
         self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
-        self.parse_subst()
         return
 
     def load_module_config(self, dataMap, module=None, package=None, version=None):
@@ -94,12 +84,13 @@ class StudioEnvironment():
                                     if version in dataMap[key]['packages'][app]['versions']:
                                         if 'env' in dataMap[key]['packages'][app]['versions'][version]:
                                             for var, val in dataMap[key]['packages'][app]['versions'][version]['env'].iteritems():
+                                                #print ("Loading module env: {0}={1}".format(var,val))
                                                 self.add(var, val)
 
         #if dataMap[]
         self.parse_subst()
         self.parse_subst()
-        self.parse_subst()
+
         return
 
     def load_workgroup_config(self, dataMap, workgroup=None, app=None, version=''):
@@ -133,7 +124,7 @@ class StudioEnvironment():
         #if dataMap[]
         self.parse_subst()
         self.parse_subst()
-        self.parse_subst()
+
 
     def write_to_bat(self, output_path):
         return
@@ -164,27 +155,28 @@ class StudioEnvironment():
     def parse_subst(self):
         trashvars = []
         for var, val in self.vars.iteritems():
-            var_subst = re.search('%(.+?)%', var)
-            if var_subst:
-                if var_subst.group(1) in self.vars:
+            var_subst = re.findall('%(.+?)%', var)
+            for match in var_subst:
+                if match in self.vars:
                     trashvars.append(var)
-                    var = var.replace(('%'+var_subst.group(1)+'%'), self.vars[var_subst.group(1)])
-                if var_subst.group(1) in os.environ:
+                    var = var.replace(('%'+match+'%'), self.vars[match])
+                if match in os.environ:
                     trashvars.append(var)
-                    var = var.replace(('%'+var_subst.group(1)+'%'), os.environ[var_subst.group(1)])
+                    var = var.replace(('%'+match+'%'), os.environ[match])
 
             # check if any string substitution is needed in the value
-            val_subst = re.search('%(.+?)%', val)
-            if val_subst:
-                if val_subst.group(1) in self.vars:
-                    val = val.replace(('%'+val_subst.group(1)+'%'), self.vars[val_subst.group(1)])
-                if val_subst.group(1) in os.environ:
-                    val = val.replace(('%'+val_subst.group(1)+'%'), os.environ[val_subst.group(1)])
+            val_subst = re.findall('%(.+?)%', val)
+            for match in val_subst:
+                if match in self.vars:
+                    val = val.replace(('%'+match+'%'), self.vars[match])
+                if match in os.environ:
+                    val = val.replace(('%'+match+'%'), os.environ[match])
             self.vars[var] = val
             #os.environ[var] = val
 
             #remove old junk var names that were substituted therefore changed to a new var name
             for key in trashvars:
+                print ("trashing vars {0}".format(self.vars[key]))
                 del self.vars[key]
                 #del os.environ[key]
 

@@ -68,7 +68,7 @@ default:
         #jfDielectric: '1.0.5'
         krakatoa: '2.6.2'
         #nimbletools: '1.2.1'
-        #openvdb: '3.3.0'
+        be_openvdb: '1.0'
         #ornatrix: '1.1.3.9340'
         phoenixfd: '3.03.00'
         realflow: '2015.0.0.9'
