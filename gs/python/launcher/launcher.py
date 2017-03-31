@@ -109,8 +109,11 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     process_env = StudioEnvironment()
 
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
-    process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
+    # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
+    # workgroups vars should be able to override any other vars
     process_env.load_app_config_file(filepath=app_config, app=app, version=version)
+    process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
+    
 
     if 'GSBRANCH' in os.environ:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':

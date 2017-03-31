@@ -334,33 +334,41 @@ class Launcher(QMainWindow):
         except:
             print 'Display Group: {0} not found'.format(display_grp)
 
-    def update_apps(self, workgroup='default', display_grp='generalist'):
+    def update_apps(self, workgroup='default', display_grp='Generalist'):
         self.app_layouts.clear();
 
         # resize the launcher window based on the amount of apps to show
         app_ct = len (self.w_data[workgroup]['display_groups'][display_grp])
         app_rows = int(app_ct / 6.0 - .1)
         win_w = self.frameGeometry().width()
-        win_h = 400 + (app_rows*105)
+        win_h = 400 + (app_rows*110)
         self.resize(win_w, win_h)
         
         self.ui['wdgt']['buttons_grid'].clear()
         for package_full in self.w_data[workgroup]['display_groups'][display_grp]:
             pkg_and_mode = package_full.split('-')
             package = pkg_and_mode[0]
-            mode = 'ui'
+
+            app = package
+            if 'app' in self.w_data[workgroup]['packages'][package]:
+                app = self.w_data[workgroup]['packages'][package]['app']
+            
             title = package
+            if 'title' in self.w_data[workgroup]['packages'][package]:
+                title = self.w_data[workgroup]['packages'][package]['title']
+
+            mode = 'ui'
             if len(pkg_and_mode) > 1:
                 mode = pkg_and_mode[1]
             if mode != 'ui':
                 title += ' {0}'.format(mode)
 
-            if package in self.a_data and self.a_data[package]['show']:
+            if app in self.a_data and self.a_data[app]['show']:
 
                 self.app_layouts[package_full] = QListWidgetItem(title.title())  # QPushButton(package)
 
                 # set the tooltip to show version and modules configured
-                tooltip = str(package+' '+self.w_data[workgroup]['packages'][package]['version'])
+                tooltip = str(app+' '+self.w_data[workgroup]['packages'][package]['version'])
                 if 'modules' in self.w_data[workgroup]['packages'][package]:
                     tooltip += '\n\nMODULES:'
                     for mod in self.w_data[workgroup]['packages'][package]['modules']:
@@ -369,9 +377,13 @@ class Launcher(QMainWindow):
                 self.app_layouts[package_full].setToolTip(tooltip)
 
                 # pixmap caching
-                if os.path.exists(os.path.join(RES,(package+".png"))):
+                if os.path.exists(os.path.join(RES,(package_full+".png"))):
+                    value = os.path.join(RES, (package_full+".png"))
+                elif os.path.exists(os.path.join(RES,(package+".png"))):
                     value = os.path.join(RES, (package+".png"))
-                else: 
+                elif os.path.exists(os.path.join(RES,(app+".png"))):
+                    value = os.path.join(RES, (app+".png"))
+                else:
                     value = os.path.join(RES, ("gs.png"))
 
                 key = "image:%s"% value
@@ -388,7 +400,7 @@ class Launcher(QMainWindow):
                 version = self.w_data[workgroup]['packages'][package]['version']
                 install_path = ""
                 try:
-                    install_path = os.path.expandvars(os.path.join(self.a_data[package]['versions'][version]['path'][sys.platform]))
+                    install_path = os.path.expandvars(os.path.join(self.a_data[app]['versions'][version]['path'][sys.platform]))
                 except KeyError:
                     print 'Could not locate App:{0} Version:{1} in app.yml'.format(package, version)
 
@@ -396,6 +408,7 @@ class Launcher(QMainWindow):
                 if not os.path.exists(install_path):
                     #print ("Not Installed: "+install_path)
                     self.app_layouts[package_full].setFlags(Qt.ItemIsSelectable)
+                    self.app_layouts[package_full].setToolTip(tooltip+' (Not Installed)')
                     #self.appLayouts[package].setEnabled(False)
 
     def list_item_menu_clicked(self, QPos):
@@ -478,13 +491,17 @@ class Launcher(QMainWindow):
         for name, button in self.app_layouts.iteritems():
             #print 'item:{0} button:{1}'.format(item, button)
             if item == button:
+                #print ('item={0} naee={1} button={2}'.format(item,name,button))
                 button_name = name
                 pkg_and_mode = name.split('-')
-                app = pkg_and_mode[0]
+                package = pkg_and_mode[0]
+                app = package
+                if 'app' in self.w_data[workgroup]['packages'][package]:
+                    app = self.w_data[workgroup]['packages'][package]['app']
                 if len(pkg_and_mode) > 1:
                     mode = pkg_and_mode[1]
                 if version == '':
-                    version = self.w_data[workgroup]['packages'][app]['version']
+                    version = self.w_data[workgroup]['packages'][package]['version']
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
@@ -492,7 +509,7 @@ class Launcher(QMainWindow):
         text = str(self.app_layouts[button_name].text())
         self.app_layouts[button_name].setText("Starting...")
         test_timer = QTimer()
-        test_timer.singleShot(3000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
+        test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
 
         return
 

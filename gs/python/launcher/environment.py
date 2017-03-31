@@ -133,12 +133,17 @@ class StudioEnvironment():
         return
 
     def add(self, var, val):
+        new_val = val
+        is_explicit = False
+        if val[:2] == '#!':
+            is_explicit = True
+            new_val = val[2:]
 
-        #if adding to an existing var then add the val to the original value, else just add it
-        if var in self.vars:
-            self.vars[var] += (';'+val)
+        #if adding to an existing var then add the val to the original value, else just add it 
+        if var in self.vars and is_explicit == False:
+            self.vars[var] += (';'+new_val)
         else:
-            self.vars[var] = val
+            self.vars[var] = new_val
         #os.environ[var] = self.vars[var]
 
     def setEnv(self):

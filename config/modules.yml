@@ -640,6 +640,25 @@ substance:
           versions:
           - '2015'
           - '2016.5'
+elementacular:
+  name: elementacular
+  show: true
+  packages:
+    maya:
+      env:
+        MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/elementacular/%ST_ELEMENTACULAR%/win/%ST_MAYA%'
+      versions:
+        '1.5.0':
+          env:
+            ST_ELEMENTACULAR: '1.5.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016.5'
+          - '2017'
 octane:
   name: octane
   show: true

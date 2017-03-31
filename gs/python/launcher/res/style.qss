@@ -129,13 +129,12 @@ QLabel {
 }
 QListWidget {
     border: transparent;
-    font-size:10pt;
+    font-size:11pt;
     font-style:bold;
     outline:none;
 
 }
 QListWidget::item {
-    font: 20pt "Courier";
     color: #97a0a5;
     selection-background-color: #ebebeb;
     font-style:bold;
@@ -145,7 +144,6 @@ QListWidget::item {
 
 }
 QListWidget::item:selected {
-    font: 20pt "Courier";
     color:#97a0a5;
     outline:none;
     border-bottom-width: 3px;
