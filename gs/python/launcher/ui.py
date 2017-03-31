@@ -414,8 +414,19 @@ class Launcher(QMainWindow):
     def list_item_menu_clicked(self, QPos):
         self.item_menu= QMenu()
         # HACK: need to replace this with actual data reference not using the UI label as a keyname
-        currentItemName=str(self.ui['wdgt']['buttons_grid'].currentItem().text())
+        
+        item = currentItemName=self.ui['wdgt']['buttons_grid'].currentItem()
+        currentItemName=str(item.text())
         package = currentItemName.lower()
+        app = package
+
+        for name, button in self.app_layouts.iteritems():
+            if item == button:
+                button_name = name
+                pkg_and_mode = name.split('-')
+                package = pkg_and_mode[0]
+                app = package
+
         menu_item = {}
         menu_item['launch'] = self.item_menu.addAction("Launch {0}".format(currentItemName))
         self.connect(menu_item['launch'], SIGNAL("triggered()"), lambda: self.menu_item_clicked(cmd='launch',package=package,version=''))
@@ -424,7 +435,7 @@ class Launcher(QMainWindow):
         #menu_item['config'] = self.item_menu.addAction("Config")
 
         # add alt versions
-        for ver in sorted(self.a_data[package]['versions'],key=lambda v: v.upper()):
+        for ver in sorted(self.a_data[app]['versions'],key=lambda v: v.upper()):
             menu_item[(package+"_"+ver)] = self.ver_menu.addAction(ver)
             self.connect(menu_item[(package+"_"+ver)], SIGNAL("triggered()"), functools.partial(self.menu_item_clicked,'launch',package,ver))
 
