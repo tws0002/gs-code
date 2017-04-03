@@ -100,13 +100,14 @@ class Submitter:
         fixedName = oldName
         if '_T_' in oldName:
             fixedName = oldName.split('_T_')[0]
-        newPrefix = imagePrefix.replace('<Scene>', fixedName)
+        newPrefix1 = imagePrefix.replace('<Scene>', fixedName)
 
         # if <Layer> is in path, parse the active render layers
-
+        newPrefix2 = newPrefix1.replace('/<Layer>', '')
         # if <Version> is in path
-
+        newPrefix3 = newPrefix2.replace('/<Version>', '')
         # if <Camera> is in path
+        newPrefix = newPrefix3.replace('/<Camera>', '')
 
         projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, newPrefix)
         normalizedFolder = projectImgFolder.replace('/', '\\')
@@ -146,6 +147,12 @@ class Submitter:
                 files_final.append(l)
         for seq in seq_list_final:
             files_final.append(seq)
+
+        # also make sure to include any pipeline configs
+        if 'GSPROJECT' in os.environ:
+            proj = os.environ['GSPROJECT']
+            config_path = os.path.join('\\\\scholar','projects',proj,'03_production','.pipeline','config','*')
+            files_final.append(config_path)
 
         # xgen
 

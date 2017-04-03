@@ -28,7 +28,9 @@ def init_gs_menu():
 		cmds.menuItem(divider=True,dl="QUICKLOAD PLUGINS")
 		cmds.menuItem(l='Load VRay',c='cmds.loadPlugin("vrayformaya")')
 		cmds.menuItem(l='Load Redshift',c='cmds.loadPlugin("redshift4maya")')
-		cmds.menuItem(sm=True,l='Autodesk')
+
+		
+		#cmds.menuItem(sm=True,l='Autodesk')
 		# Quick Loader
 		#cmds.menuItem(divider=True,dl="AUTODESK")
 		#autod = "xgenToolkit;BifrostMain;Substance;MASH;curveWarp;ATFPlugin"
