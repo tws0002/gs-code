@@ -118,6 +118,13 @@ class Submitter:
         reffiles = cmds.file(query=True, list=True)
         workspacemel = os.path.join(self.M.project, 'workspace.mel')
         filelist = [workspacemel]
+        
+        # also make sure to include any pipeline configs
+        if 'GSPROJECT' in os.environ:
+            proj = os.environ['GSPROJECT']
+            config_path = os.path.join('\\\\scholar','projects',proj,'03_production','.pipeline','config')
+            filelist.append(config_path)
+
         for f in files + reffiles:
             if glob.glob(f):
                 filelist.append(f)
@@ -148,11 +155,7 @@ class Submitter:
         for seq in seq_list_final:
             files_final.append(seq)
 
-        # also make sure to include any pipeline configs
-        if 'GSPROJECT' in os.environ:
-            proj = os.environ['GSPROJECT']
-            config_path = os.path.join('\\\\scholar','projects',proj,'03_production','.pipeline','config','*')
-            files_final.append(config_path)
+
 
         # xgen
 
