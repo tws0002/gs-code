@@ -4,6 +4,7 @@ import os
 import maya.cmds as cmds
 import mustache
 import time
+import gs_menu
 
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
@@ -85,7 +86,8 @@ def init():
     #initLogo()
     gs_autoload()
     gs_restore_pwd()
-    cmds.evalDeferred("initMustache()", lowestPriority=True)
+    cmds.evalDeferred("initMustache()")
+    cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
     gs_set_renderlayer_mode()
 if __name__ == '__main__':
     init()

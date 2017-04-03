@@ -7,8 +7,8 @@ default:
       version: '2016.5'
       env:
         # USE A '#!' in front of value to overwrite instead of default behavior of appending values to existing
-        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
-        GS_MAYA_LAYERMODE: '#!rendersetup'
+        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<layer>.'
+        GS_MAYA_LAYERMODE: '#!legacy'
       modules:
         advancedSkeleton: '5.250'
         #animschoolpicker: '1.4.6'
@@ -38,7 +38,7 @@ default:
       app: 'maya'
       version: '2015'
       env:
-        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
+        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<Layer>.'
       modules:
         advancedSkeleton: '5.250'
         #animschoolpicker: '1.4.6'
@@ -179,16 +179,3 @@ default:
     Utilities:
     - muster
     - pythonshell
-  order:
-  - maya
-  - cinema4d
-  - modo
-  - 3dsmax
-  - zbrush
-  - mudbox
-  - mari
-  - nuke
-  - aftereffects
-  - photoshop
-  - premiere
-  - houdini

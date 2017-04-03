@@ -105,6 +105,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     os.environ['GSPROJECT'] = project
     os.environ['GSINITIALS'] = initials
     os.environ['GSWORKGROUP'] = workgroup
+
     # load the process env from the config files
     process_env = StudioEnvironment()
 
@@ -115,6 +116,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
     
 
+
     if 'GSBRANCH' in os.environ:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':
             process_env.printout()
@@ -123,6 +125,14 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # TODO work this into the studio environment funcs validate_config(key, value)
     w_data = process_env.workgroup_data
     a_data = process_env.app_data
+
+    os.environ['GS_MODULES'] = ''
+    if 'modules' in w_data[workgroup]['packages'][app]:
+        for m in w_data[workgroup]['packages'][app]['modules']:
+            if os.environ['GS_MODULES'] == '':
+                os.environ['GS_MODULES'] = str(m)
+            else:
+                os.environ['GS_MODULES'] += ';{0}'.format(str(m))
 
     if workgroup not in w_data:
         print ('Workgroup: {0} not found in current workgroup config: {1}'.format(workgroup,wrkgrp_config))
