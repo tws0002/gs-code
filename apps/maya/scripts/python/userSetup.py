@@ -72,7 +72,7 @@ def gs_autoload(local_only=False):
     plugs = os.environ.get('GS_MAYA_AUTOLOAD')
     # temporarily remove network paths from mayas search paths, this speeds up load time dramatically
     temp_var_dict = {}
-    temp_sys_path = list(sys.path)
+    #temp_sys_path = list(sys.path)
     var_to_check=['MAYA_PLUG_IN_PATH','MAYA_SCRIPT_PATH','MAYA_SHELF_PATH','XBMLANGPATH','MAYA_PRESET_PATH','MAYA_RENDER_DESC_PATH','MAYA_PLUG_IN_RESOURCE_PATH','MAYA_MODULE_PATH','PYTHONPATH','PATH']
     if local_only == True:
         for var in var_to_check:
