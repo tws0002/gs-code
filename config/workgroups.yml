@@ -9,7 +9,7 @@ default:
         # USE A '#!' in front of value to overwrite instead of default behavior of appending values to existing
         GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<layer>.'
         GS_MAYA_LAYERMODE: '#!legacy'
-      modules:
+      #modules:
         advancedSkeleton: '5.250'
         #animschoolpicker: '1.4.6'
         #arnold: '1.3.0.0'

@@ -115,7 +115,8 @@ maya:
     '2016.5':
       name: Autodesk Maya
       env:
-        GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;OneClick;objExport;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
+        #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;OneClick;objExport;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance;xgenMR;xgenToolkit'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2016.5'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1

@@ -49,7 +49,7 @@ def gs_restore_pwd():
         os.chdir(m_install)
         cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')", lowestPriority=False)
 
-def gs_pluginLoad(plugin='', local_only=False):
+def gs_pluginLoad(plugin=''):
     start_time = time.time()
     if plugin != '':
         try:
@@ -57,7 +57,8 @@ def gs_pluginLoad(plugin='', local_only=False):
             elapsed_time = time.time() - start_time
             print("// GS: '{0}' loaded in {1} sec".format(plugin,elapsed_time))
         except:
-            print ('Plugin invalid: {0}'.format(plugin))
+            print ('Plugin Not Found: {0}'.format(plugin))
+            raise
 
 
 
@@ -65,19 +66,20 @@ def gs_pluginLoad(plugin='', local_only=False):
     #os.environ['MAYA_SCRIPT_PATH'] = tmp2
 
 def gs_autoload(local_only=False):
-    gs_load_deferred_modules()
+    #gs_load_deferred_modules()
+
 
     plugs = os.environ.get('GS_MAYA_AUTOLOAD')
     # temporarily remove network paths from mayas search paths, this speeds up load time dramatically
     temp_var_dict = {}
+    temp_sys_path = list(sys.path)
     var_to_check=['MAYA_PLUG_IN_PATH','MAYA_SCRIPT_PATH','MAYA_SHELF_PATH','XBMLANGPATH','MAYA_PRESET_PATH','MAYA_RENDER_DESC_PATH','MAYA_PLUG_IN_RESOURCE_PATH','MAYA_MODULE_PATH','PYTHONPATH','PATH']
     if local_only == True:
         for var in var_to_check:
             if var in os.environ:
                 temp_var_dict[var] = os.environ[var]
-                var_paths = os.environ[var].split(';')
                 new_paths = ''
-                for p in var_paths:
+                for p in os.environ[var].split(';'):
                     if p[:2] == '//' or p[:2] == '\\\\':
                         pass
                     else:
@@ -86,31 +88,59 @@ def gs_autoload(local_only=False):
                         else:
                             new_paths += ';{0}'.format(p)
                 os.environ[var] = new_paths
-                #if var == 'PATH':
-                #    sys.path = list(os.environ[var].split(';'))
+
                 #print ("Temporarily Removing Network Paths on {0}".format(var))
                 #print ("{0}={1}".format(var,new_paths))
-    progress = 0
-    cmds.progressWindow(title='GS Init Plugins', progress=progress, status='Loading Plugins: 0%', isInterruptable=True )
+        #sys.path = []
+        #for sp in temp_sys_path:
+        #    if sp[:2] == '\\\\' or sp[:2] == '//':
+        #        pass
+        #    else:
+        #        sys.path.append(sp)
+
     plugins = []
+    failed_plugins = []
     if plugs != None:
         plugins = plugs.split(';')
+
+    progress = 0
+    cmds.progressWindow(title='GS Init Local Plugins', progress=progress, status='Loading Plugins: 0%')
+
     for p in plugins:
-        progress += int(100.0 / float(len(plugins)))
         cmds.progressWindow( edit=True, progress=progress, status=('Loading {0}: '.format(p) + `progress` + '%' ) )
         try:
-            gs_pluginLoad(p,local_only=True)
-            #cmds.evalDeferred("gs_pluginLoad('{0}',local_only=True)".format(p), lowestPriority=False)
+            gs_pluginLoad(p)
         except:
-            print ("Could not load plugin {0}".format(p))
-    #print (mel.eval("system set"))
-    #restore
-    cmds.progressWindow(endProgress=1)
+            print ("Could not load plugin {0}, Checking Network on second pass".format(p))
+            failed_plugins.append(p) 
+        progress += int(100.0 / float(len(plugins)))
+        
+    if len(failed_plugins) == 0:
+        cmds.progressWindow(endProgress=1)
+
     if local_only == True:
         for var in var_to_check:
-            os.environ[var] = temp_var_dict[var]
-            #if var == 'PATH':
-            #    sys.path = list(os.environ[var].split(';'))
+            if var in temp_var_dict:
+                os.environ[var] = temp_var_dict[var]
+    # this causes dramatic slowdown in maya shutdown procedure
+    #sys.path = list(temp_sys_path)
+    #sys.path = []
+    #for sp in temp_sys_path:
+    #    sys.path.append(sp)
+
+    if len(failed_plugins) > 0:
+        progress = int(100.0 / float(len(failed_plugins)))
+        cmds.progressWindow(edit=True, title='GS Init Network Plugins', progress=progress, status='Loading {0}: 0%'.format(failed_plugins[0]))
+
+        for p in failed_plugins:
+            print ("Trying to load network plugin {0}".format(p))
+            cmds.progressWindow( edit=True, progress=progress, status=('Loading {0}: '.format(p) + `progress` + '%' ) )
+            try:
+                gs_pluginLoad(p)
+            except:
+                print ("Could not load plugin {0}".format(p))
+            progress += int(100.0 / float(len(failed_plugins)))
+        cmds.progressWindow(endProgress=1)
     
 
 def gs_set_renderlayer_mode():
