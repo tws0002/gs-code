@@ -31,7 +31,6 @@ default:
         studiolibrary: '1.26.2'
         substance: '1.2.2.0'
         vray: '3.40.06'
-<<<<<<< HEAD
     houdini:
       version: '15.5.523'
     3dsmax:
@@ -120,8 +119,7 @@ default:
   title: 'Default'
   packages:
     maya:
-      version: '2016.5'
-=======
+        version: '2016.5'
         soup: '2016.10.08'
         #zync: '1.2.5'
     maya2015:
@@ -130,18 +128,14 @@ default:
       version: '2015'
       env:
         GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<Layer>.'
->>>>>>> refs/remotes/origin/master
       modules:
         advancedSkeleton: '5.250'
         #animschoolpicker: '1.4.6'
         #arnold: '1.3.0.0'
         bonustools: '17.0.1'
-<<<<<<< HEAD
         crate: '1.1.148'
         elementacular: '1.5.0'
-=======
         #crate: '1.1.148'
->>>>>>> refs/remotes/origin/master
         fracturefx: '1.9.6'
         fumefx: '4.0.3'
         ideform: '1.5.1'
