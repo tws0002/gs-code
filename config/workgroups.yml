@@ -1,5 +1,5 @@
 default:
-  title: 'Default Workgroup'
+  title: 'Default'
   packages:
     maya:
       title: 'Maya 2016'
@@ -31,97 +31,6 @@ default:
         studiolibrary: '1.26.2'
         substance: '1.2.2.0'
         vray: '3.40.06'
-    houdini:
-      version: '15.5.523'
-    3dsmax:
-      version: '2016'
-    cinema4d:
-      version: 'R17.048'
-    modo:
-      version: '901_SP2'
-    zbrush:
-      version: '4R7'
-    mudbox:
-      version: '2016'
-    mari:
-      version: '2.6v5'
-    nuke:
-      version: '9.0v7'
-    aftereffects:
-      version: 'CC 2015'
-    premiere:
-      version: 'CC 2015.3'
-    photoshop:
-      version: 'CC 2015.5'
-    animate:
-      version: 'CC 2015.2'
-    indesign:
-      version: 'CC 2015'
-    illustrator:
-      version: 'CC 2015.3'
-  display_groups:
-    Design:
-    - photoshop
-    - illustrator
-    - indesign
-    - aftereffects
-    - cinema4d
-    - modo
-    generalist:
-    - maya
-    - cinema4d
-    - modo
-    - 3dsmax
-    - zbrush
-    - mudbox
-    - mari
-    - nuke
-    - aftereffects
-    - photoshop
-    - premiere
-    - houdini-indie
-    Compositing:
-    - nuke
-    - nuke-x
-    - nuke-studio
-    - aftereffects
-    - premiere
-    - photoshop
-    2D_Production:
-    - illustrator
-    - aftereffects
-    - premiere
-    - photoshop
-    - animate
-    3D_Production:
-    - maya
-    - nuke
-    - modo
-    - zbrush
-    - mudbox
-    - mari
-    - photoshop
-  order:
-  - maya
-  - cinema4d
-  - modo
-  - 3dsmax
-  - zbrush
-  - mudbox
-  - mari
-  - nuke
-  - aftereffects
-  - photoshop
-  - premiere
-  - houdini
-
-default:
-  title: 'Default'
-  packages:
-    maya:
-        version: '2016.5'
-        soup: '2016.10.08'
-        #zync: '1.2.5'
     maya2015:
       title: 'Maya 2015'
       app: 'maya'

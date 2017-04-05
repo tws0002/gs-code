@@ -651,6 +651,7 @@ elementacular:
     maya:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/elementacular/%ST_ELEMENTACULAR%/win/%ST_MAYA%'
+        MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/elementacular/%ST_ELEMENTACULAR%/win/%ST_MAYA%/shelves'
       versions:
         '1.5.0':
           env:
