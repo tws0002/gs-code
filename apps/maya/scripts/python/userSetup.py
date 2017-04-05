@@ -167,18 +167,10 @@ def gs_load_deferred_modules():
         else:
             os.environ['MAYA_SHELF_PATH'] = os.environ['GS_MAYA_SHELF_PATH']
 
-def force_legacy_render_layers():
-    cmds.optionVar(iv=('renderSetupEnable', 0))
-
 def init():
     #initLogo()
-<<<<<<< HEAD
-    force_legacy_render_layers()
-    gs_autoload()
-=======
     gs_set_renderlayer_mode()
     cmds.evalDeferred("gs_autoload(local_only=True)")
->>>>>>> refs/remotes/origin/master
     gs_restore_pwd()
     cmds.evalDeferred("initMustache()")
     cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
