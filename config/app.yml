@@ -409,7 +409,7 @@ indesign:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Adobe/Adobe In Design CC 2015'
+        win32: 'C:/Program Files/Adobe/Adobe InDesign CC 2015'
 animate:
   show: true
   tasks:
