@@ -14,7 +14,7 @@ import remote_render
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except KeyError:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 
 import gsstartup
 from gsstartup import muster2
@@ -45,13 +45,23 @@ class Submitter:
         self.M = ''
         self.imagesFolder = 'images'
 
+
+        # if not the base branch, the local branch cache prob isn't getting updated so we'll copy it from base branch
+        if os.environ['GSBRANCH'].split('/')[-1] != 'base':
+            base_mp_cache = os.path.join(os.environ['GSROOT'],'base','gs','python','gsstartup','muster.json')
+            local_mp_cache = os.path.join(os.environ['GSBRANCH'],'gs','python','gsstartup','muster.json')
+            if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
+                shutil.copy2(base_mp_cache,local_mp_cache)
+
+        # if the mod date is more recent than 5 min ago load it, otherwise query muster
         #try:
         if os.path.getmtime(muster2.MUSTERJSON) > time.time() - 60*5:    
             with open(muster2.MUSTERJSON, 'r') as f:
                 muster_json = json.load(f)
                 MUSTER_POOLS = muster_json['pools']
-        else:         
+        else:
             MUSTER_POOLS = muster2.get_pools()
+          
         #except WindowsError:
         #
         #    MUSTER_POOLS = muster2.get_pools()     
@@ -74,6 +84,7 @@ class Submitter:
         finalCams = [ f for f in camXforms if f not in defaultCams ]
         return finalCams
 
+    # used by aspera to get image prefixes
     def getImageOutputPath(self, *args):
         imagePrefix = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
@@ -83,9 +94,23 @@ class Submitter:
         if not imagePrefix:
             return False
         imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
-        projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, imagePrefix)
+        # subst <Scene>
+        fullPath = cmds.file(q=1, sn=1)
+        oldName = os.path.splitext(cmds.file(q=1, sn=1, shn=1))[0]
+        fixedName = oldName
+        if '_T_' in oldName:
+            fixedName = oldName.split('_T_')[0]
+        newPrefix1 = imagePrefix.replace('<Scene>', fixedName)
+
+        # if <Layer> is in path, parse the active render layers
+        newPrefix2 = newPrefix1.replace('/<Layer>', '')
+        # if <Version> is in path
+        newPrefix3 = newPrefix2.replace('/<Version>', '')
+        # if <Camera> is in path
+        newPrefix = newPrefix3.replace('/<Camera>', '')
+
+        projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, newPrefix)
         normalizedFolder = projectImgFolder.replace('/', '\\')
-        print '\nimageOutputPath: %s' % normalizedFolder
         return normalizedFolder
 
     def getUploadFiles(self):
@@ -93,6 +118,13 @@ class Submitter:
         reffiles = cmds.file(query=True, list=True)
         workspacemel = os.path.join(self.M.project, 'workspace.mel')
         filelist = [workspacemel]
+        
+        # also make sure to include any pipeline configs
+        if 'GSPROJECT' in os.environ:
+            proj = os.environ['GSPROJECT']
+            config_path = os.path.join('\\\\scholar','projects',proj,'03_production','.pipeline','config')
+            filelist.append(config_path)
+
         for f in files + reffiles:
             if glob.glob(f):
                 filelist.append(f)
@@ -123,7 +155,34 @@ class Submitter:
         for seq in seq_list_final:
             files_final.append(seq)
 
+
+
+        # xgen
+
+        #fullPath = cmds.file(q=1, sn=1)
+        #xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
+        #for x in xgenFiles:
+        #    files_final.append(x)
+        #abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
+        #for a in abcFiles:
+        #    files_final.append(a)
+#
+
         return list(set(files_final))
+
+    def get_gs_musterId(self,package):
+        mId = 1100
+        if package == 'maya':
+            mId += 6
+
+        # if running dev branch, increment the mId by 1000
+        branch = os.environ['GSBRANCH'].split('/')[-1]
+        if branch == 'dev':
+            mId += 100
+        print ('Detected Branch:{0} Using muster template id:{1}'.format(branch,mId))
+        return mId
+
+
 
     def getDownloadFiles(self):
         files = self.getImageOutputPath()
@@ -131,6 +190,7 @@ class Submitter:
 
     def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, rsGpus = 0, *args):
         nameNoStamp = name
+        mtid = self.get_gs_musterId('maya');
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
 
@@ -140,7 +200,7 @@ class Submitter:
         else:
             musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
 
-        musterflags['-e']               = '1106'
+        musterflags['-e']               = str(mtid)
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'
         musterflags['-group']           = self.M.projectName
@@ -408,6 +468,7 @@ class Submitter:
             os.makedirs(renderScenesDir)
         imagePrefix = ''
         sceneName = cmds.file(q=1, sn=1, shn=1)
+
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
@@ -436,6 +497,12 @@ class Submitter:
         new_file = cmds.file(s=1, f=1)
         cmds.file(rts=1)
 
+        # restore image prefix without <scene> substitution
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+            cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+        else:
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+
         if cmds.pluginInfo('xgenToolkit.mll', q=1, l=1):
             xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
             abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
@@ -454,17 +521,37 @@ class Submitter:
 
         return new_file
 
-    def setRenderPrefix(self, *args):
-        imagePrefix = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
+    def setRenderPrefix(self, imagePrefix, *args):
+
+        if 'GS_MAYA_REND_PREFIX' in os.environ:
+            imagePrefix = os.environ['GS_MAYA_REND_PREFIX']
+            result = imagePrefix.replace("<gs_shot>",self.M.SM.checkedShot)
+        else:
+            result = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
+
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
-                imagePrefix = imagePrefix + '.'
-            cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+            #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
+                #imagePrefix = imagePrefix + '.'
+            cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
         else:
             try:
-                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
             except:
                 pass
+
+    def getRenderPrefix(self, *args):
+        imagePrefix = ''
+
+        #imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
+        if 'GS_MAYA_REND_PREFIX' in os.environ:
+            imagePrefix = os.environ['GS_MAYA_REND_PREFIX']
+            result = imagePrefix.replace("<gs_shot>",self.M.SM.checkedShot)
+        else:
+            if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+                result = cmds.getAttr('vraySettings.fileNamePrefix')
+            else:
+                result = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+        return result
 
     def vray_prepassSetup(self, beautyLayer, *args):
         sceneName = cmds.file(q=1, sn=1)
@@ -564,7 +651,8 @@ class Submitter:
         padding = int(cmds.textField(paddingCtrl, q=1, tx=1))
         paddingStr = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            imgString = cmds.getAttr('vraySettings.fileNamePrefix').strip('.')
+            prf = str(cmds.getAttr('vraySettings.fileNamePrefix'))
+            imgString = prf.strip('.')
         else:
             imgString = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         if not imgString:
@@ -572,8 +660,17 @@ class Submitter:
         for x in range(0, padding):
             paddingStr = paddingStr + '#'
 
-        imgString = imageDir + imgString.replace('<Scene>', scene + ssuff) + fsuff + '.' + paddingStr + '.' + extension
+        # commented out because we only want to parse <scene> when saving temp renderscene
+        #imgString = imageDir + imgString.replace('<Scene>', scene + ssuff) + fsuff + '.' + paddingStr + '.' + extension
+        imgString = imageDir + imgString + fsuff + '.' + paddingStr + '.' + extension
         cmds.text(framePreviewCtrl, e=1, l=imgString)
+        
+
+    def parseImagePrefix(self, imagePrefixCtrl, sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args):
+        imagePrefix = cmds.textField(imagePrefixCtrl, q=1, tx=1)
+        self.setRenderPrefix(imagePrefix)
+        self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args)
+
 
     def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, rsGpus = 0, *args):
         origFile = cmds.file(q=1, sn=1)
@@ -595,7 +692,6 @@ class Submitter:
         else:
             cmds.confirmDialog(title='Submission successful.', message='Successfully submitted Job#%s to Muster.' %(finalScene), button='OK')
         cmds.file(rename=origFile)
-        self.setRenderPrefix()
         cmds.file(rts=1)
 
     def submitUI(self, *args):
@@ -632,6 +728,7 @@ class Submitter:
         paddingLabel = cmds.text(l='Padding:', ann='Number of leading zeroes used to pad the frame number. Default is 4.', parent=mayaGlobalSettings)
         sceneSuffixLabel = cmds.text(l='Scene suffix:', ann='Filename text added after each instance of the scene name for each rendered frame.', parent=mayaGlobalSettings)
         frameSuffixLabel = cmds.text(l='Frame suffix:', ann='Filename text added just before the frame number of each rendered frame.', parent=mayaGlobalSettings)
+        renderPrefixLabel = cmds.text(l='Image Prefix', ann='Image Naming Pattern (from Render Globals).', parent=mayaGlobalSettings)
         frameExampleLabel = cmds.text(l='Image files will be named:', fn='obliqueLabelFont', parent=mayaGlobalSettings)
         frameExample = cmds.text(l='', fn='smallPlainLabelFont', parent=mayaGlobalSettings)
         engineString = 'render engine is ' + cmds.getAttr('defaultRenderGlobals.currentRenderer').upper()
@@ -649,6 +746,7 @@ class Submitter:
             cmds.textField(paddingCtrl, e=1, tx=cmds.getAttr('vraySettings.fileNamePadding'))
         sceneSuffixCtrl = cmds.textField(tx='', w=150, parent=mayaGlobalSettings, cc=lambda *x: self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
         frameSuffixCtrl = cmds.textField(tx='', w=150, parent=mayaGlobalSettings, cc=lambda *x: self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
+        renderPrefixCtrl = cmds.textField(tx=self.getRenderPrefix(), w=largeInputWidth, parent=mayaGlobalSettings, cc=lambda *x: self.parseImagePrefix(renderPrefixCtrl,sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl))
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(mayaLabel, 'top', tm1),
          (mayaLabel, 'left', lm1),
          (sceneLabel, 'top', tm2),
@@ -671,7 +769,9 @@ class Submitter:
          (sceneSuffixLabel, 'left', lm1),
          (frameSuffixLabel, 'top', tm4 + lineHeight),
          (frameSuffixLabel, 'left', lm1),
-         (frameExampleLabel, 'top', tm4 + lineHeight * 2 + 10),
+         (renderPrefixLabel, 'top', tm4 + lineHeight*2),
+         (renderPrefixLabel, 'left', lm1),
+         (frameExampleLabel, 'top', tm4 + lineHeight * 3),
          (frameExampleLabel, 'left', lm1)])
         cmds.formLayout(mayaGlobalSettings, e=1, attachForm=[(sceneCtrl, 'top', tm2),
          (sceneCtrl, 'left', lm2),
@@ -693,7 +793,9 @@ class Submitter:
          (sceneSuffixCtrl, 'left', lm2),
          (frameSuffixCtrl, 'top', tm4 + lineHeight),
          (frameSuffixCtrl, 'left', lm2),
-         (frameExample, 'top', tm4 + lineHeight * 3),
+         (renderPrefixCtrl, 'top', tm4 + lineHeight*2),
+         (renderPrefixCtrl, 'left', lm2),
+         (frameExample, 'top', tm4 + lineHeight * 3+10),
          (frameExample, 'left', lm1),
          (mustacheCtrl, 'left', lm5),
          (mustacheCtrl, 'top', tm2),
@@ -921,8 +1023,8 @@ class Submitter:
          (resetBtn, 'left', lm5),
          (closeBtn, 'top', tm2 + lineHeight * 6),
          (closeBtn, 'left', lm5)])
-        self.setRenderPrefix()
         self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
+        self.parseImagePrefix(renderPrefixCtrl,sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
         mustacheDir = '//scholar/code/maya/icons/mustaches'
         if os.path.exists(mustacheDir):
             mustaches = [ f for f in os.listdir(mustacheDir) if os.path.splitext(f)[-1] == '.jpg' ]

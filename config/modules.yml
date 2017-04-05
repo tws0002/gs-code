@@ -122,7 +122,7 @@ vray:
   name: vray
   show: false
   env:
-    GS_MAYA_AUTOLOAD: 'vrayformaya'
+    #GS_MAYA_AUTOLOAD: 'vrayformaya'
     VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/conf'
   packages:
     maya:
@@ -204,6 +204,9 @@ advancedSkeleton:
   packages:
     maya:
       env:
+        #MAYA_SCRIPT_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/scripts'
+        #XMB_LANG_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/icons'
+        #PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/bin'
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%'
         MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/shelves'
       versions:
@@ -339,7 +342,7 @@ krakatoa:
     maya:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%'
-        MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
+        #MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
         THINKBOX_LICENSE_FILE: '@laxlic01'
       versions:
         '2.6.2':
@@ -548,24 +551,26 @@ redshift:
             win32: /
           versions:
           - 'R18'
-openvdb:
-  name: openvdb
+be_openvdb:
+  name: be_openvdb
   show: true
   packages:
     maya:
       env:
-        MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/openvdb/%ST_MAYA_OVDB%/win/%ST_MAYA%'
-        MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/openvdb/%ST_MAYA_OVDB%/win/%ST_MAYA%/shelves'
+        MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/be_openvdb/%ST_MAYA_OVDB%/win/%ST_MAYA%'
+        MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/be_openvdb/%ST_MAYA_OVDB%/win/%ST_MAYA%/shelves'
       versions:
-        '3.3.0':
+        '1.0':
           env:
-            ST_MAYA_OVDB: '3.3.0'
+            ST_MAYA_OVDB: '1.0'
           path:
             linux: /
             mac: /
             win32: /
           versions:
-          - '2015'
+          - '2016'
+          - '2016.5'
+          - '2017'
 slib:
   name: slib
   show: true

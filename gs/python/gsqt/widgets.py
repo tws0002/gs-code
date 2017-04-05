@@ -336,3 +336,20 @@ class LRegExpValidator(QRegExpValidator):
         # for old code still using QString, use this instead
         string.replace(0, string.count(), string.toUpper())
         return result[0], pos
+
+#class LListWidgetItem(QListWidgetItem):
+#    def __init__(self, parent=None):
+#        super(LListWidgetItem, self).__init__(text, parent)
+#        # ...
+#        self.innercolor = QColor(200,0,20)
+#
+#    def setcolor(self,value): self.innercolor = value
+#    def getcolor(self): return self.innercolor
+#    color = Property(QColor,getcolor,setcolor)
+#
+#    def paintEvent(self, event):
+#        p = QPainter(self)
+#        p.fillRect(self.rect(),self.color)
+#        # ...
+#        p.end()
+

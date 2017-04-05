@@ -26,7 +26,9 @@ import core.project
 class Launcher(QMainWindow):
 
     
-    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
+    #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
+    a_data = APPS
+    w_data = WORKGRP
     
     def __init__(self, parent=None):
 
@@ -39,8 +41,8 @@ class Launcher(QMainWindow):
         self.lastLaunch = ''
 
         # animation init
-        self.timeline = QTimeLine(1000)
-        self.timeline.setFrameRange(0,100)
+        #self.timeline = QTimeLine(1000)
+        #self.timeline.setFrameRange(0,100)
 
         # pyQT settings framework (stores in user registry)
         self.settings = QSettings('gs', 'launcher')
@@ -49,8 +51,8 @@ class Launcher(QMainWindow):
         # sStyleSheet = StyleSheet().styleSheet(1)
         # self.setStyleSheet(sStyleSheet)
 
-        pixmap_icon = QPixmap(os.path.join(RES, "pink.ico"))
-        self.setWindowIcon(QIcon(pixmap_icon))
+        #pixmap_icon = QPixmap(os.path.join(RES, "pink.ico"))
+        #self.setWindowIcon(QIcon(pixmap_icon))
 
         # parent.setMargin(50)
 
@@ -132,7 +134,7 @@ class Launcher(QMainWindow):
         # self.ui['wdgt']['project_combo'].completer().setCompletionMode(QCompleter.PopupCompletion)
         font = self.ui['wdgt']['project_combo'].font()
         font.setPointSize(20)
-        font.setStyleStrategy(QFont.PreferAntialias);
+        font.setStyleStrategy(QFont.PreferAntialias)
         self.ui['wdgt']['project_combo'].setFont(font)
         self.ui['mdl']['project_mdl'] = self.ui['wdgt']['project_combo'].model()
         self.ui['lyt']['project_lyt'].addWidget(self.ui['lbl']['project'])
@@ -156,7 +158,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['initials_le'].setFixedWidth(50)
         font = self.ui['wdgt']['initials_le'].font()
         font.setPointSize(16)
-        font.setStyleStrategy(QFont.PreferAntialias);
+        font.setStyleStrategy(QFont.PreferAntialias)
         self.ui['wdgt']['initials_le'].setFont(font)
         self.ui['lyt']['initials_lyt'].addWidget(self.ui['lbl']['initials'])
         self.ui['lyt']['initials_lyt'].addWidget(self.ui['wdgt']['initials_le'])
@@ -170,7 +172,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['dispgroup_combo'] = QComboBox()
         font = self.ui['wdgt']['dispgroup_combo'].font()
         font.setPointSize(20)
-        font.setStyleStrategy(QFont.PreferAntialias);
+        font.setStyleStrategy(QFont.PreferAntialias)
         self.ui['wdgt']['dispgroup_combo'].setFont(font)
         self.ui['mdl']['display_groups_mdl'] = self.ui['wdgt']['dispgroup_combo'].model()
         self.ui['lyt']['dispgroup_lyt'].addWidget(self.ui['lbl']['task'])
@@ -199,12 +201,13 @@ class Launcher(QMainWindow):
         # self.ui['wdgt']['jobs_list_box']  = QListWidget()
 
         # setup context menu
-        self.ui['wdgt']['buttons_grid'].setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'],SIGNAL("customContextMenuRequested(QPoint)" ), self.list_item_menu_clicked)
+        if isAdmin():
+            self.ui['wdgt']['buttons_grid'].setContextMenuPolicy(Qt.CustomContextMenu)
+            self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'],SIGNAL("customContextMenuRequested(QPoint)" ), self.list_item_menu_clicked)
 
         # connect up signals
         self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stack_change)
-        # self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.projChange)
+        self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.proj_change)
         self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.disp_grp_change)
 
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
@@ -219,7 +222,19 @@ class Launcher(QMainWindow):
         self.update_apps()
 
     def load_style(self):
-        ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+        branch = 'base'
+        try:
+            print ("GSBRANCH={0}".format(os.environ['GSBRANCH'].split('/')[-1]))
+            branch = os.environ['GSBRANCH'].split('/')[-1]
+        except:
+            pass
+
+        if branch == 'dev':
+            print ("Launching DEV UI")
+            ssh_file = '/'.join([os.path.dirname(__file__),'res','dev.qss'])
+        else:
+            ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+
         fh = open(ssh_file,"r")
         qstr = QString(fh.read())
         self.setStyleSheet(qstr)
@@ -239,6 +254,44 @@ class Launcher(QMainWindow):
         else:
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
+    def load_project_config(self,project_name):
+        #print ("CHECKING FOR NEW CONFIG")
+        wrkgrp_config = CONFIG+'/workgroups.yml'
+        app_config = CONFIG+'/app.yml'
+
+        job_wrkgrp_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","workgroups.yml")
+        if os.path.isfile(job_wrkgrp_config):
+            wrkgrp_config = job_wrkgrp_config
+            print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
+        else:
+            wrkgrp_config = CONFIG+'/workgroups.yml'
+            #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
+
+        job_app_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","app.yml")
+        if os.path.isfile(job_app_config):
+            app_config = job_app_config
+            print ("GS Launcher: loading local project app config:{0}").format(app_config)
+        else:
+            app_config = CONFIG+'/app.yml'
+            #print ("GS Launcher: loading studio app config:{0}").format(app_config)
+
+        #load the apps dictionary
+        f = open(wrkgrp_config)
+        self.w_data = None
+        self.w_data = yaml.safe_load(f)
+        f.close()
+        
+        ###load the modules dictionary
+        ##f = open(CONFIG+"/modules.yml")
+        ##MODULES = yaml.safe_load(f)
+        ##f.close()
+        
+        #load the workgroups dictionary
+        f = open(app_config)
+        self.a_data = None
+        self.a_data = yaml.safe_load(f)
+        f.close()
+
     def set_project(self, project_name):
         try:
             #print ('Setting to Project: '+project_name)  
@@ -246,15 +299,20 @@ class Launcher(QMainWindow):
             index = self.ui['wdgt']['project_combo'].findText(project_name)
             if index > -1:
                 self.ui['wdgt']['project_combo'].setCurrentIndex(index)
-        
+
+            #self.load_project_config(project_name)
+            #self.update_disp_groups()
+            #self.update_apps()
         except:
             print ('Project: {0} not found'.format(project_name))
 
     def update_disp_groups(self, workgroup='default', project='default'):
         # todo: after project is set, check for workgroups to merge
         # clear the item model and init a new one
+        # get the current value for restoring value after refresh
+        
         self.ui['mdl']['display_groups_mdl'].clear()
-        workgroup_list = WORKGRP
+        workgroup_list = self.w_data
         if workgroup_list:
             for j in sorted(workgroup_list[workgroup]['display_groups'],key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -263,6 +321,7 @@ class Launcher(QMainWindow):
                 font.setStyleStrategy(QFont.PreferAntialias);
                 item.setFont(font)
                 self.ui['mdl']['display_groups_mdl'].appendRow(item)
+                
         else:
             print("Could not Find Workgroups. Please check in config/workgroups.yml")
 
@@ -275,44 +334,56 @@ class Launcher(QMainWindow):
         except:
             print 'Display Group: {0} not found'.format(display_grp)
 
-    def update_apps(self, workgroup='default', display_grp='generalist'):
+    def update_apps(self, workgroup='default', display_grp='Generalist'):
         self.app_layouts.clear();
 
         # resize the launcher window based on the amount of apps to show
-        app_ct = len (WORKGRP[workgroup]['display_groups'][display_grp])
+        app_ct = len (self.w_data[workgroup]['display_groups'][display_grp])
         app_rows = int(app_ct / 6.0 - .1)
         win_w = self.frameGeometry().width()
-        win_h = 400 + (app_rows*105)
+        win_h = 400 + (app_rows*110)
         self.resize(win_w, win_h)
         
         self.ui['wdgt']['buttons_grid'].clear()
-        for package_full in WORKGRP[workgroup]['display_groups'][display_grp]:
+        for package_full in self.w_data[workgroup]['display_groups'][display_grp]:
             pkg_and_mode = package_full.split('-')
             package = pkg_and_mode[0]
-            mode = 'ui'
+
+            app = package
+            if 'app' in self.w_data[workgroup]['packages'][package]:
+                app = self.w_data[workgroup]['packages'][package]['app']
+            
             title = package
+            if 'title' in self.w_data[workgroup]['packages'][package]:
+                title = self.w_data[workgroup]['packages'][package]['title']
+
+            mode = 'ui'
             if len(pkg_and_mode) > 1:
                 mode = pkg_and_mode[1]
             if mode != 'ui':
                 title += ' {0}'.format(mode)
 
-            if package in APPS and APPS[package]['show']:
-
+            if app in self.a_data and self.a_data[app]['show']:
 
                 self.app_layouts[package_full] = QListWidgetItem(title.title())  # QPushButton(package)
 
-                tooltip = str(package+' '+WORKGRP[workgroup]['packages'][package]['version'])
-                if 'modules' in WORKGRP[workgroup]['packages'][package]:
+                # set the tooltip to show version and modules configured
+                tooltip = str(app+' '+self.w_data[workgroup]['packages'][package]['version'])
+                if 'modules' in self.w_data[workgroup]['packages'][package]:
                     tooltip += '\n\nMODULES:'
-                    for mod in WORKGRP[workgroup]['packages'][package]['modules']:
-                        mod_ver = WORKGRP[workgroup]['packages'][package]['modules'][mod]
+                    for mod in self.w_data[workgroup]['packages'][package]['modules']:
+                        mod_ver = self.w_data[workgroup]['packages'][package]['modules'][mod]
                         tooltip += '\n'+ mod.ljust(10) + '\t' + mod_ver
                 self.app_layouts[package_full].setToolTip(tooltip)
 
                 # pixmap caching
-                if os.path.exists(os.path.join(RES,(package+".png"))):
+                if os.path.exists(os.path.join(RES,(package_full+".png"))):
+                    value = os.path.join(RES, (package_full+".png"))
+                elif os.path.exists(os.path.join(RES,(package+".png"))):
                     value = os.path.join(RES, (package+".png"))
-                else: 
+                elif os.path.exists(os.path.join(RES,(app+".png"))):
+                    value = os.path.join(RES, (app+".png"))
+                else:
                     value = os.path.join(RES, ("gs.png"))
 
                 key = "image:%s"% value
@@ -326,23 +397,36 @@ class Launcher(QMainWindow):
                 self.ui['wdgt']['buttons_grid'].setIconSize(self.icon_size)
 
                 self.ui['wdgt']['buttons_grid'].addItem(self.app_layouts[package_full])
-                version = WORKGRP[workgroup]['packages'][package]['version']
+                version = self.w_data[workgroup]['packages'][package]['version']
+                install_path = ""
                 try:
-                    install_path = os.path.expandvars(os.path.join(APPS[package]['versions'][version]['path'][sys.platform]))
+                    install_path = os.path.expandvars(os.path.join(self.a_data[app]['versions'][version]['path'][sys.platform]))
                 except KeyError:
                     print 'Could not locate App:{0} Version:{1} in app.yml'.format(package, version)
 
                 # BUG: not working if app path has an env var that only exist during runtime
                 if not os.path.exists(install_path):
-                    print ("Not Installed: "+install_path)
-                    self.app_layouts[package_full].setFlags(Qt.ItemIsEnabled)
+                    #print ("Not Installed: "+install_path)
+                    self.app_layouts[package_full].setFlags(Qt.ItemIsSelectable)
+                    self.app_layouts[package_full].setToolTip(tooltip+' (Not Installed)')
                     #self.appLayouts[package].setEnabled(False)
 
     def list_item_menu_clicked(self, QPos):
         self.item_menu= QMenu()
         # HACK: need to replace this with actual data reference not using the UI label as a keyname
-        currentItemName=str(self.ui['wdgt']['buttons_grid'].currentItem().text())
+        
+        item = currentItemName=self.ui['wdgt']['buttons_grid'].currentItem()
+        currentItemName=str(item.text())
         package = currentItemName.lower()
+        app = package
+
+        for name, button in self.app_layouts.iteritems():
+            if item == button:
+                button_name = name
+                pkg_and_mode = name.split('-')
+                package = pkg_and_mode[0]
+                app = package
+
         menu_item = {}
         menu_item['launch'] = self.item_menu.addAction("Launch {0}".format(currentItemName))
         self.connect(menu_item['launch'], SIGNAL("triggered()"), lambda: self.menu_item_clicked(cmd='launch',package=package,version=''))
@@ -351,7 +435,7 @@ class Launcher(QMainWindow):
         #menu_item['config'] = self.item_menu.addAction("Config")
 
         # add alt versions
-        for ver in sorted(APPS[package]['versions'],key=lambda v: v.upper()):
+        for ver in sorted(self.a_data[app]['versions'],key=lambda v: v.upper()):
             menu_item[(package+"_"+ver)] = self.ver_menu.addAction(ver)
             self.connect(menu_item[(package+"_"+ver)], SIGNAL("triggered()"), functools.partial(self.menu_item_clicked,'launch',package,ver))
 
@@ -359,7 +443,7 @@ class Launcher(QMainWindow):
 
         parentPosition = self.ui['wdgt']['buttons_grid'].mapToGlobal(QPoint(0, 0))        
         self.item_menu.move(parentPosition + QPos)
-        self.item_menu.show() 
+        self.item_menu.show()
 
     def menu_item_clicked(self, cmd='', package='', version=''):
         currentItemName=str(self.ui['wdgt']['buttons_grid'].currentItem().text())
@@ -374,8 +458,20 @@ class Launcher(QMainWindow):
 
     def proj_change(self, i):
         # check for project config file and merge config if it exists
-        self.update_ui()
-        pass
+        
+        p = str(self.ui['wdgt']['project_combo'].currentText())
+        self.load_project_config(p)
+        d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
+
+        # update display groups but don't execute signals
+        self.ui['wdgt']['dispgroup_combo'].blockSignals(True)
+        self.update_disp_groups()
+        self.set_disp_grp(d_grp)
+        d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
+        self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
+        self.update_apps(display_grp=d_grp)
+        
+
 
     def disp_grp_change(self, i):
         # check for project config file and merge config if it exists
@@ -384,51 +480,48 @@ class Launcher(QMainWindow):
             display_grp = 'generalist'
         self.update_apps(display_grp=display_grp)
         # clear widget layout
-        pass
+
 
     def stack_change(self):
         sender = self.sender()
         page = str(sender.currentItem().text())
         self.ui['wdgt']['stack_widget'].setCurrentIndex(self.ui['lyt']['stack_layouts'][page].page_index)
 
-    def launch_app(self, item, app='', version='', mode='ui'):
+    def toggle_launch_stat(self, widget, text):
+        widget.setText(text)
 
+    def launch_app(self, item, app='', version='', mode='ui'):
 
         initials = str(self.ui['wdgt']['initials_le'].text())
         project = str(self.ui['wdgt']['project_combo'].currentText())
         workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
+        button = ''
+        button_name = ''
 
         #print ('item: {0} app:{1} version:{2} mode:{3}'.format(item, app, version,mode))
         for name, button in self.app_layouts.iteritems():
             #print 'item:{0} button:{1}'.format(item, button)
             if item == button:
-                print ("BUTTON FOUND")
+                #print ('item={0} naee={1} button={2}'.format(item,name,button))
+                button_name = name
                 pkg_and_mode = name.split('-')
-                app = pkg_and_mode[0]
+                package = pkg_and_mode[0]
+                app = package
+                if 'app' in self.w_data[workgroup]['packages'][package]:
+                    app = self.w_data[workgroup]['packages'][package]['app']
                 if len(pkg_and_mode) > 1:
                     mode = pkg_and_mode[1]
                 if version == '':
-                    version = WORKGRP[workgroup]['packages'][app]['version']
+                    version = self.w_data[workgroup]['packages'][package]['version']
+
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
 
-        return
+        text = str(self.app_layouts[button_name].text())
+        self.app_layouts[button_name].setText("Starting...")
+        test_timer = QTimer()
+        test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
 
-    def launch_util(self, util=None, version=None):
-        #sender = self.sender()
-        #
-        #for name, button in self.utilLayouts.iteritems():
-        #    if sender == button:
-        #        util = name
-        #        version = UTILITIES[util]['versions'].keys()[0]
-        #
-        #executable = os.path.join(UTILITIES[util]['versions'][version]['path'][sys.platform], UTILITIES[util]['versions'][version]['modes']['ui'][sys.platform])
-        #print executable
-        #env = dict(os.environ.items() + self.studio_env.vars.items())
-        #
-        #si = subprocess.STARTUPINFO()
-        #si.dwFlags = subprocess.STARTF_USESTDHANDLES
-        #subprocess.Popen(executable, env=env, startupinfo=si)
         return
 
     def install_app(self):
@@ -496,6 +589,14 @@ class Launcher(QMainWindow):
         except:
             "initializing settings"
             self.init_settings()
+
+        print ("checking active directory for initials")
+        #try:
+        initials = get_initials()
+        self.ui['wdgt']['initials_le'].setText(initials)
+       #except:
+       #    print ("could not connect to active directory")
+       #    pass
 
     def close_event(self, event):
         #print ('Running close event')

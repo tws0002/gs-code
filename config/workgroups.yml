@@ -1,59 +1,37 @@
-generalist:
-  title: 'Generalist'
+default:
+  title: 'Default Workgroup'
   packages:
     maya:
-      version: '2015'
+      title: 'Maya 2016'
+      app: 'maya'
+      version: '2016.5'
+      env:
+        # USE A '#!' in front of value to overwrite instead of default behavior of appending values to existing
+        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<layer>.'
+        GS_MAYA_LAYERMODE: '#!legacy'
       modules:
-        arnold: '1.1.0.4'
-        crate: '1.1.148'
-        jfDielectric: '1.0.5'
-        vray: '3.30.01'
-        advancedSkeleton: '4.0'
-    houdini:
-      version: '15.5.523'
-    3dsmax:
-      version: '2016'
-    cinema4d:
-      version: 'R17.048'
-    modo:
-      version: '901_SP2'
-    zbrush:
-      version: '4R7'
-    mudbox:
-      version: '2016'
-    mari:
-      version: '2.6v5'
-    nuke:
-      version: '9.0v7'
-    aftereffects:
-      version: 'CC 2015'
-    premiere:
-      version: 'CC 2015'
-    photoshop:
-      version: 'CC 2015'
-    softimage:
-      version: '2014'
-  order:
-  - maya
-  - cinema4d
-  - modo
-  - 3dsmax
-  - zbrush
-  - mudbox
-  - mari
-  - nuke
-  - aftereffects
-  - photoshop
-  - premiere
-  - houdini
-
-default_2017:
-  title: 'Default'
-  packages:
-    maya:
-      version: '2017'
-      modules:
+        advancedSkeleton: '5.250'
+        #animschoolpicker: '1.4.6'
+        #arnold: '1.3.0.0'
+        bonustools: '17.0.1'
+        #crate: '1.1.148'
+        fracturefx: '1.9.6'
+        fumefx: '4.0.3'
+        ideform: '1.5.1'
+        elementacular: '1.5.0'
+        #jfDielectric: '1.0.5'
+        krakatoa: '2.6.2'
+        #nimbletools: '1.2.1'
+        be_openvdb: '1.0'
+        #ornatrix: '1.1.3.9340'
+        phoenixfd: '3.03.00'
+        realflow: '2015.0.0.9'
+        redshift: '2.0.70'
+        slib: '2.02'
+        studiolibrary: '1.26.2'
+        substance: '1.2.2.0'
         vray: '3.40.06'
+<<<<<<< HEAD
     houdini:
       version: '15.5.523'
     3dsmax:
@@ -143,21 +121,36 @@ default:
   packages:
     maya:
       version: '2016.5'
+=======
+        soup: '2016.10.08'
+        #zync: '1.2.5'
+    maya2015:
+      title: 'Maya 2015'
+      app: 'maya'
+      version: '2015'
+      env:
+        GS_MAYA_REND_PREFIX: '#!<gs_shot>/<Scene>/<Layer>/<Scene>_<Layer>.'
+>>>>>>> refs/remotes/origin/master
       modules:
         advancedSkeleton: '5.250'
-        animschoolpicker: '1.4.6'
-        arnold: '1.3.0.0'
+        #animschoolpicker: '1.4.6'
+        #arnold: '1.3.0.0'
         bonustools: '17.0.1'
+<<<<<<< HEAD
         crate: '1.1.148'
         elementacular: '1.5.0'
+=======
+        #crate: '1.1.148'
+>>>>>>> refs/remotes/origin/master
         fracturefx: '1.9.6'
         fumefx: '4.0.3'
         ideform: '1.5.1'
-        jfDielectric: '1.0.5'
+        elementacular: '1.5.0'
+        #jfDielectric: '1.0.5'
         krakatoa: '2.6.2'
-        nimbletools: '1.2.1'
-        openvdb: '3.3.0'
-        ornatrix: '1.1.3.9340'
+        #nimbletools: '1.2.1'
+        be_openvdb: '1.0'
+        #ornatrix: '1.1.3.9340'
         phoenixfd: '3.03.00'
         realflow: '2015.0.0.9'
         redshift: '2.0.70'
@@ -166,12 +159,18 @@ default:
         substance: '1.2.2.0'
         vray: '3.40.06'
         soup: '2016.10.08'
-        zync: '1.2.5'
+        #zync: '1.2.5'
     houdini:
-      version: '15.5.523'
+      title: 'Houdini'
+      app: 'houdini'
+      version: '15.5.607'
     3dsmax:
+      title: '3DS Max'
+      app: '3dsmax'
       version: '2016'
     cinema4d:
+      title: 'Cinema 4D'
+      app: 'cinema4d'
       version: 'R18'
       modules:
         qcmds: '0.21'
@@ -179,27 +178,57 @@ default:
         octane: '3.03.2'
         redshift: '2.0.83'
     modo:
+      title: 'Modo 901'
+      app: 'modo'
       version: '901_SP2'
     zbrush:
+      title: 'ZBrush 4R7'
+      app: 'zbrush'
       version: '4R7'
     mudbox:
+      title: 'Mudbox'
+      app: mudbox
       version: '2016'
     mari:
+      title: 'Mari 2.6'
+      app: 'mari'
       version: '2.6v5'
     nuke:
+      title: 'Nuke'
+      app: 'nuke'
       version: '10.0v5'
     aftereffects:
+      title: 'AE 2015'
+      app: 'aftereffects'
       version: 'CC 2015'
     premiere:
+      title: 'PR 2015'
+      app: 'premiere'
       version: 'CC 2015.3'
     photoshop:
+      title: 'PS 2015'
+      app: 'photoshop'
       version: 'CC 2015.5'
     animate:
+      title: 'AN 2015'
+      app: 'animate'
       version: 'CC 2015.2'
     indesign:
+      title: 'ID 2015'
+      app: 'indesign'
       version: 'CC 2015'
     illustrator:
+      title: 'AI 2015'
+      app: 'illustrator'
       version: 'CC 2015.3'
+    pythonshell:
+      title: 'Python Shell'
+      app: 'pythonshell'
+      version: '2.7'
+    muster:
+      title: 'Muster'
+      app: 'muster'
+      version: '7.0'
   display_groups:
     Design:
     - photoshop
@@ -208,7 +237,7 @@ default:
     - aftereffects
     - cinema4d
     - modo
-    generalist:
+    Generalist:
     - maya
     - cinema4d
     - modo
@@ -244,113 +273,6 @@ default:
     - mudbox
     - mari
     - photoshop
-  order:
-  - maya
-  - cinema4d
-  - modo
-  - 3dsmax
-  - zbrush
-  - mudbox
-  - mari
-  - nuke
-  - aftereffects
-  - photoshop
-  - premiere
-  - houdini
-
-compositor:
-  title: 'Compositor'
-  packages:
-    nuke:
-      version: '9.0v7'
-      mode: 'ui'
-    nukex:
-      version: '9.0v7'
-      mode: 'nukex'
-    nukestudio:
-      version: '9.0v7'
-      mode: 'nukestudio'
-    aftereffects:
-      version: 'CC 2015'
-    premiere:
-      version: 'CC 2015'
-    photoshop:
-      version: 'CC 2015'
-  order:
-  - nuke
-  - nukex
-  - nukestudio
-  - aftereffects
-  - premiere
-  - photoshop
-
-2dartist:
-  title: '2D Artist'
-  packages:
-    aftereffects:
-      version: 'CC 2015'
-    premiere:
-      version: 'CC 2015'
-    photoshop:
-      version: 'CC 2015'
-  order:
-  - aftereffects
-  - premiere
-  - photoshop
-design:
-  title: 'Designer'
-  packages:
-    cinema4d:
-      version: 'R17'
-    modo:
-      version: '901_SP2'
-    aftereffects:
-      version: 'CC 2015'
-    photoshop:
-      version: 'CC 2015'
-    indesign:
-      version: 'CC 2015'
-    illustrator:
-      version: 'CC 2015'
-  order:
-  - photoshop
-  - illustrator
-  - indesign
-  - aftereffects
-  - cinema4d
-  - modo
-
-3dartist:
-  title: '3D Artist'
-  packages:
-    maya:
-      version: '2015'
-      modules:
-        arnold: '1.1.0.4'
-        crate: '1.1.148'
-        jfDielectric: '1.0.5'
-        vray: '3.30.01'
-    houdini:
-      version: '15.5.523'
-      mode: 'hindie'
-    modo:
-      version: '901_SP2'
-    zbrush:
-      version: '4R7'
-    mudbox:
-      version: '2016'
-    mari:
-      version: '2.6v5'
-    nuke:
-      version: '9.0v7'
-    photoshop:
-      version: 'CC 2015'
-  order:
-  - maya
-  - modo
-  - houdini
-  - zbrush
-  - mudbox
-  - mari
-  - nuke
-  - photoshop
+    Utilities:
+    - muster
+    - pythonshell

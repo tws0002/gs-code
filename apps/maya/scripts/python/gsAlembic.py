@@ -81,8 +81,8 @@ def get_maya_window(window='main', title='New PyQT Window'):
 
 class StudioAlembicUIWindowImport(MayaQWidgetBaseMixin,QWidget):
 	''' Main importer UI '''
-	def __init__(self, parent=None):
-		super(StudioAlembicUIWindowImport, self).__init__(parent)
+	def __init__(self, parent=None, *args, **kwargs):
+		super(StudioAlembicUIWindowImport, self).__init__(parent=parent, *args, **kwargs) 
 
 		self.parent = parent
 
@@ -169,8 +169,8 @@ class StudioAlembicUIWindowImport(MayaQWidgetBaseMixin,QWidget):
 
 class StudioAlembicUIWindow(MayaQWidgetBaseMixin,QWidget):
 
-	def __init__(self, parent=None):
-		super(StudioAlembicUIWindow, self).__init__(parent)
+	def __init__(self, parent=None, *args, **kwargs):
+		super(StudioAlembicUIWindow, self).__init__(parent=parent, *args, **kwargs) 
 
 
 		self.parent = parent

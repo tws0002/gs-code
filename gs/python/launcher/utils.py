@@ -1,8 +1,26 @@
 __author__ = 'adamb'
 
+HAS_PYWIN = False
+HAS_PYAD = False
+
 import os, sys, shutil, errno
 from settings import *
-#from win32com.client import Dispatch
+
+# Load Pywin, if its available load pyad package
+try:
+    from win32com.client import Dispatch
+    from win32com.shell import shell
+    import win32api
+    HAS_PYWIN = True
+    try:
+        from pyad import aduser
+        HAS_PYAD = True
+    except ImportError:
+        print("Missing pyad package. Disabling AD services")
+
+except ImportError:
+    print("Missing pywin package. Disabling pywin services")
+
 
 
 def driveToUNC(p, switchToFwdSlash=False):
@@ -50,27 +68,85 @@ def copyDirTree(src,dest):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dest)
         #else: raise
-#def updatePipelineFavorites():
-#    # remove any gs pipelie favs
-#    # add new pipeline faves
-#    root = '//scholar/projects/{0}'.format(os.environ['GSPROJECT'])
-#    createUserFavorite(root)
-#
-#def createUserFavorite(path):
-#    link_name = '{0}.lnk'.format(os.path.basename(path))
-#    fav_links = '{0}\{1}'.format(os.path.expandvars('%USERPROFILE%\Links'),link_name)
-#    print (fav_links)
-#    createShortcut(path=fav_links,target=path,wd=path)
-# 
-#def createShortcut(path, target='', wd='', icon=''):    
-#    user = str(os.environ['USERNAME'])
-#    shell = Dispatch('WScript.Shell', userName=user)
-#    shortcut = shell.CreateShortCut(str(path))
-#    print(dir (shortcut))
-#    shortcut.Targetpath = target
-#    shortcut.WorkingDirectory = wd
-#    if icon == '':
-#        pass
-#    else:
-#        shortcut.IconLocation = icon
-#    shortcut.save()#
+def updatePipelineFavorites():
+    if HAS_PYWIN:
+        # remove any gs pipelie favs
+        # add new pipeline faves
+        root = '//scholar/projects/{0}'.format(os.environ['GSPROJECT'])
+        createUserFavorite(root)
+
+def createUserFavorite(path):
+    if HAS_PYWIN:
+        os_path = os.path.normpath(path)
+        link_name = '{0}.lnk'.format(os.path.basename(os_path))
+        fav_links = '{0}\{1}'.format(os.path.expandvars('%USERPROFILE%\Links'),link_name)
+        print ('createShortcut(path={0},target={1},wd={2})'.format(fav_links,os_path,os_path))
+        createShortcut(path=fav_links,target=path,wd=path)
+ 
+def createShortcut(path, target='', wd='', icon=''):  
+    if HAS_PYWIN:
+        wind_path = os.path.normpath(path)  
+        wind_target = os.path.normpath(target)  
+        wind_wd = os.path.normpath(wd)
+        wind_icon = os.path.normpath(icon)
+
+        user = str(os.environ['USERNAME'])
+        shell = Dispatch('WScript.Shell', userName=user)
+        shortcut = shell.CreateShortCut(str(wind_path))
+
+        shortcut.Targetpath = wind_target
+        shortcut.WorkingDirectory = wind_wd
+        if icon == '':
+            pass
+        else:
+            shortcut.IconLocation = wind_icon
+        shortcut.save()
+
+def isAdmin():
+    result = False
+    try:
+        result = shell.IsUserAnAdmin()
+    except:
+        print ("Unable determine privilege (pywin), please ask a systems admin for help")
+    return result
+
+
+def loadActiveUser():
+    user = ''
+    if (HAS_PYAD):
+        try:
+            ad_dn = win32api.GetUserNameEx(win32api.NameFullyQualifiedDN)
+            user = aduser.ADUser.from_dn(ad_dn)
+        except:
+            print ("Unable to connect to AD server, please ask a systems admin for help")
+    return user
+
+#def isAdmin():
+#    result = False
+#    try:
+#        user = loadActiveUser():
+#        user = aduser.ADUser.from_cn("myuser")
+#        # search user groups for Admins
+#        ad_groups = user.get_attributes('memberOf')
+#        if ad_groups.search("CN=Domain Admins"):
+#            result = True
+#    except:
+#        print ("Unable to connect to AD server, please ask a systems admin for help")
+#    return result
+
+def get_initials():
+    fullname = ''
+    initials = ''
+    #if HAS_PYWIN:
+    #    if (HAS_PYAD):
+    #        act_user = loadActiveUser()
+    #        fullname = str(act_user.get_attribute('name')[-1])
+    #    xs = (fullname)
+    #    name_list = xs.split()
+    #
+    #    for name in name_list:  # go through each name
+    #      initials += name[0].upper()  # append the initial
+    #else:
+    initials = os.environ['USERNAME'][:2]
+
+    return initials

@@ -26,9 +26,9 @@ PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
 #os.environ['PATH'] += (';'+pyQTPath)
 #print ('setting PYQTPATH to '+PYQTPATH)
 try:
-    os.environ['PYTHONPATH'] += (';'+PYQTPATH)
+    os.environ['PYTHONPATH'] += (';'+os.path.join(ROOT,'lib','python'))
 except:
-    os.environ['PYTHONPATH'] = (PYQTPATH)
+    os.environ['PYTHONPATH'] = (os.path.join(ROOT,'lib','python'))
 sys.path.append(PYQTPATH)
 
 ## print os.environ['PYTHONPATH']
@@ -48,31 +48,19 @@ SHARES = {
     'home' : 'personal',
     'assets' : 'lib',
 }
-#DRIVE_MAP = {
-#    'prod' : 'P:',
-#    'sys' : 'T:',
-#    'user' : 'W:',
-#    'lib' : 'R:',
-#    'job' : 'Z:'
-#}
 
-
-#RES = 'E:\\temp\\res'
 #load the apps dictionary
 f = open(CONFIG+"/app.yml")
-# use safe_load instead load
 APPS = yaml.safe_load(f)
 f.close()
 
 #load the modules dictionary
 f = open(CONFIG+"/modules.yml")
-# use safe_load instead load
 MODULES = yaml.safe_load(f)
 f.close()
 
 #load the workgroups dictionary
 f = open(CONFIG+"/workgroups.yml")
-# use safe_load instead load
 WORKGRP = yaml.safe_load(f)
 f.close()
 
@@ -81,4 +69,3 @@ from environment import *
 STUDIO_ENV = StudioEnvironment()
 STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
 STUDIO_ENV.setEnv()
-#STUDIO_ENV.printout()

@@ -55,7 +55,7 @@ def nuke_ui():
         framerange = [int(value) for value in re.sub('[^0-9]',',',panel.value('Frame Range')).split(',')]
         
         musterflags = {}
-        musterflags['-add']     = '--major %s --job %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING,panel.value('Project'), selected_write_nodes_string)
+        musterflags['-add']     = '--major %s  --job %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING,panel.value('Project'), selected_write_nodes_string)
         musterflags['-e']       = '1105'
         musterflags['-n']       = panel.value('Job Name')
         musterflags['-parent']  = '33409'

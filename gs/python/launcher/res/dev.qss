@@ -2,7 +2,7 @@
 
 QWidget {
     font-family: "Myriad Pro";
-    background-color: #ebebeb;
+    background-color: #353535;
     color: #97a0a5;
     selection-background-color: #ebebeb;
 }
@@ -16,7 +16,7 @@ QGroupBox {
 }
 
 QGroupBox#lblGroup {
-    background: #ffffff;
+    background: #484848;
     border:0px;
     border-radius: 10px;
     margin: 0px 0px 0px 0px;
@@ -25,7 +25,7 @@ QGroupBox#lblGroup {
 }
 QScrollBar:vertical {
     border: 0px solid grey; 
-    background: #ffffff;
+    background: #484848;
     width: 8px; 
     margin: 0px 0px 0 0px; 
 }
@@ -46,7 +46,7 @@ QFrame#launcherAppFrame {
 QComboBox {
     font: 18pt;
     color: #97a0a5;
-    background-color: #ffffff;
+    background-color: #484848;
     selection-background-color: #f62375;
     border: 0px solid #282828;
     border-radius: 10px;
@@ -65,7 +65,7 @@ QComboBox::drop-down {
     border-bottom-right-radius: 10px;
 }
 QComboBox QAbstractItemView {
-    background-color: #ffffff;
+    background-color: #484848;
     padding: 4px 0px 6px 8px;
     border: 0px;
     border-radius: 10px;
@@ -101,9 +101,9 @@ PushButton:pressed  {
 QLineEdit {
     font: 18pt;
     color: #97a0a5;
-    background-color: #ffffff;
+    background-color: #484848;
     selection-background-color: #f62375;
-    selection-color: #ffffff;
+    selection-color: #484848;
     border: 0px solid #282828;
     border-radius: 10px;
     padding: 0px 0px 0px 10px;
@@ -113,7 +113,7 @@ QSpinBox {
     font: bold 10pt;
     color: #f3f3f3;
     font-style:bold;
-    background-color: #333333;
+    background-color: #484848;
     selection-background-color: #f62375;
     selection-color: #333333;
     border: 1px solid #282828;
@@ -137,21 +137,24 @@ QListWidget {
 QListWidget::item {
     color: #97a0a5;
     selection-background-color: #ebebeb;
-    font-style:bold;
+    font-style: bold;
     border-bottom-width: 3px;
-    border-bottom-style: solid;
+    border-bottom-style: transparent;
     border-bottom-color: #ebebeb;
 
 }
 QListWidget::item:selected {
-    color:#97a0a5;
+    color:#484848;
     outline:none;
+    background-color: #f62375;
+    border-radius: 5px;
     border-bottom-width: 3px;
     border-bottom-style: solid;
     border-bottom-color: #f62375;
 
 }
 QListWidget::item:disabled {
+
 
 }
 QListWidget::item::pressed  {
