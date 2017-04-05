@@ -59,9 +59,12 @@ def gs_autoload():
         except:
             print ("Could not load plugin {0}".format(p))
 
+def force_legacy_render_layers():
+    cmds.optionVar(iv=('renderSetupEnable', 0))
 
 def init():
     #initLogo()
+    force_legacy_render_layers()
     gs_autoload()
     gs_restore_pwd()
     cmds.evalDeferred("initMustache()", lowestPriority=True)
