@@ -121,7 +121,6 @@ maya:
         #MAYA_COLOR_MANAGEMENT_POLICY_FILE: '%GSBRANCH%/apps/maya/synColor/%ST_MAYA%/synColorConfig.xml' 
         ST_MAYA: '2016.5'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.1
-        GS_MAYA_REND_PREFIX: '<gs_shot>/<scene>/<layer>/<scene>_<layer>.'
       modes:
         ui:
           linux: /
@@ -143,6 +142,7 @@ maya:
       name: Autodesk Maya
       env:
         #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
