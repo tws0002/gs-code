@@ -31,6 +31,8 @@ default:
         studiolibrary: '1.26.2'
         substance: '1.2.2.0'
         vray: '3.40.06'
+        soup: '2016.10.08'
+        #zync: '1.2.5'
     maya2015:
       title: 'Maya 2015'
       app: 'maya'
