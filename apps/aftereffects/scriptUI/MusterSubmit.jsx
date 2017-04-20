@@ -9,9 +9,9 @@ var M_WRAPY = 0;
 var M_PADDING = 4;
 var M_PROJECTFILE = null;
 var M_JOBNAME = null;
-var M_FONTINSTALLERLOC = "\\\\scholar\\code\\general\\scripts\\batch\\installFont.vbs";
+var M_FONTINSTALLERLOC = "\\\\scholar\\pipeline\\base\\gs\\batch\\installFont.vbs";
 
-var M_MUSTERPY = "C:\\Python27\\python.exe \\\\scholar\\code\\general\\scripts\\python\\gs\\muster.py";
+var M_MUSTERPY = "C:\\Python27\\python.exe \\\\scholar\\pipeline\\base\\gs\\python\\gsstartup\\muster2.py";
 var M_FOLDER = '33409';
 
 function createUI(thisObj) {
@@ -108,12 +108,9 @@ Array.prototype.move = function (old_index, new_index) {
 };
 
 function getMusterPools(){
-	cmd = M_MUSTERCONNECT+' -q p -H 0 -S 0 -pf parent';
-	cmdOutput = system.callSystem(cmd);
-	
-	var pools = cmdOutput.replace(/(\r)/gm,"").replace(/ /g,"").split('\n');
-	pools = removeDuplicates(pools);
-	pools = removeBlanks(pools);
+	cmdOutput = system.callSystem(M_MUSTERPY+ ' -p');
+
+	var pools = eval(cmdOutput);
 
 	return pools;
 }
@@ -198,10 +195,21 @@ function getAELocation(){
 			break;
 		case '13.5':
 			pathVer = 'CC 2015';
+			break;
 		case '13.6':
 			pathVer = 'CC 2015';
+			break;
 		case '13.7':
 			pathVer = 'CC 2015';
+			break;
+		case '13.8':
+			pathVer = 'CC 2015.3';
+			break;
+		case '14.0':
+			pathVer = 'CC 2017';
+			break;
+		case '14.1':
+			pathVer = 'CC 2017';
 			break;
 	}
 
