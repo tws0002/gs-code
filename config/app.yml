@@ -116,7 +116,8 @@ maya:
       name: Autodesk Maya
       env:
         #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;OneClick;objExport;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
-        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance;xgenMR;xgenToolkit'
+        #GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance;xgenMR;xgenToolkit'
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;MASH;invertShape;poseInterpolator;Substance;xgenMR'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         #MAYA_COLOR_MANAGEMENT_POLICY_FILE: '%GSBRANCH%/apps/maya/synColor/%ST_MAYA%/synColorConfig.xml' 
         ST_MAYA: '2016.5'
@@ -221,7 +222,7 @@ softimage:
   - muscle
   - light
 nuke:
-  shell: true
+  shell: false
   env:
     RLM_LICENSE: '4101@laxlic01'
     NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
@@ -509,8 +510,8 @@ modo:
     '901_SP2':
       name: Modo
       env:
-        NEXUS_ASSET: '%GSROOT%bin/external/modo/modo_contnent/901/assets'
-        NEXUS_CONTENT: '%GSROOT%bin/external/modo/modo_content/901'
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/Assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
       modes:
         ui:
           linux: /

@@ -345,6 +345,16 @@ krakatoa:
         #MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
         THINKBOX_LICENSE_FILE: '@laxlic01'
       versions:
+        '2.6.3':
+          env:
+            ST_KRAKATOA: '2.6.3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
         '2.6.2':
           env:
             ST_KRAKATOA: '2.6.2'
@@ -354,7 +364,6 @@ krakatoa:
             win32: /
           versions:
           - '2015'
-          - '2016.5'
           - '2017'
         '2.4.3.59396':
           env:
@@ -365,7 +374,6 @@ krakatoa:
             win32: /
           versions:
           - '2015'
-          - '2016.5'
           - '2017'
 bonustools:
   name: bonustools

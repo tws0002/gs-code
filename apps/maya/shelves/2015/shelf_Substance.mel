@@ -1,0 +1,34 @@
+global proc shelf_Substance () {
+    global string $gBuffStr;
+    global string $gBuffStr0;
+    global string $gBuffStr1;
+
+
+    shelfButton
+        -enableCommandRepeat 1
+        -enable 1
+        -width 35
+        -height 35
+        -manage 1
+        -visible 1
+        -preventOverride 0
+        -annotation "Launch Substance Maya Toolset" 
+        -enableBackground 0
+        -align "center" 
+        -label "Substance Maya Toolset" 
+        -labelOffset 0
+        -font "plainLabelFont" 
+        -overlayLabelColor 0.8 0.8 0.8 
+        -overlayLabelBackColor 0 0 0 0.5 
+        -image "froyok/fros_icologo.png" 
+        -image1 "froyok/fros_icologo.png" 
+        -style "iconOnly" 
+        -marginWidth 1
+        -marginHeight 1
+        -command "source SubstanceMayaToolset.mel; SubstanceMayaToolset();" 
+        -sourceType "mel" 
+        -commandRepeatable 1
+        -flat 1
+    ;
+
+} 
