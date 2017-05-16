@@ -170,11 +170,14 @@ def gs_load_deferred_modules():
 def init():
     #initLogo()
     gs_set_renderlayer_mode()
-    cmds.evalDeferred("gs_autoload(local_only=True)")
+
+    # avoid autoload on batch render since scenefile will automatically require the plugins it needs
+    if not cmds.about(batch=True):
+        cmds.evalDeferred("gs_autoload(local_only=True)")
     gs_restore_pwd()
     cmds.evalDeferred("initMustache()")
     cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
-    gs_set_renderlayer_mode()
+    
 
 
 if __name__ == '__main__':

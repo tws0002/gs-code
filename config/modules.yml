@@ -364,6 +364,7 @@ krakatoa:
             win32: /
           versions:
           - '2015'
+          - '2016.5'
           - '2017'
         '2.4.3.59396':
           env:
@@ -374,6 +375,7 @@ krakatoa:
             win32: /
           versions:
           - '2015'
+          - '2016.5'
           - '2017'
 bonustools:
   name: bonustools
@@ -526,13 +528,35 @@ redshift:
   name: redshift
   show: true
   env:
-    REDSHIFT_LICENSEPATH: '5057@laxlic01'
+    redshift_LICENSE: '5057@laxlic01'
   packages:
     maya:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%'
         MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%/bin/rendererDesc'
       versions:
+        '2.5.13':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.13'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016.5'
+          - '2017'
+        '2.0.93':
+          env:
+            ST_MAYA_REDSHIFT: '2.0.93'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016.5'
+          - '2017'
         '2.0.70':
           env:
             ST_MAYA_REDSHIFT: '2.0.70'

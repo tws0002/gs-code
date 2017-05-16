@@ -77,6 +77,7 @@ def init():
 def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default', initials='', project='', add_args=''):
 
     app_config = ''
+    shell_mode = False
     # get a current working directory
     cwd = r'//{0}/{1}/{2}'.format(SERVER,SHARES['projects'],project)
     print cwd
@@ -188,11 +189,12 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
 
+
     # check if shell mode is enabled
     if 'shell' in a_data[app]:
         #print ("shell mode detected {0}".format(a_data[app]['shell'] ))
         if a_data[app]['shell'] == True:
-            mode = 'cli'
+            shell_mode = True
 
     if mode == 'render':
         print cmd
@@ -220,8 +222,11 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         p = subprocess.Popen(cmd, env=env, startupinfo=si, shell=True)
 
     else:
+        if shell_mode:
+            executable = win_shell_safe(executable)
+            cmd = 'start '+ executable + ' ' + add_args
         print cmd
-        p = subprocess.Popen(cmd, env=env, startupinfo=si)
+        p = subprocess.Popen(cmd, env=env, startupinfo=si, shell=shell_mode)
 
     if p.returncode != None and p.returncode != 0:
         sys.exit(p.returncode)
