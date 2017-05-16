@@ -188,12 +188,16 @@ class Submitter:
         files = self.getImageOutputPath()
         return files.replace('\\','/')
 
-    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, rsGpus = 0, *args):
+    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, deep2matte = False, rsGpus = 0, *args):
         nameNoStamp = name
         mtid = self.get_gs_musterId('maya');
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
 
+        post_chunk_actions = ['C:\Windows\System32\cmd.exe /C C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/gs/python/sensu/post_chunk_action.py"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'])]
+        if deep2matte:
+            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_action.py %%ATTR(start_frame) %%ATTR(end_frame) %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/')))
+        
         musterflags = {}
         if majorver and minorver:
             musterflags['-add']             = '--package maya --major %s --minor %s --render -x %s -y %s' %(majorver, minorver, x, y)
@@ -214,6 +218,8 @@ class Submitter:
         musterflags['-f']               = file
         musterflags['-ecerrtype']       = '1'
         musterflags['-logerrtype']      = '1'
+        musterflags['-eca']             = '&&'.join(post_chunk_actions)
+                                                    
         if depend: musterflags['-wait'] = depend
         if notes: musterflags['-info']  = notes
             
@@ -589,6 +595,7 @@ class Submitter:
          'hdr',
          'exr',
          'exr (multichannel)',
+		 'exr (deep)',
          'tga',
          'bmp',
          'sgi',
@@ -672,7 +679,7 @@ class Submitter:
         self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args)
 
 
-    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, rsGpus = 0, *args):
+    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, deep2matte = False, rsGpus = 0, *args):
         origFile = cmds.file(q=1, sn=1)
         self.sceneRenderPrep(renderCam, renderLayers, imgPlanes, imageType, framePadding, memLimit, displaceLimit)
         prepassID = '0'
@@ -686,7 +693,7 @@ class Submitter:
             if not prepassID:
                 cmds.error('Error submitting prepass!')
         finalScene = self.save_render_file(suffix, endSuffix)
-        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, rsGpus)
+        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, deep2matte, rsGpus)
         if finalScene == False:
             cmds.confirmDialog(title='Error submitting render!', message='Muster has found an ERROR. Check the script editor.', button="Please Resubmit")
         else:
@@ -821,12 +828,14 @@ class Submitter:
 
         imagePlanesCtrl = cmds.checkBox(l='Render image planes', v=0, parent=mayaGlobalSettings, ann="Turn this option on if you want to render image planes, which you don't.")
         exr2tiffCtrl = cmds.checkBox(l='Post-convert EXR to TIFF', v=0, parent=mayaGlobalSettings, ann='Convert multichannel EXRs to TIFFs after rendering is completed.')
+        deep2matteCtrl = cmds.checkBox(l='Post-convert Deep EXR to Matte', v=0, parent=mayaGlobalSettings, ann='Convert deep EXRs to matte EXR after rendering is completed.')
         vrayFormats = ['png',
          'jpg',
          'vrimg',
          'hdr',
          'exr',
          'exr (multichannel)',
+         'exr (deep)',
          'tga',
          'bmp',
          'sgi',
@@ -868,7 +877,9 @@ class Submitter:
          (imagePlanesCtrl, 'top', tm5 + lineHeight * 2),
          (imagePlanesCtrl, 'left', lm3),
          (exr2tiffCtrl, 'top', tm5 + lineHeight * 3),
-         (exr2tiffCtrl, 'left', lm3)])
+         (exr2tiffCtrl, 'left', lm3),
+         (deep2matteCtrl, 'top', tm5 + lineHeight * 4),
+         (deep2matteCtrl, 'left', lm3)])
         #####################################
         vraySettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(vraySettingsLayout, 'top', 450)])
@@ -986,6 +997,7 @@ class Submitter:
                 memLimit = cmds.textField(memLimitCtrl, q=1, tx=1),
                 displaceLimit = cmds.textField(displaceLimitCtrl, q=1, tx=1),
                 exr2tiff = cmds.checkBox(exr2tiffCtrl, q=1, v=1),
+                deep2matte = cmds.checkBox(deep2matteCtrl, q=1, v=1),
                 rsGpus = rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
                 )
             )
