@@ -1,8 +1,7 @@
 
 
 QWidget {
-    font-family: "Myriad Pro";
-    background-color: #353535;
+    background-color: #252525;
     color: #97a0a5;
     selection-background-color: #ebebeb;
 }
@@ -25,6 +24,7 @@ QGroupBox#lblGroup {
 }
 QScrollBar:vertical {
     border: 0px solid grey; 
+    border-radius: 4px;
     background: #484848;
     width: 8px; 
     margin: 0px 0px 0 0px; 
@@ -36,6 +36,22 @@ QScrollBar:handle {
     width: 10px; 
     margin: 0px 0px 0 0px;
 }
+QScrollBar::add-line:horizontal {
+    border-radius: 10px;
+}
+QScrollBar::sub-line:horizontal {
+    border-radius: 10px;
+}
+QScrollBar::sub-page:vertical {
+    background: #484848;
+    border-radius: 10px;
+}
+
+QScrollBar::add-page:vertical {
+    background: #484848;
+    border-radius: 10px;
+}
+
 QFrame#launcherAppFrame {
     padding-top: 7 7px;
     border: transparent;
@@ -164,4 +180,31 @@ QListWidget::item::pressed  {
 QGridLayout {
     background-color: #101010;
 }
+QTreeView {
+    border: transparent;
+    alternate-background-color: #292929;
+    font-size:11pt;
+    font-style:bold;
+    outline:none;
 
+}
+QTreeView::item {
+    font: 18pt;
+    color: #97a0a5;
+    selection-background-color: #ebebeb;
+    font-style: bold;
+    border-bottom-width: 3px;
+    border-bottom-style: transparent;
+    border-bottom-color: #ebebeb;
+
+}
+QTreeView::item:selected {
+    color:#282828;
+    outline:none;
+    background-color: #f62375;
+    border-radius: 5px;
+    border-bottom-width: 3px;
+    border-bottom-style: solid;
+    border-bottom-color: #f62375;
+
+}
