@@ -42,6 +42,17 @@ nuke.menu( 'Viewer' ).addCommand( 'Save Image As..', "saveImage.saveImage()", "F
 nuke.menu( 'Viewer' ).addCommand( 'Toggle Z', 'zToggle()', 'shift+d')
 
 
+#Add mlTools root
+import sys
+mlToolsDir=os.path.dirname(os.path.dirname(__file__))+'/modules'
+sys.path.append(mlToolsDir)
+sys.path.append(mlToolsDir+'/mlTools')
+import mlTools
+import mlPipeline
+
+automattePath=os.path.dirname(os.path.dirname(__file__))+'/gizmos'#temp, dev gizmos not loading currently
+nuke.pluginAddPath(automattePath)
+
 #Set Default Format
 HD = '1920 1080 HD'
 nuke.knobDefault('Root.format', HD)
@@ -210,6 +221,8 @@ m.addCommand("Gizmos/Misc/Rotate Normals", "nuke.createNode(\"misc_RotateNormals
 m.addCommand("Gizmos/Misc/Slice Tool", "nuke.createNode(\"misc_SliceTool\")", "", "")
 m.addCommand("Gizmos/Misc/ThreeD Mattes", "nuke.createNode(\"misc_ThreeDMattes_v02\")", "", "")
 m.addCommand("Gizmos/Misc/Zebra Slicer", "nuke.createNode(\"misc_ZebraSlicer\")", "", "")
+
+m.addCommand("Gizmos/ML/ml_automatte", "nuke.createNode(\"ml_automatte\")", "", "")
 
 v = toolbar.addMenu("VideoCopilot", icon="VideoCopilot.png")
 v.addCommand( "OpticalFlares", "nuke.createNode('OpticalFlares')", icon="OpticalFlares.png")

@@ -931,9 +931,9 @@ class Submitter:
         rsSettingsLabel = cmds.text(l='REDSHIFT SPECIFIC SETTINGS', fn='boldLabelFont', parent=rsSettingsLayout)
         rsGpuLabel = cmds.text(l='GPUs per Frame:', parent=rsSettingsLayout)
         rsGpuRadioColCtrl = cmds.radioCollection(parent=rsSettingsLayout)
-        rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, ann='Use 1 GPU per frame. (Recommended)')
+        rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 1 GPU per frame. (Recommended)')
         rs2GpuCtrl = cmds.radioButton(l='2 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 2 GPUs per frame.')
-        rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 4 GPUs per frame.')
+        rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 4 GPUs per frame.')
         #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
         #    cmds.radioButton(rs1GpuCtrl, e=1, en=1)
         #    cmds.radioButton(rs2GpuCtrl, e=1, en=1)

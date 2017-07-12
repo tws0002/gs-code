@@ -126,6 +126,7 @@ def initGSEnv():
 
 def load_plugins():
     var = os.environ.get('ST_NUKE_PLUGINS')
+    print var
     plugins = []
     if var != None:
         plugins = var.split(';')
