@@ -572,8 +572,19 @@ redshift:
       env:
         REDSHIFT_COREDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
         REDSHIFT_LOCALDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
+        REDSHIFT_PLUG_IN_PATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         C4D_PLUGINS_DIR: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
+        PATH: '%REDSHIFT_COREDATAPATH%/bin'
       versions:
+        '2.5.13':
+          env:
+            ST_C4D_REDSHIFT: '2.5.13'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R18'
         '2.0.83':
           env:
             ST_C4D_REDSHIFT: '2.0.83'

@@ -174,9 +174,13 @@ def init():
     # avoid autoload on batch render since scenefile will automatically require the plugins it needs
     if not cmds.about(batch=True):
         cmds.evalDeferred("gs_autoload(local_only=True)")
-    gs_restore_pwd()
-    cmds.evalDeferred("initMustache()")
-    cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
+        gs_restore_pwd()
+        cmds.evalDeferred("initMustache()")
+        cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
+    else:
+        # maya doesn't properly add the requires flag to scenefiles for these plugins, so we have to force it to load in batchmode
+        cmds.loadPlugin("AbcExport")
+        cmds.loadPlugin("AbcImport")
     
 
 

@@ -477,7 +477,7 @@ cinema4d:
       path:
         linux: /
         mac: /
-        win32: 'C:\Program Files\Maxon\Cinema4D\R18.020'
+        win32: 'C:\Program Files\Maxon\Cinema4D\R18.039'
     'R17':
       name: Cinema 4D
       env:
