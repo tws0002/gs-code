@@ -37,7 +37,7 @@ aftereffects:
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2014\Support Files'
     'CC 2015':
-      name: After Effects CC 2015
+      name: AE 2015
       env:
         ST_AE: 'CC 2015'
       modes:
@@ -54,7 +54,7 @@ aftereffects:
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015\Support Files'
     'CC 2015.3':
-      name: After Effects CC 2015.3
+      name: AE 2015.3
       env:
         ST_AE: 'CC 2015.3'
       modes:
@@ -70,6 +70,23 @@ aftereffects:
         linux: /
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015.3\Support Files'
+    'CC 2017':
+      name: AE 2017
+      env:
+        ST_AE: 'CC 2015.3'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+        render:
+          linux: /
+          mac: /
+          win32: aerender.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2017\Support Files'
 maya:
   env:
     LM_LICENSE_FILE: '27001@laxlic01'
@@ -322,6 +339,17 @@ premiere:
         linux: /
         mac: /
         win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2015.3
+    'CC 2017':
+      name: Premiere
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Adobe Premiere Pro.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2017
 hiero:
   name: Hiero
   show: true
@@ -373,6 +401,19 @@ photoshop:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2015.5'
+    'CC 2017':
+      name: Photoshop CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Photoshop.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2017'
 illustrator:
   show: true
   tasks:
@@ -392,6 +433,19 @@ illustrator:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2015.3'
+    'CC 2017':
+      name: Illustrator CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: illustrator.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2017/Support Files/Contents/Windows'
 indesign:
   show: true
   tasks:
@@ -411,6 +465,19 @@ indesign:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe InDesign CC 2015'
+    'CC 2017':
+      name: InDesign CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: indesign.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe InDesign CC 2017'
 animate:
   show: true
   tasks:
@@ -429,6 +496,19 @@ animate:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Animate CC 2015.2'
+    'CC 2017.2':
+      name: Animate CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: animate.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Animate CC 2017'
 zbrush:
   show: true
   tasks:
@@ -529,6 +609,33 @@ modo:
         linux: /
         mac: /
         win32: 'C:\Program Files\Foundry\Modo\901_SP2'
+    '10.0v1':
+      name: Modo
+      env:
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/10.0/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/10.0'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: modo.exe
+          #win32: 'modo.exe -config:\\scholar\pipeline\base\apps\modo\configs\gs_env.cfg'
+        cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+        render:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Modo\10.0v1'
+
+
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
 mari:
   show: true
   tasks:
@@ -666,6 +773,39 @@ houdini:
         linux: /
         mac: /
         win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
+    '16.0.600':
+      name: Houdini
+      env:
+        ST_HOU: '16.0.600'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        indie:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        apprentice:
+          linux: /
+          mac: /
+          win32: happrentice.exe.exe
+        fx:
+          linux: /
+          mac: /
+          win32: houdinifx.exe
+        escape:
+          linux: /
+          mac: /
+          win32: hescape.exe
+        cli:
+          linux: /
+          mac: /
+          win32: hbatch.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Side Effects Software/Houdini 16.0.600/bin'
 pythonshell:
   name: Python Shell
   show: true

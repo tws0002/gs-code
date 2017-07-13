@@ -69,7 +69,7 @@ default:
     houdini:
       title: 'Houdini'
       app: 'houdini'
-      version: '15.5.607'
+      version: '16.0.600'
     3dsmax:
       title: '3DS Max'
       app: '3dsmax'
@@ -84,9 +84,9 @@ default:
         octane: '3.03.2'
         redshift: '2.5.13'
     modo:
-      title: 'Modo 901'
+      title: 'Modo 10.0v1'
       app: 'modo'
-      version: '901_SP2'
+      version: '10.0v1'
     zbrush:
       title: 'ZBrush 4R7'
       app: 'zbrush'
@@ -94,7 +94,7 @@ default:
     mudbox:
       title: 'Mudbox'
       app: mudbox
-      version: '2016'
+      version: '2015'
     mari:
       title: 'Mari 2.6'
       app: 'mari'
@@ -104,29 +104,29 @@ default:
       app: 'nuke'
       version: '10.0v5'
     aftereffects:
-      title: 'AE 2015'
+      title: 'AE 2017'
       app: 'aftereffects'
-      version: 'CC 2015'
+      version: 'CC 2017'
     premiere:
-      title: 'PR 2015'
+      title: 'PR 2017'
       app: 'premiere'
-      version: 'CC 2015.3'
+      version: 'CC 2017'
     photoshop:
-      title: 'PS 2015'
+      title: 'PS 2017'
       app: 'photoshop'
-      version: 'CC 2015.5'
+      version: 'CC 2017'
     animate:
-      title: 'AN 2015'
+      title: 'AN 2017'
       app: 'animate'
-      version: 'CC 2015.2'
+      version: 'CC 2017'
     indesign:
-      title: 'ID 2015'
+      title: 'ID 2017'
       app: 'indesign'
-      version: 'CC 2015'
+      version: 'CC 2017'
     illustrator:
-      title: 'AI 2015'
+      title: 'AI 2017'
       app: 'illustrator'
-      version: 'CC 2015.3'
+      version: 'CC 2017'
     pythonshell:
       title: 'Python Shell'
       app: 'pythonshell'
