@@ -124,6 +124,7 @@ vray:
   env:
     #GS_MAYA_AUTOLOAD: 'vrayformaya'
     VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/conf'
+    MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/maya_bin/rendererDesc'
   packages:
     maya:
       env:

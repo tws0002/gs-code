@@ -2,7 +2,7 @@ default:
   title: 'Default'
   packages:
     maya:
-      title: 'Maya 2016'
+      title: 'Maya'
       app: 'maya'
       version: '2016.5'
       env:
@@ -18,17 +18,16 @@ default:
         fracturefx: '1.9.6'
         fumefx: '4.0.3'
         ideform: '1.5.1'
-        elementacular: '1.5.0'
+        #elementacular: '1.5.0'
         #jfDielectric: '1.0.5'
         krakatoa: '2.6.3'
-        #krakatoa: '2.6.2'
-        #nimbletools: '1.2.1'
+        nimbletools: '1.2.1'
         be_openvdb: '1.0'
         #ornatrix: '1.1.3.9340'
         phoenixfd: '3.03.00'
         realflow: '2015.0.0.9'
         redshift: '2.5.13'
-        slib: '2.02'
+        #slib: '2.02'
         studiolibrary: '1.26.2'
         substance: '1.2.2.0'
         vray: '3.40.06'
@@ -54,7 +53,7 @@ default:
         elementacular: '1.5.0'
         #jfDielectric: '1.0.5'
         krakatoa: '2.6.3'
-        #nimbletools: '1.2.1'
+        nimbletools: '1.2.1'
         be_openvdb: '1.0'
         #ornatrix: '1.1.3.9340'
         phoenixfd: '3.03.00'
@@ -84,21 +83,21 @@ default:
         octane: '3.03.2'
         redshift: '2.5.13'
     modo:
-      title: 'Modo 10.0v1'
+      title: 'Modo 11.1v1'
       app: 'modo'
-      version: '10.0v1'
+      version: '11.1v1'
     zbrush:
-      title: 'ZBrush 4R7'
+      title: 'ZBrush 4R8'
       app: 'zbrush'
-      version: '4R7'
+      version: '4R8'
     mudbox:
       title: 'Mudbox'
       app: mudbox
-      version: '2015'
+      version: '2017'
     mari:
-      title: 'Mari 2.6'
+      title: 'Mari 3.3'
       app: 'mari'
-      version: '2.6v5'
+      version: '3.3v1'
     nuke:
       title: 'Nuke'
       app: 'nuke'
@@ -139,6 +138,10 @@ default:
       title: 'Command Prompt'
       app: 'commandline'
       version: '1.0'
+    silhouette:
+      title: 'Silhouette'
+      app: 'silhouette'
+      version: '6.1'
   display_groups:
     Design:
     - photoshop
@@ -168,12 +171,14 @@ default:
     - aftereffects
     - premiere
     - photoshop
+    - silhouette
     2D_Production:
     - illustrator
     - aftereffects
     - premiere
     - photoshop
     - animate
+    - silhouette
     3D_Production:
     - maya
     - nuke-assist

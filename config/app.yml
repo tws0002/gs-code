@@ -94,13 +94,13 @@ maya:
     MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
     MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
     MAYA_MODULE_PATH: '%MAYA_STTOOLS%/modules/%ST_MAYA%'
-    MAYA_PLUG_IN_PATH: '//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/plug-ins'
-    #MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/plug-ins'
+    MAYA_PLUG_IN_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
+    #MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
     MAYA_PRESET_PATH: '%MAYA_STTOOLS%/presets'
-    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
-    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/shelves/%ST_MAYA%'
-    XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/icons'
-    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/maya/scripts'
+    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
+    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/shelves/%ST_MAYA%'
+    XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/icons'
+    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
     #GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
     MAYA_DISABLE_CLIC_IPM: '1'
     MAYA_DISABLE_CIP: '1'
@@ -242,7 +242,7 @@ nuke:
   shell: false
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/10_pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
+    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
     NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
@@ -254,6 +254,39 @@ nuke:
   - track
   - roto
   versions:
+    '11.0v1':
+      name: Nuke
+      env:
+        ST_NUKE: '11.0'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe
+        cli:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe
+        render:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe
+        x:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe --nukex
+        studio:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe --studio
+        assist:
+          linux: /
+          mac: /
+          win32: Nuke11.0.exe --nukeassist
+      path:
+        linux: /
+        mac: /
+        win32: "C:/Program Files/Foundry/Nuke/11.0v1"
     '10.0v5':
       name: Nuke
       env:
@@ -515,8 +548,21 @@ zbrush:
   - design
   - model
   versions:
+    '4R8':
+      name: ZBrush 4R8
+      env:
+        ST_ZB: '4R8'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: ZBrush.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Pixologic/ZBrush 4R8 FL'
     '4R7':
-      name: ZBrush 4R6
+      name: ZBrush 4R7
       env:
         ST_ZB: '4R7'
       modes:
@@ -587,16 +633,17 @@ modo:
   env:
     RLM_LICENSE: '4101@laxlic01'
   versions:
-    '901_SP2':
+    '11.1v1':
       name: Modo
       env:
-        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/Assets'
-        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/10.0/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/10.0'
       modes:
         ui:
           linux: /
           mac: /
           win32: modo.exe
+          #win32: 'modo.exe -config:\\scholar\pipeline\base\apps\modo\configs\gs_env.cfg'
         cli:
           linux: /
           mac: /
@@ -608,7 +655,7 @@ modo:
       path:
         linux: /
         mac: /
-        win32: 'C:\Program Files\Foundry\Modo\901_SP2'
+        win32: 'C:\Program Files\Foundry\Modo\11.1v1'
     '10.0v1':
       name: Modo
       env:
@@ -632,10 +679,28 @@ modo:
         linux: /
         mac: /
         win32: 'C:\Program Files\Foundry\Modo\10.0v1'
-
-
-        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/assets'
+    '901_SP2':
+      name: Modo
+      env:
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/Assets'
         NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: modo.exe
+        cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+        render:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Modo\901_SP2'
 mari:
   show: true
   tasks:
@@ -645,6 +710,17 @@ mari:
         RLM_LICENSE: '4101@laxlic01'
         MARI_SCRIPT_PATH: '%GSROOT%/base/apps/mari/scripts'
   versions:
+    '3.3v1':
+      name: Mari
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Mari3.3v1.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Mari\3.3v1\Bundle\bin'
     '3.1v3':
       name: Mari
       modes:
@@ -682,11 +758,22 @@ mudbox:
   show: true
   env:
     AUTODESK_ADLM_THINCLIENT_ENV: '//scholar/apps/Autodesk/adlm/AdlmThinClientCustomEnv.xml'
-    LM_LICENSE_FILE: 'laxlic01'
+    LM_LICENSE_FILE: '27001@laxlic01'
   tasks:
   - design
   - texture
   versions:
+    '2017':
+      name: Mudbox
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: mudbox.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Autodesk\Mudbox\2017.0.0'
     '2016':
       name: Mudbox
       modes:
@@ -730,6 +817,22 @@ mudbox:
         linux: /
         mac: /
         win32: 'C:\Program Files\Autodesk\3dsMax\2016.0.0'
+silhouette:
+  show: true
+  env:
+    sfx_LICENSE: '4313@laxlic01'
+  versions:
+    '6.1':
+      name: Silhouette
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Silhouette.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\SilhouetteFX\Silhouette\6.1'
 houdini:
   env:
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
