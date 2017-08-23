@@ -15,6 +15,8 @@ from subprocess import Popen, PIPE, STDOUT
 # it can read the global studio config and initialize a setup or it can read a custom config on a 
 # per project level, or any custom config to alter or override it
 
+# the brain
+
 
 
 def list_servers():
@@ -33,37 +35,55 @@ def list_jobs(share):
 		print (share+" is not a valid share name as per config")
 
 def list_shots(share,job):
+	result = []
 	try:
 		path = STUDIO['servers'][share]['root_path']
 		path = os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','02_cg_scenes')
-		valid_proj = []
+		
 		for name in os.listdir(path):
 			if os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
-				valid_proj.append(name)
-		return valid_proj
+				result.append(name)
 	except:
 		print (job+" not found")
+	return result
+
+def list_assets(share,job):
+	result = []
+	try:
+		path = STUDIO['servers'][share]['root_path']
+		path = os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','01_cg_elements','01_models')
+		
+		for name in os.listdir(path):
+			if os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
+				result.append(name)
+		
+	except:
+		print (job+" not found")
+	return result
 
 
 def list_scenes(share, job, shot):
+	valid_result = []
 	try:
 		path = STUDIO['servers'][share]['root_path']
 		paths = []
 		paths.append(os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','02_cg_scenes',shot))
+		paths.append(os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','01_cg_elements','01_models',shot))
 		paths.append(os.path.join(path,job,'03_production', '02_composite',shot))
 		paths.append(os.path.join(path,job,'03_production', '01_cg','04_houdini',shot))
 
-		valid_files = []
+		
 		for p in paths:
 			result = [y for x in os.walk(p) for y in glob(os.path.join(x[0], '*.mb'))]
 			for name in result:
 				if not os.path.isdir(os.path.join(p,name)) and not name.startswith('.') and not name.startswith('_'):
 					rel_path = name[len(p)+1:]
-					valid_files.append(rel_path)
+					valid_result.append(rel_path)
 
-		return valid_files
+		
 	except:
 		print (shot+" not found")
+	return valid_result
 
 
 # given a file path determine shot info about it

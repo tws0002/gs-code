@@ -68,7 +68,7 @@ default:
     houdini:
       title: 'Houdini'
       app: 'houdini'
-      version: '15.5.607'
+      version: '16.0.600'
     3dsmax:
       title: '3DS Max'
       app: '3dsmax'
@@ -93,7 +93,7 @@ default:
     mudbox:
       title: 'Mudbox'
       app: mudbox
-      version: '2016'
+      version: '2015'
     mari:
       title: 'Mari 2.6'
       app: 'mari'
@@ -105,7 +105,7 @@ default:
     aftereffects:
       title: 'AE 2015'
       app: 'aftereffects'
-      version: 'CC 2015'
+      version: 'CC 2015.3'
     premiere:
       title: 'PR 2015'
       app: 'premiere'

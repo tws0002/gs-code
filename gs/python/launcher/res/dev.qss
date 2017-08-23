@@ -27,7 +27,14 @@ QScrollBar:vertical {
     border-radius: 4px;
     background: #484848;
     width: 8px; 
-    margin: 0px 0px 0 0px; 
+    margin: 0px 0px 0px 0px; 
+}
+QScrollBar:horizontal {
+    border: 0px solid grey; 
+    border-radius: 4px;
+    background: #484848;
+    height: 8px; 
+    margin: 0px 0px 0px 0px; 
 }
 QScrollBar:handle {
     border: 0px solid grey; 
@@ -36,18 +43,18 @@ QScrollBar:handle {
     width: 10px; 
     margin: 0px 0px 0 0px;
 }
-QScrollBar::add-line:horizontal {
+QScrollBar::add-line {
     border-radius: 10px;
 }
-QScrollBar::sub-line:horizontal {
+QScrollBar::sub-line {
     border-radius: 10px;
 }
-QScrollBar::sub-page:vertical {
+QScrollBar::sub-page {
     background: #484848;
     border-radius: 10px;
 }
 
-QScrollBar::add-page:vertical {
+QScrollBar::add-page {
     background: #484848;
     border-radius: 10px;
 }
@@ -55,7 +62,7 @@ QScrollBar::add-page:vertical {
 QFrame#launcherAppFrame {
     padding-top: 7 7px;
     border: transparent;
-    border-radius: 10px;
+    border-radius: 0px;
     margin: 5px 20px 20px 5px; 
 }
 
@@ -123,6 +130,11 @@ QLineEdit {
     border: 0px solid #282828;
     border-radius: 10px;
     padding: 0px 0px 0px 10px;
+}
+QLineEdit#LchrList{
+    border-radius: 8px;
+    font: 11pt;
+    padding: 5px 5px 5px 5px;
 }
 QSpinBox {
     buttonSymbols: false;
@@ -207,4 +219,36 @@ QTreeView::item:selected {
     border-bottom-style: solid;
     border-bottom-color: #f62375;
 
+}
+QTabWidget::pane { /* The tab widget frame */
+
+}
+
+QTabWidget::tab-bar {
+    margin: 5px 5px 5px 5px;
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    font: 14pt;
+    outline:none;
+    padding: 5px 5px 5px 5px; 
+    min-width: 12ex;
+    min-height: 5ex;
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+    background-color: #333333;
+}
+
+QTabBar::tab:selected {
+    background-color: #252525;
+    border-bottom-width: 3px;
+    border-bottom-style: solid;
+    border-bottom-color: #f62375;
+}
+
+QTabBar::tab:!selected {
+    background-color: #252525;
 }

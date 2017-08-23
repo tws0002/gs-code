@@ -14,56 +14,11 @@ import functools
 from environment import *
 from gsqt.widgets import *
 from gsqt.stylesheets import *
+from widgets import *
 
 import yaml
 import core.project
 
-# TODO LIST
-# add project level workgroup config merging/overwrite
-# add feedback for uninstalled applications
-# add icon resize based on amount of apps loaded
-
-class CustomSortFilterProxyModel(QSortFilterProxyModel):
-
-    def __init__(self, parent, title=""):
-        super(CustomSortFilterProxyModel, self).__init__(parent)
-
-    def filterAcceptsRow(self, row_num, source_parent):
-        ''' Overriding the parent function '''
-        # Check if the current row matches
-        if self.filter_accepts_row_itself(row_num, source_parent):
-            return True
-        # Traverse up all the way to root and check if any of them match
-        #if self.filter_accepts_any_parent(source_parent):
-        #   return True
-        # Finally, check if any of the children match
-        return self.has_accepted_children(row_num, source_parent)
-
-    def filter_accepts_row_itself(self, row_num, parent):
-        return super(CustomSortFilterProxyModel, self).filterAcceptsRow(row_num, parent)
-
-    def filter_accepts_any_parent(self, parent):
-        ''' Traverse to the root node and check if any of the
-            ancestors match the filter
-        '''
-        while parent.isValid():
-            if self.filter_accepts_row_itself(parent.row(), parent.parent()):
-                return True
-            parent = parent.parent()
-        return False
-
-    def has_accepted_children(self, row_num, parent):
-        ''' Starting from the current node as root, traverse all
-            the descendants and test if any of the children match
-        '''
-        model = self.sourceModel()
-        source_index = model.index(row_num, 0, parent)
-     
-        children_count =  model.rowCount(source_index)
-        for i in xrange(children_count):
-            if self.filterAcceptsRow(i, source_index):
-                return True
-        return False
 
 class Launcher(QMainWindow):
 
@@ -122,7 +77,7 @@ class Launcher(QMainWindow):
         self.shadow.setBlurRadius(25)
         self.setGraphicsEffect(self.shadow)
 
-        self.ui['frm'] = GSTitleBar(self, self.title)
+        self.ui['frm'] = LchrTitlebar(self, self.title)
         # self.ui['frm'] = QFrame()
         self.ui['frm'].setObjectName('launcherAppFrame')
         self.ui['frm'].setFrameStyle(QFrame.NoFrame)
@@ -138,35 +93,26 @@ class Launcher(QMainWindow):
         # setup projects sidebar
         self.ui['wdgt']['sidebar'] = QWidget()
         #self.ui['wdgt']['sidebar'].setHidden(True)
+
         self.ui['wdgt']['sidebar_list'] = QListWidget()
-        self.ui['wdgt']['sidebar_list'].setMaximumHeight(80)
+        self.ui['wdgt']['sidebar_list'].setMaximumHeight(25)
+        self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
         self.ui['lyt']['sidebar_layout'] = QVBoxLayout(self.ui['wdgt']['sidebar'])
-        self.ui['wdgt']['project_list'] = QTreeView()
-        self.ui['mdl']['proj_model'] = QStandardItemModel(self.ui['wdgt']['project_list'])
-        self.ui['mdl']['proj_proxy_model'] = CustomSortFilterProxyModel(self.ui['wdgt']['project_list'])
-        self.ui['mdl']['proj_proxy_model'].setSourceModel(self.ui['mdl']['proj_model'])
-        self.ui['mdl']['proj_proxy_model'].setDynamicSortFilter(True)
-        self.ui['wdgt']['project_list'].setUniformRowHeights(True)
-        self.ui['wdgt']['project_list'].setIndentation(8)
-        self.ui['wdgt']['project_list'].setRootIsDecorated(False)
-        self.ui['wdgt']['project_list'].setHeaderHidden(True)
-        self.ui['wdgt']['project_list'].setModel(self.ui['mdl']['proj_proxy_model'])
-        #self.ui['mdl']['proj_proxy_model'].setFilterRegExp(QRegExp('.*'))
-        self.ui['mdl']['proj_proxy_model'].setFilterRegExp(QRegExp(''))
-        #self.ui['mdl']['proj_proxy_model'].setFilterFixedString('a')
+
+        # project list
+        #self.ui['lbl']['workgroup_label'] = QLabel("Projects")
+        self.ui['wdgt']['project_list'] = LchrTreeList()
 
 
-        self.ui['lbl']['workgroup_label'] = QLabel("Projects")
-        self.ui['wdgt']['project_filter'] = QLineEdit('')
+        
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
-        self.ui['lyt']['sidebar_layout'].addWidget(self.ui['lbl']['workgroup_label'])
-        self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['project_filter'])
+        #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['lbl']['workgroup_label'])
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['project_list'])
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['sidebar'])
         self.ui['wdgt']['stack_widget'] = QStackedWidget()
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['stack_widget'])
 
-        sidebar_items = ['Orig','Design','Production']
+        sidebar_items = ['Apps','Design','Production']
         proj_list = core.project.list_jobs('jobs')
         self.ui['lyt']['stack_layouts'] = {}
         i = 0
@@ -175,7 +121,7 @@ class Launcher(QMainWindow):
         for package in sidebar_items:
             package = package.title()
             item = QListWidgetItem(package)
-            item.setIcon(QIcon(os.path.join(RES, ("list_"+package+".png"))))
+            #item.setIcon(QIcon(os.path.join(RES, ("list_"+package+".png"))))
             self.ui['wdgt']['sidebar_list'].addItem(item)
             self.ui['lyt']['stack_layouts'][package] = QWidget()
             self.ui['wdgt']['stack_widget'].addWidget(self.ui['lyt']['stack_layouts'][package])
@@ -188,21 +134,19 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['proj_cat']['Az'] = QStandardItem('A-Z')
 
         # load projects from core
+        project_dict = {}
+        project_dict['grp_a'] = {'name':'Recent','children':{}}
+        project_dict['grp_b'] = {'name':'A-Z','children':{}}
         for proj in sorted(proj_list):
-            item = QStandardItem(proj)
-            self.ui['wdgt']['proj_cat']['Az'].appendRow(item)
+            project_dict['grp_b']['children'][proj] = {}
+            project_dict['grp_b']['children'][proj]['name'] = proj
+            project_dict['grp_b']['children'][proj]['filepath'] = ""
+            project_dict['grp_b']['children'][proj]['status'] = "Active"
 
-        self.ui['mdl']['proj_model'].appendRow(self.ui['wdgt']['proj_cat']['Recent'])
-        self.ui['mdl']['proj_model'].appendRow(self.ui['wdgt']['proj_cat']['Az'])
-        index = self.ui['mdl']['proj_model'].indexFromItem(self.ui['wdgt']['proj_cat']['Recent'] )
-        index = self.ui['mdl']['proj_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['project_list'].setExpanded(index,True)
-        index = self.ui['mdl']['proj_model'].indexFromItem(self.ui['wdgt']['proj_cat']['Az'])
-        index = self.ui['mdl']['proj_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['project_list'].setExpanded(index,True)
+        self.ui['wdgt']['project_list'].loadViewModelFromDict(project_dict)
 
 
-        self.ui['lyt']['tab1_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Orig'])
+        self.ui['lyt']['tab1_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Apps'])
         self.ui['lyt']['tab2_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Design'])
         self.ui['lyt']['tab3_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Production'])
 
@@ -217,45 +161,26 @@ class Launcher(QMainWindow):
 
         # item_pane layout
         self.ui['lyt']['item_layout'] = QVBoxLayout(self.ui['wdgt']['obj_pane'])
-        self.ui['wdgt']['item_filter'] = QLineEdit('')
-        self.ui['lbl']['item_label'] = QLabel("Shots/Assets")
+        self.ui['wdgt']['obj_tabs'] = QTabWidget()
+        self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['obj_tabs'])
 
-        self.ui['wdgt']['item_list'] = QTreeView()
-        self.ui['wdgt']['item_list'].setAlternatingRowColors(True)
-        self.ui['mdl']['item_model'] = QStandardItemModel(self.ui['wdgt']['item_list'])
-        self.ui['mdl']['item_proxy_model'] = CustomSortFilterProxyModel(self.ui['wdgt']['item_list'])
-        self.ui['mdl']['item_proxy_model'].setSourceModel(self.ui['mdl']['item_model'])
-        self.ui['mdl']['item_proxy_model'].setDynamicSortFilter(True)
-        self.ui['wdgt']['item_list'].setUniformRowHeights(True)
-        self.ui['wdgt']['item_list'].setIndentation(8)
-        self.ui['wdgt']['item_list'].setRootIsDecorated(False)
-        self.ui['wdgt']['item_list'].setHeaderHidden(True)
-        self.ui['wdgt']['item_list'].setModel(self.ui['mdl']['item_proxy_model'])
-        self.ui['mdl']['item_proxy_model'].setFilterRegExp(QRegExp(''))
-        self.ui['lyt']['item_layout'].addWidget(self.ui['lbl']['item_label'])
-        self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['item_filter'])
-        self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['item_list'])
+        self.ui['wdgt']['shot_list'] = LchrTreeList()
+        self.ui['wdgt']['asset_list'] = LchrTreeList()
+        self.ui['wdgt']['shot_list'].tvw.setAlternatingRowColors(True)
+        self.ui['wdgt']['asset_list'].tvw.setAlternatingRowColors(True)
+        #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['shot_list'])
+        #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_list'])
 
+        self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['shot_list'],"Shots")
+        self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['asset_list'],"Assets")
 
         # scene_pane layout
         self.ui['lyt']['scene_layout'] = QVBoxLayout(self.ui['wdgt']['scenes_pane'])
-        self.ui['wdgt']['scene_filter'] = QLineEdit('')
         self.ui['lbl']['scene_label'] = QLabel("Scenefiles")
 
-        self.ui['wdgt']['scene_list'] = QTreeView()
-        self.ui['wdgt']['scene_list'].setAlternatingRowColors(True)
-        self.ui['mdl']['scene_model'] = QStandardItemModel(self.ui['wdgt']['scene_list'])
-        self.ui['mdl']['scene_proxy_model'] = CustomSortFilterProxyModel(self.ui['wdgt']['scene_list'])
-        self.ui['mdl']['scene_proxy_model'].setSourceModel(self.ui['mdl']['scene_model'])
-        self.ui['mdl']['scene_proxy_model'].setDynamicSortFilter(True)
-        self.ui['wdgt']['scene_list'].setUniformRowHeights(True)
-        self.ui['wdgt']['scene_list'].setIndentation(8)
-        self.ui['wdgt']['scene_list'].setRootIsDecorated(False)
-        self.ui['wdgt']['scene_list'].setHeaderHidden(True)
-        self.ui['wdgt']['scene_list'].setModel(self.ui['mdl']['scene_proxy_model'])
-        self.ui['mdl']['scene_proxy_model'].setFilterRegExp(QRegExp(''))
+        self.ui['wdgt']['scene_list'] = LchrTreeList()
+        self.ui['wdgt']['scene_list'].tvw.setAlternatingRowColors(True)
         self.ui['lyt']['scene_layout'].addWidget(self.ui['lbl']['scene_label'])
-        self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_filter'])
         self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
 
 
@@ -350,17 +275,14 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stack_change)
         self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.proj_change)
         self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.disp_grp_change)
-        self.ui['wdgt']['project_filter'].textChanged.connect(self.proj_filter_change)
-        self.ui['wdgt']['item_filter'].textChanged.connect(self.item_filter_change)
-        self.ui['wdgt']['scene_filter'].textChanged.connect(self.scene_filter_change)
-
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
 
         # set the project
-        self.ui['wdgt']['project_list'].selectionModel().selectionChanged.connect(self.proj_list_change)
-
+        # self.ui['wdgt']['project_list'].selectionModel().selectionChanged.connect(self.proj_list_change)
+        self.ui['wdgt']['project_list'].selectionChanged.connect(self.proj_list_selection_change)
         # set the shot object
-        self.ui['wdgt']['item_list'].selectionModel().selectionChanged.connect(self.item_list_change)
+        self.ui['wdgt']['shot_list'].selectionChanged.connect(self.item_list_change)
+        self.ui['wdgt']['asset_list'].selectionChanged.connect(self.asset_list_change)
 
         self.update_ui()
         self.read_settings()
@@ -389,52 +311,6 @@ class Launcher(QMainWindow):
         qstr = QString(fh.read())
         self.setStyleSheet(qstr)
 
-    def proj_filter_change(self):
-        
-        self.ui['wdgt']['project_list'].clearSelection()
-
-        regstr = self.ui['wdgt']['project_filter'].text()
-        if len(regstr) < 3:
-            regstr = '^{0}'.format(regstr)
-        self.ui['mdl']['proj_proxy_model'].setFilterRegExp(QRegExp(regstr))
-
-        # keep items expanded
-        index = self.ui['mdl']['proj_model'].indexFromItem(self.ui['wdgt']['proj_cat']['Recent'] )
-        index = self.ui['mdl']['proj_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['project_list'].setExpanded(index,True)
-        index = self.ui['mdl']['proj_model'].indexFromItem(self.ui['wdgt']['proj_cat']['Az'])
-        index = self.ui['mdl']['proj_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['project_list'].setExpanded(index,True)
-
-    def item_filter_change(self):
-        
-        self.ui['wdgt']['item_list'].clearSelection()
-
-        regstr = self.ui['wdgt']['item_filter'].text()
-        if len(regstr) < 3:
-            regstr = '^{0}'.format(regstr)
-        self.ui['mdl']['item_proxy_model'].setFilterRegExp(QRegExp(regstr))
-
-        # keep items expanded
-        index = self.ui['mdl']['item_model'].indexFromItem(self.ui['wdgt']['obj_kind']['Shots'] )
-        index = self.ui['mdl']['item_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['item_list'].setExpanded(index,True)
-
-    def scene_filter_change(self):
-        
-        self.ui['wdgt']['scene_list'].clearSelection()
-
-        regstr = self.ui['wdgt']['scene_filter'].text()
-        if len(regstr) < 3:
-            regstr = '^{0}'.format(regstr)
-        self.ui['mdl']['scene_proxy_model'].setFilterRegExp(QRegExp(regstr))
-
-        # keep scenes expanded
-        index = self.ui['mdl']['scene_model'].indexFromItem(self.ui['wdgt']['scene_kind']['Scenefiles'] )
-        index = self.ui['mdl']['scene_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['scene_list'].setExpanded(index,True)
-
-
     def update_projects(self):
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
@@ -451,36 +327,51 @@ class Launcher(QMainWindow):
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
     def update_items_list(self,project_name):
-        # clearn the item model and init a new one
-        self.ui['mdl']['item_model'].clear()
         item_list = core.project.list_shots('jobs',project_name)
-        self.ui['wdgt']['obj_kind'] = {}
-        self.ui['wdgt']['obj_kind']['Shots'] = QStandardItem('Shots')
+
         # load projects from core
+        item_dict = {}
+        item_dict['grp_a'] = {'name':'Shots','children':{}}
+        item_dict['grp_b'] = {'name':'Assets','children':{}}
         for item in sorted(item_list):
-            obj = QStandardItem(item)
-            self.ui['wdgt']['obj_kind']['Shots'].appendRow(obj)
+            item_dict['grp_a']['children'][item] = {}
+            item_dict['grp_a']['children'][item]['name'] = item
+            item_dict['grp_a']['children'][item]['filepath'] = ""
+            item_dict['grp_a']['children'][item]['status'] = "Active"
 
-        self.ui['mdl']['item_model'].appendRow(self.ui['wdgt']['obj_kind']['Shots'])
-        index = self.ui['mdl']['item_model'].indexFromItem(self.ui['wdgt']['obj_kind']['Shots'] )
-        index = self.ui['mdl']['item_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['item_list'].setExpanded(index,True)      
+        self.ui['wdgt']['shot_list'].loadViewModelFromDict(item_dict)   
 
+    def update_assets_list(self,project_name):
+        item_list = core.project.list_assets('jobs',project_name)
+
+        # load projects from core
+        item_dict = {}
+        item_dict['a_all'] = {'name':'A-Z','children':{}}
+        item_dict['b_char'] = {'name':'Characters','children':{}}
+        item_dict['c_props'] = {'name':'Props','children':{}}
+        item_dict['d_sets'] = {'name':'Sets','children':{}}
+        for item in sorted(item_list):
+            item_dict['a_all']['children'][item] = {}
+            item_dict['a_all']['children'][item]['name'] = item
+            item_dict['a_all']['children'][item]['filepath'] = ""
+            item_dict['a_all']['children'][item]['status'] = "Active"
+
+        self.ui['wdgt']['asset_list'].loadViewModelFromDict(item_dict)   
+        
     def update_scenes_list(self, project_name, shot_name):
-        # clearn the item model and init a new one
-        self.ui['mdl']['scene_model'].clear()
-        item_list = core.project.list_scenes('jobs',project_name, shot_name)
-        self.ui['wdgt']['scene_kind'] = {}
-        self.ui['wdgt']['scene_kind']['Scenefiles'] = QStandardItem('Scenefiles')
-        # load projects from core
-        for item in sorted(item_list):
-            obj = QStandardItem(item)
-            self.ui['wdgt']['scene_kind']['Scenefiles'].appendRow(obj)
 
-        self.ui['mdl']['scene_model'].appendRow(self.ui['wdgt']['scene_kind']['Scenefiles'])
-        index = self.ui['mdl']['scene_model'].indexFromItem(self.ui['wdgt']['scene_kind']['Scenefiles'] )
-        index = self.ui['mdl']['scene_proxy_model'].mapFromSource(index)
-        self.ui['wdgt']['scene_list'].setExpanded(index,True)    
+        item_list = core.project.list_scenes('jobs',project_name, shot_name)
+
+        # load projects from core
+        item_dict = {}
+        item_dict['grp_a'] = {'name':'Scenefiles','children':{}}
+        for item in sorted(item_list):
+            item_dict['grp_a']['children'][item] = {}
+            item_dict['grp_a']['children'][item]['name'] = item
+            item_dict['grp_a']['children'][item]['filepath'] = ""
+            item_dict['grp_a']['children'][item]['status'] = "Active"
+
+        self.ui['wdgt']['scene_list'].loadViewModelFromDict(item_dict)   
 
     def load_project_config(self,project_name):
         #print ("CHECKING FOR NEW CONFIG")
@@ -562,7 +453,9 @@ class Launcher(QMainWindow):
         app_rows = int(app_ct / 6.0 - .1)
         win_w = self.frameGeometry().width()
         win_h = 400 + (app_rows*110)
-        self.resize(win_w, win_h)
+
+        # disabled autosize since we are now able to resize window
+        #self.resize(win_w, win_h)
         
         self.ui['wdgt']['buttons_grid'].clear()
         for package_full in self.w_data[workgroup]['display_groups'][display_grp]:
@@ -694,18 +587,13 @@ class Launcher(QMainWindow):
 
 
 ############
-    def proj_list_change(self, selected, deselected):
+    def proj_list_selection_change(self, selected, deselected):
 
-        if len(selected.indexes()) > 0:
-            index = selected.indexes()[0]
-            src_index = selected.indexes()[0].model().mapToSource(index)
-            
-            item = selected.indexes()[0].model().sourceModel().itemFromIndex(src_index)
-            
-            p = str(item.text())
 
-            print ('found src_index {0}'.format(src_index))
-            print ('setting project to {0}'.format(item.text()))
+        items = self.ui['wdgt']['project_list'].getSelectedItems()
+        if len(items):
+            p = str(items[0].text()) 
+            print ('setting project to {0}'.format(p))
 
             # this appears to be a little slow!
             # self.load_project_config(p)
@@ -722,24 +610,25 @@ class Launcher(QMainWindow):
             self.update_apps(display_grp=d_grp)
 
             self.update_items_list(p)
-        else:
-            print ('Selection Empty')
+            self.update_assets_list(p)
 
     def item_list_change(self, selected, deselected):
-
-        if len(selected.indexes()) > 0:
-            index = selected.indexes()[0]
-            src_index = selected.indexes()[0].model().mapToSource(index)
-            item = selected.indexes()[0].model().sourceModel().itemFromIndex(src_index)
-            s = str(item.text())
-
-            print ('found src_index {0}'.format(src_index))
-            print ('setting shot to {0}'.format(item.text()))
-
+        items = self.ui['wdgt']['shot_list'].getSelectedItems()
+        if len(items):
+            s = str(items[0].text()) 
+            print ('setting shot to {0}'.format(s))
             self.update_scenes_list(self.p_data['project_name'],s)
         else:
             print ('Selection Empty')
 
+    def asset_list_change(self, selected, deselected):
+        items = self.ui['wdgt']['asset_list'].getSelectedItems()
+        if len(items):
+            s = str(items[0].text()) 
+            print ('setting asset to {0}'.format(s))
+            self.update_scenes_list(self.p_data['project_name'],s)
+        else:
+            print ('Selection Empty')
 
     def disp_grp_change(self, i):
         # check for project config file and merge config if it exists
@@ -790,6 +679,8 @@ class Launcher(QMainWindow):
         test_timer = QTimer()
         test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
 
+        self.add_recent_project(project)
+
         return
 
     def install_app(self):
@@ -828,6 +719,12 @@ class Launcher(QMainWindow):
         except:
             print "Unable to Initialize Launcher Settings"
 
+    def add_recent_project(self,project):
+        self.settings.setValue('prev_project4', self.settings.value('prev_project3'))
+        self.settings.setValue('prev_project3', self.settings.value('prev_project2'))
+        self.settings.setValue('prev_project2', self.settings.value('prev_project1'))
+        self.settings.setValue('prev_project1', project)        
+
     def save_settings(self):
 
         print ('Saving settings...')
@@ -836,10 +733,7 @@ class Launcher(QMainWindow):
             project = str(self.ui['wdgt']['project_combo'].currentText())
             display_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
-            self.settings.setValue('prev_project4', self.settings.value('prev_project3'))
-            self.settings.setValue('prev_project3', self.settings.value('prev_project2'))
-            self.settings.setValue('prev_project2', self.settings.value('prev_project1'))
-            self.settings.setValue('prev_project1', project)
+
             self.settings.setValue('initials', initials)
             self.settings.setValue('role', display_grp)
         except:

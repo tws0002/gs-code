@@ -37,7 +37,7 @@ aftereffects:
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2014\Support Files'
     'CC 2015':
-      name: After Effects CC 2015
+      name: AE 2015
       env:
         ST_AE: 'CC 2015'
       modes:
@@ -54,7 +54,7 @@ aftereffects:
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015\Support Files'
     'CC 2015.3':
-      name: After Effects CC 2015.3
+      name: AE 2015.3
       env:
         ST_AE: 'CC 2015.3'
       modes:
@@ -70,6 +70,23 @@ aftereffects:
         linux: /
         mac: /
         win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2015.3\Support Files'
+    'CC 2017':
+      name: AE 2017
+      env:
+        ST_AE: 'CC 2015.3'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: AfterFX.exe
+        render:
+          linux: /
+          mac: /
+          win32: aerender.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Adobe\Adobe After Effects CC 2017\Support Files'
 maya:
   env:
     LM_LICENSE_FILE: '27001@laxlic01'
@@ -116,7 +133,8 @@ maya:
       name: Autodesk Maya
       env:
         #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;OneClick;objExport;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
-        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance;xgenMR;xgenToolkit'
+        #GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance;xgenMR;xgenToolkit'
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;ik2Bsolver;ikSpringSolver;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;MASH;invertShape;poseInterpolator;Substance;xgenMR'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         #MAYA_COLOR_MANAGEMENT_POLICY_FILE: '%GSBRANCH%/apps/maya/synColor/%ST_MAYA%/synColorConfig.xml' 
         ST_MAYA: '2016.5'
@@ -321,6 +339,17 @@ premiere:
         linux: /
         mac: /
         win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2015.3
+    'CC 2017':
+      name: Premiere
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Adobe Premiere Pro.exe
+      path:
+        linux: /
+        mac: /
+        win32: C:/Program Files/Adobe/Adobe Premiere Pro CC 2017
 hiero:
   name: Hiero
   show: true
@@ -372,6 +401,19 @@ photoshop:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2015.5'
+    'CC 2017':
+      name: Photoshop CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: Photoshop.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Photoshop CC 2017'
 illustrator:
   show: true
   tasks:
@@ -391,6 +433,19 @@ illustrator:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2015.3'
+    'CC 2017':
+      name: Illustrator CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: illustrator.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Illustrator CC 2017/Support Files/Contents/Windows'
 indesign:
   show: true
   tasks:
@@ -410,6 +465,19 @@ indesign:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe InDesign CC 2015'
+    'CC 2017':
+      name: InDesign CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: indesign.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe InDesign CC 2017'
 animate:
   show: true
   tasks:
@@ -428,6 +496,19 @@ animate:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Animate CC 2015.2'
+    'CC 2017.2':
+      name: Animate CC 2017
+      env:
+        ST_PS: 'CC 2017'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: animate.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Adobe/Adobe Animate CC 2017'
 zbrush:
   show: true
   tasks:
@@ -476,7 +557,7 @@ cinema4d:
       path:
         linux: /
         mac: /
-        win32: 'C:\Program Files\Maxon\Cinema4D\R18.020'
+        win32: 'C:\Program Files\Maxon\Cinema4D\R18.039'
     'R17':
       name: Cinema 4D
       env:
@@ -509,8 +590,8 @@ modo:
     '901_SP2':
       name: Modo
       env:
-        NEXUS_ASSET: '%GSROOT%bin/external/modo/modo_contnent/901/assets'
-        NEXUS_CONTENT: '%GSROOT%bin/external/modo/modo_content/901'
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/Assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
       modes:
         ui:
           linux: /
@@ -528,6 +609,33 @@ modo:
         linux: /
         mac: /
         win32: 'C:\Program Files\Foundry\Modo\901_SP2'
+    '10.0v1':
+      name: Modo
+      env:
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/10.0/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/10.0'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: modo.exe
+          #win32: 'modo.exe -config:\\scholar\pipeline\base\apps\modo\configs\gs_env.cfg'
+        cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+        render:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Modo\10.0v1'
+
+
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
 mari:
   show: true
   tasks:
@@ -665,6 +773,39 @@ houdini:
         linux: /
         mac: /
         win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
+    '16.0.600':
+      name: Houdini
+      env:
+        ST_HOU: '16.0.600'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        indie:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        apprentice:
+          linux: /
+          mac: /
+          win32: happrentice.exe.exe
+        fx:
+          linux: /
+          mac: /
+          win32: houdinifx.exe
+        escape:
+          linux: /
+          mac: /
+          win32: hescape.exe
+        cli:
+          linux: /
+          mac: /
+          win32: hbatch.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Side Effects Software/Houdini 16.0.600/bin'
 pythonshell:
   name: Python Shell
   show: true
@@ -681,10 +822,34 @@ pythonshell:
           linux: /
           mac: /
           win32: python.exe
+        render:
+          linux: /
+          mac: /
+          win32: python.exe
       path:
         linux: /
         mac: /
         win32: 'C:/Python27'
+commandline:
+  name: Command Prompt
+  show: true
+  shell: true
+  versions:
+    '1.0':
+      name: commandline
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: cmd.exe
+        cli:
+          linux: /
+          mac: /
+          win32: cmd.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Windows/System32'
 muster:
   name: Muster
   show: true
