@@ -3,7 +3,6 @@ __author__ = 'adamb'
 class CoreModel():
 
     name = ""
-
     notes = ""
     date_created = ""
     date_modified = ""
@@ -19,17 +18,44 @@ class CoreProject(CoreModel):
         return
 
 class CoreDeliverable(CoreModel):
-
-    format_type = "video" 
-    colorspace = "rec709"
-    frame_rate = 24
-    render_width = 1920
-    render_height = 1080
-    duration = 30
+    format_type = 'undefined'
     start_date = "1/1/2017"
-    due_date = "4/2/2017"
+    finish_date = "4/2/2017"
+    producer='undefined'
+    art_director='undefined'
 
+    def __init__(self):
+        return
 
+class CoreDeliverableAsset(CoreDeliverable):
+    format_type = 'asset'
+    file_type = 'zip'
+    source_path = ''
+
+    def __init__(self):
+        return
+
+class CoreDeliverableImage(CoreDeliverable):
+    format_type = 'image'
+    file_type = 'tiff'
+    colorspace = "sRGB"
+    colordepth = '8bit'
+    width = 1920
+    height = 1080
+
+    def __init__(self):
+        return
+
+class CoreDeliverableVideo(CoreDeliverable):
+    format_type = 'video'
+    preview_codec = 'h264'
+    codec = 'prores444'
+    frame_rate = 23.976
+    duration = '00:00:30:00'
+    tc_in = '01:00:00:00'
+
+    sequence_members = []
+    shot_members = []
     def __init__(self):
         return
 
@@ -43,7 +69,7 @@ class CoreItemGroup(CoreModel):
 
     members = []
     order = []
-    deliverables = []
+    parent_deliverables = []
 
     def __init__(self):
         return
@@ -52,7 +78,7 @@ class CoreItem(CoreModel):
 
     item_type = ''
     parent_groups = []
-    deliverables = []
+    parent_deliverables = []
 
     def __init__(self):
         return   
@@ -80,7 +106,7 @@ class CoreShotGroup(CoreItemGroup):
     frame_in = 0
     frame_out = 720
     tc_in = '01:00:00:00'
-    tc_out = '01:00:30:00'
+    tc_out = '01:00:29:23'
 
     def __init__(self):
         return
