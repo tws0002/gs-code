@@ -12,6 +12,17 @@ f = open(CONFIG+"/studio.yml")
 # use safe_load instead load
 STUDIO = yaml.safe_load(f)
 f.close()
-print "Loaded studio Config Successfully"
+print "Loaded Studio Config Successfully"
 
-os.environ['ST_JOB_SERVERS'] = STUDIO['servers']['jobs']['root_path']
+os.environ['ST_JOB_SERVERS'] = STUDIO['file_shares']['jobs']['root_path']
+
+
+f = open(CONFIG+"/projects_old.yml")
+# use safe_load instead load
+PROJECTS = yaml.safe_load(f)
+f.close()
+# substitute known variables from STUDIO and internal variables
+
+print "Loaded Project Config Successfully"
+
+

@@ -79,7 +79,9 @@ class CoreItem(CoreModel):
     item_type = ''
     parent_groups = []
     parent_deliverables = []
-
+    status = 'in_progress'
+    tasks = []
+    
     def __init__(self):
         return   
 
@@ -95,8 +97,7 @@ class CoreRenderableItem(CoreItem):
     output_type = "image"
     file_dependencies = []
     thumbnail_path = ""
-    status = 'in_progress'
-    tasks = []
+
 
     def __init__(self):
         return

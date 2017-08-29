@@ -16,11 +16,13 @@ departments:
 - compositing
 - edit
 tasks:
-- asset
+- edit
+- model
+- camera
 - animation
 - lighting
 - composite
-- edit
+- conform
 status:
 - 'ready'
 - 'not started'
@@ -30,84 +32,97 @@ status:
 - 'approved'
 - 'on hold'
 - 'dead'
-data_structs:
-  '3d_asset_lib':
-    root_path: "<file_share>/<job>/04_production/01_cg/01_MAYA/scenes/02_cg_elements"
-    public_root: "<root_path>"
-    private_root: "<root_path>/_versions"
-  'asset_group':
-    root_path: "<file_share>/<job>/<stage>/<asset_lib>"
-    public_root: "<root_path>"
-    private_root: "<root_path>"      
-  'asset':
-    root_path: "<fileshare>/<job>/<stage>/<asset_lib>/<asset_group>"
-    public_root: "<root_path>/publish"
-    private_root: "<root_path>/user/<username>"
-  '3d_shot_lib':
-    root_path: "<file_share>/<job>/04_production/01_cg/01_MAYA/scenes/02_cg_elements"
-    public_root: "<root_path>"
-    private_root: "<root_path>/_versions"
-  'shot_group':
-    root_path: "<fileshare>/<job>/<stage>/sequences"
-    public_root: "<root_path>"
-    private_root: "<root_path>"
-  'shot':
-    root_path: "<fileshare>/<job>/<stage>/sequences/<sequence>"
-    public_root: "<root_path>/<shot>/publish"
-    private_root: "<root_path>/<shot>/user/<username>"
-task_struct:
-  'default':
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
+# generic defined variables that can be substituted below by wrapping in %% characters
+path_vars:
+  project_root: "<server>/projects/<job>"
+  asset_lib_2d: "<server>/projects/<job>/03_production/00_elements"
+  shot_lib_2d: "<server>/projects/<job>/03_production/02_composite"
+  asset_lib_3d: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
+  shot_lib_3d: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
+# defines template paths that can be inherited to task_structs, this saves space with common paths
+template_structs:
+  'shot_2d':
+    root_path: "<server>/projects/<job>/03_production/02_composite/<sequence>/<shot>"
+    publish_path: "%root_path%"
+    private_path: "%root_path%/work_<username>"
+    work_path: "%root_path%"
+    work_file: "<sequence>_<shot>_<task>_<version>.<ext>"
+    out_render_path: "<server>/projects/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
+    out_render_file: "<shot>_<task>_<version>_<initials>.<ext>"
+  'asset_2d':
+    root_path: "<server>/projects/<job>/03_production/00_elements/<asset_group>/<asset>"
+    publish_path: "%root_path%"
+    private_path: "%root_path%/<asset_group>/<asset>/work_<username>"
+    work_path: "%root_path%"
+    work_file: "<sequence>_<shot>_<task>_<version>.<ext>"
+    out_render_path: "<server>/projects/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
+    out_render_file: "<asset>_<version>.<ext>"
+  'shot_3d':
+    root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<shot>"
+    work_path: "%root_path%/<task>"
+    work_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>.<ext>"
+    publish_path: "%work_path%"
+    publish_file: "%work_file%"
+    private_path: "%work_path%/_scrap"
+    private_file: "%work_file%"
+    cache_path: "%work_path%/_cache"
+    cache_file: "%work_file%"
+    renderscene_path: "%root_path%/mustache_renderScenes"
+    renderscene_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_T_<stime>.<ext>"
+    render_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/images/<shot>/%work_file%/<renderlayer>"
+    render_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>"
+  'asset_3d':
+    root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
+    work_path: "%root_path%/_versions"
+    work_file: "<asset>_<version>_<intials>.<ext>"
+    publish_path: "%root_path%"
+    publish_file: "<asset>.<ext>"
+    private_path: "%root_path%/_scrap"
+    private_file: "%work_file%"
+    cache_path: "%root_path%/_cache"
+    cache_file: <publish_file>
+    renderscene_path: "%root_path%/mustache_renderScenes"
+    renderscene_file: "<asset>_<version>_T_<stime>"
+    render_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/images/assets/<asset>"
+    render_file: "<asset>_<version>.<ext>"
+
+# Defines file locations specific to tasks
+task_structs: 
+  'design':
+    root_path: "<server>/projects/<job>/02_design"
+    work_path: "%root_path%/work.<initials>/02_styleframes"
+    work_file: "<job>_<initials>_<frame>.<ext>"
+    publish_path: "%root_path%/_publish"
+    private_path: "%root_path%/work_<username>"
   'edit':
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
-  'design':
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
-  'design':
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
-  'anim':
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
+    root_path: "<server>/projects/<job>/03_production/03_edit"
+    publish_path: "%root_path%/_publish"
+    private_path: "%root_path%/work_<username>"
+    out_file: "<job>_<task>_<version>.<ext>"
+  'conform':
+    root_path: "<server>/projects/<job>/03_production/02_composite/_conform"
+    work_path: "%root_path%"
+    work_file: "<job>_<task>_<version>.<ext>"
+    publish_path: "%root_path%/_publish"
+    publish_file: "%work_file%"
+    private_path: "%root_path%/work_<username>"
+    private_file: "%work_file%"
+    render_path: "<server>/projects/<job>/04_Renders/_conform/<version>"
+    render_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>"
+  'model':
+    inherits: 'asset_3d'
+  'cameras':
+    inherits: 'shot_3d'
+    work_path: "%root_path%/cameras"
+    work_file: "<shot>_<version>_<aversion>_<lversion>_<initials>.<ext>"
+  'animation':
+    inherits: 'shot_3d'
+    work_path: "%root_path%/animation"
+    work_file: "<shot>_<cversion>_<version>_<lversion>_<initials>.<ext>"
+  'lighting':
+    inherits: 'shot_3d'
+    work_path: "%root_path%/lighting"
+    work_file: "<shot>_<cversion>_<aversion>_<version>_<initials>.<ext>"
   'comp':
-    inherits: 'default'
-    root_path: "<task_root>/"
-    public_root: "<task_root>/public/<package>"
-    private_root: "<task_root>/user/<package>"
-    out_cache_path: "<task_root>/public/cache/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_render_path: "<fileshare>/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
-    out_cache_file: "<sequence>_<shot>_<task>_<version>.<ext>"
-    out_scenefile: "<sequence>_<shot>_<task>_<version>.<ext>"
+    inherits: 'shot_2d'
+    work_file: "<sequence>_<shot>_<task>_<version>.<ext>"

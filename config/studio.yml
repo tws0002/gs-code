@@ -1,18 +1,10 @@
 company: 'Gentleman Scholar'
 file_shares:
   'jobs':
-    projects: 
-      unc_path: '//scholar/projects'
-      linux_path: '/scholar/projects'
+    root_path: '//scholar/projects'
   'library':
-    assets:
-      unc_path: '//scholar/assets'
-      linux_path: '/scholar/assets'
+    root_path: '//scholar/assets'
   'tools':
-    pipeline:
-      unc_path: '//scholar/pipeline'
-      linux_path: '/scholar/pipeline'
+    root_path: '//scholar/pipeline'
   'home':
-    homes:
-      unc_path: '//scholar/homes'
-      linux_path: '/scholar/homes'
+    root_path: '//scholar/homes'

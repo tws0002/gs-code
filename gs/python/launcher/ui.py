@@ -17,7 +17,7 @@ from gsqt.stylesheets import *
 from widgets import *
 
 import yaml
-import core.project
+import core.core
 
 
 class Launcher(QMainWindow):
@@ -113,7 +113,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['stack_widget'])
 
         sidebar_items = ['Apps','Design','Production']
-        proj_list = core.project.list_jobs('jobs')
+        proj_list = core.core.list_jobs('jobs')
         self.ui['lyt']['stack_layouts'] = {}
         i = 0
 
@@ -314,7 +314,7 @@ class Launcher(QMainWindow):
     def update_projects(self):
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
-        job_list = core.project.list_jobs('jobs')
+        job_list = core.core.list_jobs('jobs')
         if job_list:
             for j in sorted(job_list,key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -327,7 +327,7 @@ class Launcher(QMainWindow):
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
     def update_items_list(self,project_name):
-        item_list = core.project.list_shots('jobs',project_name)
+        item_list = core.core.list_shots('jobs',project_name)
 
         # load projects from core
         item_dict = {}
@@ -342,7 +342,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['shot_list'].loadViewModelFromDict(item_dict)   
 
     def update_assets_list(self,project_name):
-        item_list = core.project.list_assets('jobs',project_name)
+        item_list = core.core.list_assets('jobs',project_name)
 
         # load projects from core
         item_dict = {}
@@ -360,7 +360,7 @@ class Launcher(QMainWindow):
         
     def update_scenes_list(self, project_name, shot_name):
 
-        item_list = core.project.list_scenes('jobs',project_name, shot_name)
+        item_list = core.core.list_scenes('jobs',project_name, shot_name)
 
         # load projects from core
         item_dict = {}
