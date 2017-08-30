@@ -160,7 +160,8 @@ maya:
       name: Autodesk Maya
       env:
         #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
-        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;mayaHIK;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Type;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;invertShape;poseInterpolator;Substance'
+        # full maya 2017 factory default plugins (takes about 26 sec to load on local pipeline 8sec to shutdown, about 30.4sec on network, 9.22sec to shutdown)
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;retargeterNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;fbxmaya;invertShape;poseInterpolator;Substance'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
