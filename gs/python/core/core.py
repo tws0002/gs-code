@@ -28,7 +28,7 @@ def init():
     project_struct = project.StudioProject()
     project_struct.load_project_config_file(filepath=config_path)
 
-    # test the load match
+    # test the load matching
     project_struct.test_file_paths()
     return
 

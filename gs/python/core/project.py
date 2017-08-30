@@ -31,7 +31,7 @@ class StudioProject():
 
 
     def load_project_config(self, dataMap, version='1.0'):
-        ''' load job data structs, expand any known variables wrapped in \%\%, inherit structs of other groups'''
+        ''' loads job data structs, expand any known variables wrapped in \%\%, and expands inherited structs'''
 
         for key, value in dataMap.iteritems():
             if key == 'path_vars':
@@ -75,13 +75,26 @@ class StudioProject():
         ''' given a loaded project model, populate given vars and return a path with subsituted vars'''
         return
 
-    def path_template_to_regex(self, filepath):
-        result = ""
+    def template_to_regex(self, filepath, limiters, exclude):
+        ''' converts a template path into a regex with named capture groups
+            special exceptions are made for groups that should capture mutliple directories or underscores'''
+        lstr = ''
+        for l in limiters:
+            if l == '.':
+                l = '\\.'
+            lstr += l
+
+        result = filepath.replace('<', '(?P<')
+        result = result.replace('>', '>[^{0}]*)'.format(lstr))
+        for e in exclude:
+            rgx_path = rgx_path.replace('{0}[^/]*', '{0}.*'.format(e))
         return str(result)
 
-    def get_path(self):
+    def get_path(self, object_dict):
         ''' given a valid object (like the dict returned by parse_path), it returns a valid file path that represents that object'''
-        return 0
+        result = ""
+
+        return 
 
     def parse_path(self,filepath):
         ''' returns an object containing details about the file path based on the pathname given. Very similar to a url parser'''
@@ -93,7 +106,6 @@ class StudioProject():
             print ("Filepath: {0} does not exist, nice try".format(filepath))
             return
         split_path = os.path.split(filepath)
-
         if os.path.isdir(filepath):
             split_path = (filepath,"")
             
@@ -121,21 +133,23 @@ class StudioProject():
         for task, data in self.task_structs.iteritems():
 
             if 'work_path' in data:
-                task_path = data['work_path']
-                # turn into a regex with capture groups
-                rgx_path = task_path.replace('<', '(?P<')
-                rgx_path = rgx_path.replace('>', '>[^/]*)')
-                # allow file share to contain multiple directories
-                rgx_path = rgx_path.replace('<server>[^/]*', '<server>.*')
-                rgx_path = rgx_path.replace('<shot>[^_\.]*', '<shot>.*')
-                rgx_path = rgx_path.replace('<asset>[^_\.]*', '<asset>.*')
+                #task_path = data['work_path']
+                ## turn into a regex with capture groups
+                #rgx_path = task_path.replace('<', '(?P<')
+                #rgx_path = rgx_path.replace('>', '>[^/]*)')
+                ## allow file share to contain multiple directories
+                #rgx_path = rgx_path.replace('<server>[^/]*', '<server>.*')
 
-                task_file = data['work_file']
-                rgx_file = task_file.replace('<', '(?P<')
-                rgx_file = rgx_file.replace('>', '>[^_\.]*)')
-                # allow shot to contain multiple underscores
-                rgx_file = rgx_file.replace('<shot>[^_\.]*', '<shot>.*')
-                rgx_file = rgx_file.replace('<asset>[^_\.]*', '<asset>.*')
+                # should cache converted regexs
+                rgx_path = self.template_to_regex(filepath=data['work_path'], limiters=['/'], exclude=['<server>'])
+
+                #task_file = data['work_file']
+                #rgx_file = task_file.replace('<', '(?P<')
+                #rgx_file = rgx_file.replace('>', '>[^_\.]*)')
+                ## allow shot to contain multiple underscores
+                #rgx_file = rgx_file.replace('<shot>[^_\.]*', '<shot>.*')
+                #rgx_file = rgx_file.replace('<asset>[^_\.]*', '<asset>.*')
+                rgx_file = self.template_to_regex(filepath=data['work_file'], limiters=['_','.'], exclude=['<shot>','<asset>'])
 
                 #print ("rgx_path={0}".format(rgx_path))
 
@@ -194,10 +208,6 @@ class StudioProject():
             # load up the local vars
             localvars = dict(self.task_structs[task])
             for var, val in data.iteritems():
-                #print ("printing var:")                
-                #print (var)
-                #print ("printing val:")                
-                #print (val)
                 # check if any string substitution is needed in the value
                 val_subst = re.findall('%(.+?)%', str(val))
                 for match in val_subst:
@@ -222,3 +232,15 @@ class StudioProject():
         for filepath in filepaths:
             print ("testing:{0}".format(filepath))
             self.parse_path(filepath)
+
+    def create_task(self):
+        ''' create a task, this will be done using the config template, and will automatically create sequence, 
+        shots and assets as needed'''
+        # this will need to create the task and any standardized subfolders
+        return
+
+    def trash_task(self):
+        return
+
+    def create_job(self):
+        return
