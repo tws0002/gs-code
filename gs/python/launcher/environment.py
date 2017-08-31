@@ -36,12 +36,46 @@ class StudioEnvironment():
         self.workgroup_data = dataMap
         self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
 
+    def append_app_config_file(self, filepath, app=None, version=None):
+        dataMap = self.get_config_file(filepath)
+        if type(self.app_data) == type(dict()):
+            print ("Appending App Config File = {0}".format(filepath))
+            self.config_merge(self.app_data,dataMap)
+            self.load_app_config(self.app_data, app, version)
+
+    def append_workgroup_config_file(self, filepath, workgroup=None, app=None, version=''):
+        dataMap = self.get_config_file(filepath)
+        if type(self.workgroup_data) == type(dict()):
+            print ("Appending Workgroup Config File = {0}".format(filepath))
+            self.config_merge(self.workgroup_data,dataMap)
+            self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
+
+    def append_module_config_file(self, filepath, module, version):
+        dataMap = self.get_config_file(filepath)
+        if type(self.workgroup_data) == type(dict()):
+            print ("Appending Module Config File = {0}".format(filepath))
+            self.config_merge(self.module_data,dataMap)
+            self.load_module_config(self.module_data, module, version)
+
+
     def get_config_file(self,filepath):
+        #print (filepath)
         f = open(filepath)
         # use safe_load instead load
-        dataMap = yaml.safe_load(f)
+        dataMap = yaml.load(f, Loader=yaml.CLoader)
         f.close()
         return dataMap
+
+    def config_merge(self, orig_dict, new_dict):
+        #print new_dict
+        for key, val in new_dict.iteritems():
+            if key in orig_dict:
+                if type(val) == type(dict()):
+                    self.config_merge(orig_dict[key],val)
+                else:
+                    orig_dict[key] = val
+            else:
+                orig_dict[key] = val
 
     def load_app_config(self, dataMap, app='studiotools', version='1.0'):
 
@@ -116,7 +150,7 @@ class StudioEnvironment():
 
                                 if 'modules' in dataMap[key]['packages'][package]:
                                     for m, mv in dataMap[key]['packages'][package]['modules'].iteritems():
-                                        self.load_module_config(dataMap=MODULES, module=m, package=app, version=mv)
+                                        self.load_module_config(dataMap=self.module_data, module=m, package=app, version=mv)
                                         if 'env' in dataMap[key]['packages'][app]['modules']:
                                             for var, val in dataMap[key]['packages'][package]['modules']['env'].iteritems():
                                                 self.add(var, val)

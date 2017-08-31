@@ -240,7 +240,7 @@ softimage:
   - muscle
   - light
 nuke:
-  shell: false
+  shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
     NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
@@ -530,7 +530,7 @@ animate:
         linux: /
         mac: /
         win32: 'C:/Program Files/Adobe/Adobe Animate CC 2015.2'
-    'CC 2017.2':
+    'CC 2017':
       name: Animate CC 2017
       env:
         ST_PS: 'CC 2017'

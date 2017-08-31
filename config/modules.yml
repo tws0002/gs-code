@@ -649,7 +649,6 @@ animschoolpicker:
           versions:
           - '2015'
           - '2016.5'
-          - '2017'
 studiolibrary:
   name: studiolibrary
   show: true

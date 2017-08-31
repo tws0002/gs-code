@@ -3,8 +3,8 @@ __author__ = 'adamb'
 import os,sys
 from settings import *
 
-import urllib2
-from subprocess import Popen, PIPE, STDOUT
+#import urllib2
+#from subprocess import Popen, PIPE, STDOUT
 
 
 
@@ -17,8 +17,9 @@ from subprocess import Popen, PIPE, STDOUT
 
 
 def list_servers():
-	for share in STUDIO['servers']:
-		print (share+": "+STUDIO['servers'][share]['root_path'])
+	#for share in STUDIO['servers']:
+		#print (share+": "+STUDIO['servers'][share]['root_path'])
+	return
 
 def list_jobs(share):
 	try:
@@ -41,6 +42,6 @@ def list_jobs(share):
 
 
 
-list_servers()
+#list_servers()
 
 
