@@ -150,7 +150,7 @@ class StudioEnvironment():
 
                                 if 'modules' in dataMap[key]['packages'][package]:
                                     for m, mv in dataMap[key]['packages'][package]['modules'].iteritems():
-                                        self.load_module_config(dataMap=self.module_data, module=m, package=app, version=mv)
+                                        self.load_module_config(dataMap=MODULES, module=m, package=app, version=mv)
                                         if 'env' in dataMap[key]['packages'][app]['modules']:
                                             for var, val in dataMap[key]['packages'][package]['modules']['env'].iteritems():
                                                 self.add(var, val)

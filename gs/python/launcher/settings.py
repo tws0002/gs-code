@@ -51,11 +51,19 @@ SHARES = {
     'home' : 'personal',
     'assets' : 'lib',
 }
+
+
 #load the studio dictionary
 f = open(CONFIG+"/studio.yml")
 #STUDIO = yaml.safe_load(f)
 STUDIO = yaml.load(f, Loader=yaml.CLoader)
 f.close()
+
+#load the studio dictionary
+f = open(CONFIG+"/modules.yml")
+MODULES = yaml.load(f, Loader=yaml.CLoader)
+f.close()
+
 
 elapsed_time = time.time() - START_TIME
 print("Launcher loaded yaml files in {0} sec".format(elapsed_time))
