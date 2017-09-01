@@ -1,0 +1,115 @@
+Gizmo {
+ addUserKnob {20 autoMatte}
+ addUserKnob {4 matteType M {object material asset}}
+ addUserKnob {22 update -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.update()\t"}
+ addUserKnob {22 clear -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.clear()\t"}
+ addUserKnob {18 addID}
+ addUserKnob {18 subtractID}
+ addUserKnob {1 IDList}
+ addUserKnob {1 matteList}
+ addUserKnob {6 namespace -STARTLINE}
+ addUserKnob {1 search}
+ addUserKnob {22 find -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.searchIDs()"}
+ addUserKnob {41 expr0 l expr T matteExpr.expr0}
+ addUserKnob {22 exportMatte -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.exportMatte()\t"}
+ addUserKnob {20 matteInfo n 1}
+ matteInfo 0
+ addUserKnob {43 IDMultiList l "" +STARTLINE}
+ addUserKnob {43 matteMultiList l "" -STARTLINE}
+ addUserKnob {20 endGroup n -1}
+ knobChanged "n=nuke.thisNode() \nk=nuke.thisKnob() \nif k.name() == \"addID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.addMatte()\nif k.name() == \"subtractID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.subtractMatte()\nif k.name() == \"matteType\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.changeMatteType()\nif k.name() == \"namespace\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.update()"
+}
+ Input {
+  inputs 0
+  name MatteFileInput
+  label MatteFileInput
+  xpos 183
+  ypos 48
+ }
+set N9366e340 [stack 0]
+add_layer {objectMatte01 objectMatte01.red objectMatte01.green objectMatte01.blue objectMatte01.alpha}
+add_layer {materialMatte00 materialMatte00.red materialMatte00.green materialMatte00.blue materialMatte00.alpha}
+add_layer {materialMatte01 materialMatte01.red materialMatte01.green materialMatte01.blue materialMatte01.alpha}
+ Remove {
+  operation keep
+  channels objectMatte01
+  channels2 materialMatte00
+  channels3 materialMatte01
+  name Remove1
+  label initializingChannels
+  note_font Verdana
+  xpos 60
+  ypos 38
+ }
+add_layer {assetMatte00 assetMatte00.red assetMatte00.green assetMatte00.blue assetMatte00.alpha}
+add_layer {assetMatte01 assetMatte01.red assetMatte01.green assetMatte01.blue assetMatte01.alpha}
+ Remove {
+  operation keep
+  channels assetMatte00
+  channels2 assetMatte01
+  name Remove2
+  label initializingChannels
+  xpos 60
+  ypos 97
+ }
+push $N9366e340
+ Dot {
+  name Dot1
+  xpos 217
+  ypos 413
+ }
+push $N9366e340
+add_layer {objectMatte00 objectMatte00.red objectMatte00.green objectMatte00.blue objectMatte00.alpha}
+ Shuffle {
+  in objectMatte00
+  name insertData
+  label "\[value in]"
+  xpos 415
+  ypos 48
+ }
+ Expression {
+  expr0 r
+  expr1 random(r)
+  expr2 random(r+1)
+  name Expression1
+  xpos 415
+  ypos 213
+ }
+set N93679af0 [stack 0]
+ Expression {
+  expr0 0
+  name matteExpr
+  xpos 539
+  ypos 213
+ }
+ Shuffle {
+  green red
+  blue red
+  alpha red
+  name Shuffle1
+  label "\[value in]"
+  xpos 539
+  ypos 301
+ }
+push $N93679af0
+ Merge2 {
+  inputs 2
+  Achannels {-rgba.red rgba.green rgba.blue rgba.alpha}
+  Bchannels {-rgba.red rgba.green rgba.blue -rgba.alpha}
+  output {-rgba.red rgba.green rgba.blue rgba.alpha}
+  name Merge1
+  xpos 415
+  ypos 301
+ }
+ CopyMetaData {
+  inputs 2
+  name CopyMetaData1
+  xpos 415
+  ypos 410
+ }
+ Output {
+  name Output1
+  xpos 415
+  ypos 510
+ }
+end_group

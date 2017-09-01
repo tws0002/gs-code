@@ -124,6 +124,7 @@ vray:
   env:
     #GS_MAYA_AUTOLOAD: 'vrayformaya'
     VRAY_AUTH_CLIENT_FILE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/conf'
+    MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%/maya_bin/rendererDesc'
   packages:
     maya:
       env:
@@ -345,6 +346,16 @@ krakatoa:
         #MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
         THINKBOX_LICENSE_FILE: '@laxlic01'
       versions:
+        '2.6.3':
+          env:
+            ST_KRAKATOA: '2.6.3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2017'
         '2.6.2':
           env:
             ST_KRAKATOA: '2.6.2'
@@ -518,13 +529,35 @@ redshift:
   name: redshift
   show: true
   env:
-    REDSHIFT_LICENSEPATH: '5057@laxlic01'
+    redshift_LICENSE: '5057@laxlic01'
   packages:
     maya:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%'
         MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%/bin/rendererDesc'
       versions:
+        '2.5.13':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.13'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016.5'
+          - '2017'
+        '2.0.93':
+          env:
+            ST_MAYA_REDSHIFT: '2.0.93'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2015'
+          - '2016.5'
+          - '2017'
         '2.0.70':
           env:
             ST_MAYA_REDSHIFT: '2.0.70'
@@ -540,8 +573,19 @@ redshift:
       env:
         REDSHIFT_COREDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
         REDSHIFT_LOCALDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
+        REDSHIFT_PLUG_IN_PATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         C4D_PLUGINS_DIR: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
+        PATH: '%REDSHIFT_COREDATAPATH%/bin'
       versions:
+        '2.5.13':
+          env:
+            ST_C4D_REDSHIFT: '2.5.13'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R18'
         '2.0.83':
           env:
             ST_C4D_REDSHIFT: '2.0.83'
@@ -605,7 +649,6 @@ animschoolpicker:
           versions:
           - '2015'
           - '2016.5'
-          - '2017'
 studiolibrary:
   name: studiolibrary
   show: true

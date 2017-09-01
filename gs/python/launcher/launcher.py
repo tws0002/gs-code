@@ -1,7 +1,6 @@
 __author__ = 'adamb'
 
-import sys, urllib2, subprocess, argparse
-
+import sys, urllib2, subprocess, argparse, time
 
 from settings import *
 from utils import *
@@ -74,33 +73,25 @@ def init():
 
         launch_app(args.app, version=version, mode=mode, wrkgrp_config=wrkgrp_config, workgroup=workgroup, initials=initials, project=project, add_args=add_args)
 
+def get_project_config(project='',config_type='workgroups'):
+
+    proj_config = os.path.join(STUDIO['servers']['jobs']['root_path'],project,"03_production",".pipeline","config","{0}.yml".format(config_type))
+    #print ("Checking for project config: {0}".format(proj_config))
+    found_config = ''
+    if os.path.isfile(proj_config):
+        found_config = proj_config
+        #print ("GS Launcher: loading local project {1} config:{0}").format(found_config,config_type)
+    return found_config 
+
 def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default', initials='', project='', add_args=''):
 
-    app_config = ''
+    app_config = CONFIG+'/app.yml'
+    wrkgrp_config = CONFIG+'/workgroups.yml'
     shell_mode = False
+
     # get a current working directory
     cwd = r'//{0}/{1}/{2}'.format(SERVER,SHARES['projects'],project)
-    print cwd
-
-    if not os.path.isfile(wrkgrp_config):
-        job_wrkgrp_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","workgroups.yml")
-        if os.path.isfile(job_wrkgrp_config):
-            wrkgrp_config = job_wrkgrp_config
-            print ("GS Launcher: loading local project workgroup config:{0}").format(job_wrkgrp_config)
-        else:
-            wrkgrp_config = CONFIG+'/workgroups.yml'
-            #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
-
-    if not os.path.isfile(app_config):
-        job_app_config = os.path.join("\\\\scholar","projects",project,"03_production",".pipeline","config","app.yml")
-        if os.path.isfile(job_app_config):
-            app_config = job_app_config
-            print ("GS Launcher: loading local project app config:{0}").format(job_app_config)
-        else:
-            app_config = CONFIG+'/app.yml'
-            #print ("GS Launcher: loading studio app config:{0}").format(app_config)
-
-        
+    print ("Current Working Directory {0}".format(cwd))
     print 'Launching {0} version: {1}'.format(app,version)
 
     os.environ['GSPROJECT'] = project
@@ -116,6 +107,14 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     process_env.load_app_config_file(filepath=app_config, app=app, version=version)
     process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
     
+    # append any project local config files
+    proj_wrkgrp = get_project_config(project,'workgroups')
+    if os.path.isfile(proj_wrkgrp):
+        process_env.append_workgroup_config_file(filepath=proj_wrkgrp, workgroup=workgroup, app=app, version=version)
+
+    proj_app = get_project_config(project,'app')
+    if os.path.isfile(proj_app):
+        process_env.append_app_config_file(filepath=proj_app, app=app, version=version)
 
 
     if 'GSBRANCH' in os.environ:
@@ -154,7 +153,6 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         print ('Mode: {0} not found in package {1} in current workgroup config: {2}'.format(mode,app,wrkgrp_config))
         return
 
-
     executable = os.path.join(a_data[app]['versions'][version]['path'][sys.platform], a_data[app]['versions'][version]['modes'][mode][sys.platform])
     
     # expand any env variables in pathnames before running the process
@@ -163,32 +161,29 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # create any necessary user variable folders if they don't exist
     # process_env.make_user_folders()
 
-    
     #print executable
     #if not os.path.isfile(executable.split(' ')[0]):
     #    print ("Could Not Run: {0}. Is it installed?").format(executable.split(' ')[0])
     #    return
 
+    # load the launcher environment
+    STUDIO_ENV = StudioEnvironment()
+    STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
+    STUDIO_ENV.setEnv()
+
     env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
     
     # need to clear out pyqt from path and pythonpath
     # these need to be handled on an app by app basis
-
     env['PATH'] = os.environ['PATH']
     env['PATH'].replace('{0};'.format(PYQTPATH), '')
     env['PYTHONPATH'].replace('{0};'.format(PYQTPATH), '')
-    #print '\n== ENV VARS =='
-    #for key, value in env.iteritems():
-    #    print (key+'='+value)
-    #print '== END ENV VARS ==\n'
-    #try:
 
     utils.updatePipelineFavorites()
 
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
-
 
     # check if shell mode is enabled
     if 'shell' in a_data[app]:
@@ -256,12 +251,19 @@ if __name__ == '__main__':
 
 
     if not args.app:
+        elapsed_time = time.time() - START_TIME
+        print("Launcher settings loaded in {0} sec".format(elapsed_time))
         from ui import *
         app = QApplication(sys.argv)
         wind = Launcher()
+        elapsed_time = time.time() - START_TIME
+        print("Launcher UI loaded in {0} sec".format(elapsed_time))
         wind.setWindowTitle('Gentleman Scholar Launcher')
         wind.show()
+        elapsed_time = time.time() - START_TIME
+        print("Launcher UI Shown in {0} sec".format(elapsed_time))
         app.exec_()
+
     else:
         init()
 

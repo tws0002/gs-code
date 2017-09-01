@@ -1,14 +1,15 @@
 __author__ = 'adamb'
 
-import os, sys
+import os, sys, time
 
+START_TIME = time.time()
 
 # determines vars based on this files location
 LAUNCHER = os.path.dirname(os.path.realpath(__file__))
 RES = os.path.join(LAUNCHER, 'res')
 PYTOOLS = os.path.dirname(LAUNCHER)
-STUDIO = os.path.dirname(PYTOOLS)
-BRANCH = os.path.dirname(STUDIO)
+AUTHOR = os.path.dirname(PYTOOLS)
+BRANCH = os.path.dirname(AUTHOR)
 TOOLS = os.path.join(BRANCH,'apps')
 CONFIG = os.path.join(BRANCH,'config')
 ROOT = os.path.dirname(BRANCH)
@@ -35,9 +36,11 @@ sys.path.append(PYQTPATH)
 ## print sys.path
 sys.path.append(os.path.join(ROOT,'lib','python'))
 sys.path.append(os.path.join(PYTOOLS))
+
 import yaml
 
-
+elapsed_time = time.time() - START_TIME
+print("Launcher imported yaml module in {0} sec".format(elapsed_time))
 
 MODE = "pub"
 SITE = "ny"
@@ -49,23 +52,18 @@ SHARES = {
     'assets' : 'lib',
 }
 
-#load the apps dictionary
-f = open(CONFIG+"/app.yml")
-APPS = yaml.safe_load(f)
+
+#load the studio dictionary
+f = open(CONFIG+"/studio.yml")
+#STUDIO = yaml.safe_load(f)
+STUDIO = yaml.load(f, Loader=yaml.CLoader)
 f.close()
 
-#load the modules dictionary
+#load the studio dictionary
 f = open(CONFIG+"/modules.yml")
-MODULES = yaml.safe_load(f)
+MODULES = yaml.load(f, Loader=yaml.CLoader)
 f.close()
 
-#load the workgroups dictionary
-f = open(CONFIG+"/workgroups.yml")
-WORKGRP = yaml.safe_load(f)
-f.close()
 
-from environment import *
-# load the launcher environment
-STUDIO_ENV = StudioEnvironment()
-STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
-STUDIO_ENV.setEnv()
+elapsed_time = time.time() - START_TIME
+print("Launcher loaded yaml files in {0} sec".format(elapsed_time))

@@ -1,0 +1,5222 @@
+/*
+//	Substance Maya Toolset (SubstanceMayaToolset.mel)
+//	http://www.allegorithmic.com
+//
+//	by Fabrice Piquet (Froyok) | fabrice.piquet@allegorithmic.com
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+ ####           ##               ##                                   
+##  ##          ##               ##                                   
+##      ##  ##  #####    #####  ######   ####   #####    ####    #### 
+ ##     ##  ##  ##  ##  ##       ##         ##  ##  ##  ##  ##  ##  ##
+  ##    ##  ##  ##  ##  ##       ##         ##  ##  ##  ##      ##  ##
+   ##   ##  ##  ##  ##   ####    ##      #####  ##  ##  ##      ######
+    ##  ##  ##  ##  ##      ##   ##     ##  ##  ##  ##  ##      ##    
+##  ##  ##  ##  ##  ##      ##   ##     ##  ##  ##  ##  ##  ##  ##    
+ ####    #####  #####   #####     ####   #####  ##  ##   ####    ####         
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+    '..                                                           .c0cdO:
+    .dWNKkdl:,.                                                .oKMMW.KMMNx,
+      .kMMMMMMMMX0kdc;..                                     oXMMMMM0.WMMWNKd.
+        '0MMMMMMMMMMMMMMNKOxl:,..                          ';oMMMMMMo '..
+          lNMMMMMMMMMMMMMMMMMMMMMNKOdl:,.                 'WX.KMMMMM'
+           .dWMMMMMMMMMMMMMMMMMMMMMMMMMMMWX0kdc;'.       .XMMd;WMMMK
+             .kMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWX0xo. xMMMW,xMMMd
+               ;XMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMd:XolXMM0.NMM;
+                 oWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMo:WMMX:oWMllMN
+                  .dWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMdcWMMMMMOcdX'Xx
+                    .kMMMMMMMMMMMMMMMMMMMMMMMMMMMMMdcMMMMMMMMMk;,::
+                      .lOKXNNXXXXXKKKKK00000OOOOOkl.xkkxxxxxxxxo.
+                                                   OKKKXXXXXXNNNN:
+                                        .....     .MMMMMMMMMMMMW:
+                                     ;kWMNkol.    :MMMMMMMMMMMK.
+                                  .dNMXxlo0k.     oMMMMMMMMMMx
+                                ;ONOood0MX:       OMMMMMMMMNc
+                             .oKkllkWMMMk.        XMMMMMMMX.
+                           ;odooOWMMMMNc         .WMMMMMM0.
+                        .,:lxXMMMMMMMO.          ,MMMMMMd
+                       'okNMMMMMMMMN:            cMMMMN;
+                    .lKMMMMMMMMMMMO.             dMMM0.
+                 ,oKWWWNNNXXKK0Ox:               kMMx
+                ....                             0Wc
+                                                 Xx.
+                                                .X'Ok
+                                                .d;MM0.
+                                                 .OMMMX.
+                                                  :;..
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////		
+
+
+//SubstanceMayaToolset 0.7
+-Added cage creator (with step, triangulation and offset type settings)
+-Fixed incorrect dialog box when the tangent space plugin is missing
+
+
+//SubstanceMayaToolset 0.6.1
+-Fixed : Material IDs baker doesn't need anymore an high-poly mesh if set to low-poly
+-Fixed : Incorrect path for cage mesh when sent to the bakers
+
+
+//SubstanceMayaToolset 0.6
+-Added HP convertion (from smooth preview to polygons) during export
+-Added new bakers : Materials Color (from HP or LP), AO from HP, Thickness
+-Added warnings if export/batch path is incorrect/doesn't exist
+-Added normal Plugin setting (mikkt/unity/custom)
+-Added Triangulation during export for LP mesh
+-Added global parameters for Rays, Anti-Aliasing and Normal type
+-Updated script to support Batch tool 5.0.3
+-Updated UI to optimize the overall workflow
+-Updated Mesh nomenclature : now saved permanently
+-Updated Map suffix : Now saved permanently
+-Fixed missing dilation/diffusion setting for some bakers
+
+
+//SubstanceMayaToolset 0.5
+-Added clean batch file option
+-Added support for random seed control (+ randomize during batch)
+-Updated to support Batch Tools 4.5.x
+-Fixed wrong export path for the "UVs to texture" (in case there were some spaces)
+
+
+//SubstanceMayaToolset 0.4
+-Added baking of a template (sbsar with image and color inputs)
+
+
+//SubstanceMayaToolset 0.3
+-Added export format settings (obj, fbx, fbx_dae)
+-Added possibility to export to the oringn (0,0,0 and put back where the mesh was)
+-Added user settings ot define the multi mesh nomenclature
+-Added Possibility to bake multiple meshes at once
+-Updated bake commands to use quotes and make path compatible with spaces
+-Fixed an error when exporting the cage as an FBX file (was exporting the low poly instead)
+-Fixed an error when exporting meshes form maya (was exporting wrong mesh if not selected)
+
+
+//SubstanceMayaToolset 0.2
+-Possibility to bake multiple maps at once.
+
+
+//SubstanceMayaToolset 0.1
+-Added support for bakers of Substance Designer (4.0.2)
+
+*/
+
+global proc SubstanceMayaToolset()
+{	
+	int		$floating						= 0;		// 0=docked		1=floating
+	if(`optionVar -exists "frosDocked"`)
+	{
+		if(`optionVar -q "frosDocked"`)
+			$floating = 0;
+		else
+			$floating = 1;
+		
+	}
+	
+	// if Window exists already delete it, 
+	//so you can't call multiple windows
+    if (`window -exists Winfros`) 
+	{
+		deleteUI Winfros;
+		
+		if(`windowPref -exists Winfros` && !$floating)
+			windowPref -remove Winfros;
+	}
+	
+	//window settigns
+	string	$defaultDockArea				= "left";	// "top", "left", "bottom", "right";
+	string $frostitle = "Substance Maya Toolset 0.7";
+	string $dock	= "dockfros";
+	int $winw = 202 + 16;
+	
+	
+	//Clean dock control
+	float $mayaVersion = `getApplicationVersionAsFloat`;
+	float $mayaVersionRequired = 2011;
+	
+    if( $mayaVersion >= $mayaVersionRequired )
+	{
+		if( `dockControl -exists $dock` )
+			deleteUI -control $dock;
+	}
+	
+	//make the base window
+	window -t $frostitle -minimizeButton 1 -maximizeButton 0 Winfros;
+	
+	string $form = `formLayout -parent Winfros`;	
+	
+	
+	
+	/////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	// Header
+	//-------------------------------------------------------------------
+	//-------------------------------------------------------------------
+	columnLayout;
+		
+		string $floatform = `formLayout`;
+			checkBox 
+				-l "Docked | Floating" 
+				-v 1 -ann "Docked/Floating window" 
+				-cc "frosToggleDock" 
+				fros_check_dock;
+
+			image -image "froyok/fros_logo.png" fros_logo; 
+				
+			button
+				-l "Allegorithmic.com"
+				-bgc 0.2 0.2 0.2
+				-c "launch -web \"http://www.allegorithmic.com/technology/what-is-substance\""
+				-width (134)
+				-height 20
+				fros_website;
+		setParent ..;		
+
+		formLayout -e
+			-attachForm  fros_check_dock  "left"  64
+			-attachForm  fros_logo  "top"  16
+			-attachForm  fros_website  "left"  84
+			-attachForm  fros_website  "top"  46
+		$floatform;
+
+		if(`optionVar -exists "frosDocked"`)
+		{
+			if(`optionVar -q "frosDocked"`)
+				checkBox -e -v 1 fros_check_dock;
+			else
+				checkBox -e -v 0 fros_check_dock;
+		}
+		
+		separator -h 8 -w 216 -style "none";
+		
+		gridLayout -numberOfColumns 1 -cellHeight 40 -cellWidth (floor($winw) + 28);
+			button 
+				-width $winw 
+				-height 35
+				-bgc 0.49 0.08 0.12
+				-l "Bake texture(s)"
+				-c "frosMultiBake";
+		setParent ..;
+		
+	setParent ..;
+	
+	
+	/////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	// TAB BAKING
+	//-------------------------------------------------------------------
+	//-------------------------------------------------------------------
+	string $tabs = `tabLayout -innerMarginWidth 5 -innerMarginHeight 5 frosTabs`;
+	formLayout -edit
+		// -attachForm $tabs "top"    146
+		// -attachForm $tabs "top"    164
+		-attachForm $tabs "top"    128
+		 -attachForm $tabs "left"   0
+		 -attachForm $tabs "bottom" 0
+		 -attachForm $tabs "right"  0
+		 $form;
+
+		 
+		string $child1 = `scrollLayout -w ($winw + 25) scroll1`;
+
+			
+			/////////////////////////////////////////////////////////////////////
+			// Export path
+			//-------------------------------------------------------------------
+			separator -h 2 -w 216 -style "none";
+			
+			gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor(($winw / 1.5)));	
+					textField -w 218 -fi "" -ann "Export path" -editable 0 -bgc 0.2 0.15 0.15 fros_path_export; 
+					
+					gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+						button 
+							-label "Export path" 
+							-w 48 -h 22
+							-bgc 0.45 0.25 0.25
+							-ann ""
+							-command "frosSetExportFolder";
+					setParent ..;
+				setParent ..;
+
+				button
+					-l "Open Export folder"
+					-bgc 0.35 0.35 0.35
+					-c "frosOpenExportFolder";							
+			setParent ..;
+
+			separator -h 8 -w 216 -style "none";
+
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Mesh settings
+			//-------------------------------------------------------------------
+			/*
+			gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));		
+						textField -w 218 -fi "" -ann "High Poly mesh" fros_mesh_hp; 
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "< Set HP" 
+								-w 48 -h 22 
+								-bgc 0.35 0.35 0.35
+								-ann ""
+								-command "frosGetMesh 1"
+								fros_button_gethp;
+						setParent ..;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));					
+						textField -w 218 -fi "" -ann "Low Poly mesh" fros_mesh_lp; 
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button
+								-label "< Set LP"
+								-w 48 -h 22 
+								-bgc 0.35 0.35 0.35
+								-ann ""
+								-command "frosGetMesh 2";
+						setParent ..;
+				setParent ..;
+			
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));	
+					textField -w 218 -fi "" -ann "Export path" fros_mesh_cage; 
+					
+					gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+						button 
+							-label "< Set Cage" 
+							-w 48 -h 22
+							-bgc 0.35 0.35 0.35
+							-ann ""
+							-command "frosGetMesh 0"
+							fros_button_getcage;
+					setParent ..;
+				setParent ..;				
+			setParent ..;
+			separator -h 6 -w 216 -style "none";
+			*/	
+
+
+			
+			/////////////////////////////////////////////////////////////////////
+			// Mesh nomenclature
+			//-------------------------------------------------------------------	
+			separator -h 1 -w 200 -style "none";
+			
+			frameLayout -label "Mesh nomenclature" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_naming;
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					text -l "Low Poly (used as base name)" -align "center" -bgc 0.15 0.15 0.15;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "*mesh*" -align "right";
+						textField -fi "_lp" -cc "frosSaveNomenclature" fros_multibake_lp;
+					setParent..;
+				setParent..;
+				
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					text -l "High Poly" -align "center" -bgc 0.15 0.15 0.15;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "*mesh*" -align "right";
+						textField -fi "_hp" -cc "frosSaveNomenclature" fros_multibake_hp;
+					setParent..;
+				setParent..;
+				
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					text -l "Cage" -align "center" -bgc 0.15 0.15 0.15;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "*mesh*" -align "right";
+						textField -fi "_cg" -cc "frosSaveNomenclature" fros_multibake_cg;
+					setParent..;
+				setParent..;
+			setParent..;
+			
+			separator -h 2 -w 216 -style "none";	
+			
+
+			
+			/////////////////////////////////////////////////////////////////////
+			// Cage setup
+			//-------------------------------------------------------------------	
+			separator -h 1 -w 200 -style "none";
+			
+			frameLayout -label "Cage" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_cagecreation;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);		
+					button -l "Create Cage" -bgc 0.35 0.25 0.25 -c "frosCreateEnvelope";
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 4);
+						floatField
+							-v 1 -min 0.0001 -max 100 -pre 4
+							-cc "frosCageInflate"
+							-ann "This field control the distance offset of the cage" 
+							fros_slider_cage;
+						
+						gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 8);
+							button
+								-bgc 0.35 0.25 0.35
+								-c "frosCageStep 1"
+								-l "+";
+								
+							button
+								-bgc 0.35 0.25 0.35
+								-c "frosCageStep 0"
+								-l "-";
+						setParent ..;
+					setParent ..;	
+						
+					checkBox -v 1 -l "Triangulate cage" fros_cage_triangulate;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 4);
+						text -l "Step : " -align right;
+						floatField -v 0.1 -min 0.0001 -max 10 -pre 4 fros_step_cage;
+					setParent ..;
+					
+					text -l "Offset type : " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_cage_type;
+					menuItem -p fros_cage_type -l "Per Face"	fros_cage_type_1;
+					menuItem -p fros_cage_type -l "Per Vertex"	fros_cage_type_2;
+					optionMenu -e -sl 1 fros_cage_type;
+					
+				setParent ..;
+			setParent..;
+			
+			separator -h 2 -w 216 -style "none";	
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Baker to use (which map to bake)
+			//-------------------------------------------------------------------	
+			frameLayout -label "Map to bake :" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2) -bgc 0.3 0.2 0.2;
+					checkBox -v 1 -l "Normal" 				frosCheck_map_normal;
+					checkBox -v 0 -l "Curvature" 			frosCheck_map_curv;
+					checkBox -v 0 -l "Amb Occlusion LP" 	frosCheck_map_ao;
+					checkBox -v 0 -l "Amb Occlusion HP" 	frosCheck_map_aohp;
+					checkBox -v 0 -l "Material IDs"			frosCheck_map_mids;
+					checkBox -v 0 -l "Position"				frosCheck_map_pos;
+					checkBox -v 0 -l "UVs"			 		frosCheck_map_uv;
+					checkBox -v 0 -l "Vertex colors"		frosCheck_map_vtx;
+					checkBox -v 0 -l "Height" 				frosCheck_map_height;
+					checkBox -v 0 -l "Thickness"			frosCheck_map_thick;
+					checkBox -v 0 -l "World Direction"		frosCheck_map_wdir;
+					checkBox -v 0 -l "World Normal"			frosCheck_map_wnor;
+				setParent ..;
+			setParent..;
+						
+			separator -h 1 -w 200 -style "none";	
+
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Common export settings
+			//-------------------------------------------------------------------	
+			frameLayout -collapse 0 -label "Export settings" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_settings;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					
+					checkBox 
+							-v 1 
+							-l "Auto load normal" 
+							-ann "Automatically load the normal map into the other bakers"
+							fros_check_loadnormal;
+							
+					checkBox 
+							-l "Export Meshes" 
+							-v 1
+							-ann "If enabled, the script will automatically export LP and HP meshes"
+							fros_check_exportmesh;
+							
+					checkBox
+							-v 0
+							-label "Convert smooth"
+							-ann "Convert HP from smooth preview to polygon (during export)"
+							fros_check_smooth;
+							
+					checkBox 
+							-v 0 
+							-label "Export from Origin" 
+							-ann "Move mesh to origin before export" 
+							fros_check_pivot; 
+					
+					checkBox
+							-v 0
+							-label "Triangulate"
+							-ann "Triangulate LP mesh during export"
+							fros_check_triangulate;
+							
+					checkBox 
+							-l "Use Cage" 
+							-v 0
+							-ann "If enabled, check for a cage to use during the bake"
+							-cc "frosDisableUIcage"
+							fros_check_cage;
+							
+					/*		
+					checkBox
+							-v 0
+							-label "Exploded Bake"
+							-ann "Move meshes apart before baking them"
+							-enable 0
+							fros_check_explode;
+					*/
+					text -l "";
+
+					checkBox 
+							-v 0
+							-l "Keep batch files" 
+							-ann "\*.bat file are not removed after the bake process"
+							fros_check_batch;
+
+					/*
+					checkBox 
+							-l "HP is out of scene" 
+							-v 0 
+							-cc "frosDisableUIhighpoly"
+							-ann "Specify that your HP mesh is outside of Maya, in the export folder" 
+							fros_check_hpout;
+					*/
+					/*
+					checkBox 
+							-v 0
+							-label "Keep old Location" 
+							-ann "Restore location after export if moved to origin" 
+							fros_check_oriloc; 
+					*/
+				setParent ..;
+				
+				
+				gridLayout -numberOfColumns 2 -cellHeight 18 -cellWidth ($winw / 2);
+					text -l "LP file format :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.3 0.2 0.2
+						fros_mesh1_menu;
+					menuItem -p fros_mesh1_menu -l "OBJ"				vtx_mesh_1;
+					menuItem -p fros_mesh1_menu -l "FBX"				vtx_mesh_2;
+					menuItem -p fros_mesh1_menu -l "DAE"				vtx_mesh_3;
+					optionMenu -e -sl 1 fros_mesh1_menu;
+					
+					text -l "HP file format :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.3 0.2 0.2
+						fros_mesh2_menu;
+					menuItem -p fros_mesh2_menu -l "OBJ"				menu_mesh_1;
+					menuItem -p fros_mesh2_menu -l "FBX"				menu_mesh_2;
+					menuItem -p fros_mesh2_menu -l "DAE"				menu_mesh_3;
+					optionMenu -e -sl 1 fros_mesh2_menu;
+				setParent ..;
+				
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Output size :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_size_menu;
+					menuItem -p fros_size_menu -l "32x32" 		vtx_size_1;
+					menuItem -p fros_size_menu -l "64x64" 		vtx_size_2;
+					menuItem -p fros_size_menu -l "128x128" 	vtx_size_3;
+					menuItem -p fros_size_menu -l "256x256" 	vtx_size_4;
+					menuItem -p fros_size_menu -l "512x512" 	vtx_size_5;
+					menuItem -p fros_size_menu -l "1024x1024"	vtx_size_6;
+					menuItem -p fros_size_menu -l "2048x2048"	vtx_size_7;
+					menuItem -p fros_size_menu -l "4096x4096"	vtx_size_8;
+					optionMenu -e -sl 6 fros_size_menu;
+					
+					text -l "UV Set :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.24 0.24 0.24
+						fros_uv_menu;
+					
+					menuItem -p fros_uv_menu -l "UV0"	vtx_uv_1;
+					menuItem -p fros_uv_menu -l "UV1"	vtx_uv_2;
+					menuItem -p fros_uv_menu -l "UV2"	vtx_uv_3;
+					optionMenu -e -sl 1 fros_uv_menu;
+
+					
+					text -l "";
+					checkBox -l "Use Diffusion" -v 0 fros_check_diffusion;
+					
+					text -l "Dilation (in pixels) : " -align "right";
+					floatField -min 0 -max 2048 -v 16 -step 1 -pre 0 fros_field_dilatation;
+
+					text -l "Output format :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_format_menu;
+						
+					menuItem -p fros_format_menu -l "dds"	vtx_format_1;
+					menuItem -p fros_format_menu -l "bmp"	vtx_format_2;
+					menuItem -p fros_format_menu -l "png"	vtx_format_3;
+					menuItem -p fros_format_menu -l "tga" 	vtx_format_4;
+					menuItem -p fros_format_menu -l "jpg" 	vtx_format_5;
+					menuItem -p fros_format_menu -l "hdr" 	vtx_format_6;
+					menuItem -p fros_format_menu -l "tif" 	vtx_format_7;
+					menuItem -p fros_format_menu -l "exr" 	vtx_format_8;
+					optionMenu -e -sl 3 fros_format_menu;
+					
+					text -l "Compression :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.24 0.24 0.24
+						fros_compression_menu;
+						
+					menuItem -p fros_compression_menu -l "Raw"	fros_compression_1;
+					menuItem -p fros_compression_menu -l "DXT1"	fros_compression_2;
+					menuItem -p fros_compression_menu -l "DXT3"	fros_compression_3;
+					menuItem -p fros_compression_menu -l "DXT5"	fros_compression_4;
+					optionMenu -e -sl 1 fros_compression_menu;
+				setParent ..;
+						
+			setParent ..;
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// FBX Settings
+			//-------------------------------------------------------------------	
+			frameLayout -label "FBX Settings" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_fbx;
+
+				gridLayout -numberOfColumns 2 -cellHeight 20 -cellWidth ($winw / 2);
+
+					text -l "FBX format version : " -align "right";
+
+					$fros_fbx_version = `optionMenu 
+					-label "" 
+					-w (floor($winw / 1.2)) -h 24
+					-ann ""
+					-cc "" 
+					fros_fbx_version_menu`;
+					
+					float $temp = float(`pluginInfo -q -version "fbxmaya"`);
+					if($temp >= 2014.0)
+						menuItem -p fros_fbx_version_menu -l "2014" form6;
+						
+					menuItem -p fros_fbx_version_menu -l "2013" form1;
+					menuItem -p fros_fbx_version_menu -l "2012" form2;
+					menuItem -p fros_fbx_version_menu -l "2011" form3;
+					menuItem -p fros_fbx_version_menu -l "2010" form4;
+					menuItem -p fros_fbx_version_menu -l "2009" form5;
+					
+					optionMenu -e -sl 1 fros_fbx_version_menu;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 20 -cellWidth ($winw / 2);
+					checkBox -l "Smoothing Grp" -v 1 	fros_checkFBXsmoothgrp;
+					checkBox -l "Split Normals" -v 0 	fros_checkFBXsplit;
+					checkBox -l "Tang/Binormals" -v 1 	fros_checkFBXbinormal;
+					checkBox -l "Smooth Msh" -v 0 		fros_checkFBXsmoothmsh;
+					checkBox -l "Selection Sets" -v 0 	fros_checkFBXsels;
+					checkBox -l "Convert to Null" -v 0 	fros_checkFBXnull;
+					checkBox -l "Connections" -v 0 		fros_checkFBXconnections;
+					checkBox -l "Ref Containers" -v 1 	fros_checkFBXreference;
+					checkBox -l "Triangulate" -v 0 		fros_checkFBXtriangulate;
+				setParent ..;
+			setParent ..;
+					
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Collada Settings
+			//-------------------------------------------------------------------	
+			frameLayout -label "FBX Collada Settings" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_collada;
+
+				gridLayout -numberOfColumns 2 -cellHeight 20 -cellWidth ($winw / 2);
+					checkBox -l "Triangulate" -v 0 fros_collada_tri;
+					checkBox -l "SingleMatrix" -v 0 fros_collada_matrix;
+				setParent ..;
+			
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// OBJ Settings
+			//-------------------------------------------------------------------	
+			frameLayout -label "OBJ Settings" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_obj;
+
+				gridLayout -numberOfColumns 2 -cellHeight 20 -cellWidth ($winw / 2);
+					checkBox -l "Groups" 		-v 0 fros_checkOBJgroups;
+					checkBox -l "Point groups" 	-v 1 fros_checkOBJpoint;
+					checkBox -l "Materials" 	-v 1 fros_checkOBJmaterials;
+					checkBox -l "Smoothing" 	-v 0 fros_checkOBJsmoothing;
+					checkBox -l "Normals" 		-v 1 fros_checkOBJnormals;
+				setParent ..;
+			
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Software settings
+			//-------------------------------------------------------------------	
+			frameLayout -label "Software Settings" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_soft;
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));
+						textField -w 218 -fi "" -ann "" -editable 0 -bgc 0.2 0.15 0.15 fros_path_batch; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Batch path" 
+								-w 48 -h 22 
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "frosSetBatchFolder";
+						setParent ..;
+					setParent ..;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));	
+						textField -w 218 -fi "" -ann "" -editable 0 -bgc 0.2 0.15 0.15 fros_path_plugin; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Plugin path" 
+								-w 48 -h 22 
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "frosSetPlugin";
+						setParent ..;
+					setParent ..;
+					
+					/*
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));	
+						textField -w 218 -fi "" -ann "" -editable 0 -bgc 0.2 0.15 0.15 fros_path_designer; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Designer path" 
+								-w 48 -h 22 
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "";
+						setParent ..;
+					setParent ..;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));	
+						textField -w 218 -fi "" -ann "" -editable 0 -bgc 0.2 0.15 0.15 fros_path_painter; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Painter path" 
+								-w 48 -h 22 
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "";
+						setParent ..;
+					setParent ..;
+					*/
+					
+				setParent ..;			
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+
+
+			/////////////////////////////////////////////////////////////////////
+			// Shelf button
+			//-------------------------------------------------------------------
+			frameLayout -label "Misc" -collapsable 0 -borderStyle "out" ;
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 1 -cellHeight 20 -cellWidth ($winw / 1);
+						button
+							-l "Add shelf button"
+							-c "frosCreateShelfButton"
+							-bgc 0.35 0.3 0.3;
+					setParent..;
+				setParent..;
+				
+				//correcting framelayout width size
+				gridLayout -numberOfColumns 1 -cellHeight 1 -cellWidth ($winw );
+					separator -h 4 -w 200 -style "out";
+				setParent ..;
+			setParent ..; //framelayout
+				
+		setParent ..; //end scroll
+			
+			
+		/////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		string $child2 = `scrollLayout -w ($winw + 25) -h 300 scroll2`;
+		
+			/////////////////////////////////////////////////////////////////////
+			// Common settings
+			//-------------------------------------------------------------------	
+			gridLayout -numberOfColumns 1 -cellHeight 8 -cellWidth ($winw );
+				separator -h 8 -style "out" -bgc 0.5 0.15 0.25;
+			setParent ..;
+			
+			gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);					
+				
+				text -l "Max Frontal Dist : " -align "right";
+				floatField -min 0.0001 -max 1 -v 0.01 fros_field_global_frontdist;
+				
+				text -l "Max Rear Dist : " -align "right";
+				floatField -min 0.0001 -max 1 -v 0.01 fros_field_global_reardist;
+
+				text -l "Global Normal : " -align "right";
+					
+				optionMenu 
+					-label "" 
+					-w (floor($winw / 1.2)) -h 24
+					-ann ""
+					-cc "frosSetGlobalNormal"
+					-bgc 0.2 0.2 0.25
+					fros_globalnormal_menu;
+				menuItem -p fros_globalnormal_menu -l "OpenGL"	fros_globalnormal_1;
+				menuItem -p fros_globalnormal_menu -l "DirectX"	fros_globalnormal_2;
+				optionMenu -e -sl 1 fros_globalnormal_menu;
+				
+				
+				text -l "Global Anti-aliasing : " -align "right";
+
+				optionMenu 
+					-label ""
+					-w (floor($winw / 1.2)) -h 24
+					-ann ""
+					-cc "frosSetGlobalAntiAliasing"
+					-bgc 0.2 0.2 0.2
+					fros_globalaa_menu;
+					
+				menuItem -p fros_globalaa_menu -l "None"			fros_globalaa_1;
+				menuItem -p fros_globalaa_menu -l "Subsampling 2x2"	fros_globalaa_2;
+				menuItem -p fros_globalaa_menu -l "Subsampling 4x4"	fros_globalaa_3;
+				menuItem -p fros_globalaa_menu -l "Subsampling 8x8" fros_globalaa_4;
+				optionMenu -e -sl 1 fros_globalaa_menu;
+		
+				checkBox 
+					-l "Average Normals" 
+					-v 1
+					-ann ""
+					fros_check_global_normals;
+						
+				checkBox 
+					-l "Relative Bounding" 
+					-v 1 
+					-ann ""
+					fros_check_global_bbox;
+					
+				checkBox 
+					-l "Per-Pixel Binormal" 
+					-v 0 
+					-ann ""
+					fros_check_global_binormals;
+
+				checkBox 
+					-l "Ignore backface" 
+					-v 1 
+					fros_check_global_backface;
+					
+		
+			setParent ..;
+			
+			gridLayout -numberOfColumns 1 -cellHeight 8 -cellWidth ($winw );
+				separator -h 8 -style "in" -bgc 0.5 0.15 0.25;
+			setParent ..;
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Normal map
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Normal from mesh" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_5;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_norm" -ann "" -cc "frosSaveSuffix" fros_file_normal;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+
+					text -l "Anti-aliasing : " -align "right";
+
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_field_normalaa;
+						
+					menuItem -p fros_field_normalaa -l "None"				fros_normalaa_1;
+					menuItem -p fros_field_normalaa -l "Subsampling 2x2"	fros_normalaa_2;
+					menuItem -p fros_field_normalaa -l "Subsampling 4x4"	fros_normalaa_3;
+					menuItem -p fros_field_normalaa -l "Subsampling 8x8" 	fros_normalaa_4;
+					optionMenu -e -sl 1 fros_field_normalaa;
+					
+					text -l "Space :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_normal_menu;
+					menuItem -p fros_normal_menu -l "Object"		fros_normal_2;
+					menuItem -p fros_normal_menu -l "Tangent"		fros_normal_1;
+					optionMenu -e -sl 2 fros_normal_menu;
+					
+					
+					text -l "Normal type :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.25
+						fros_normaltype_menu;
+					menuItem -p fros_normaltype_menu -l "OpenGL"	fros_normaltype_1;
+					menuItem -p fros_normaltype_menu -l "DirectX"	fros_normaltype_2;
+					optionMenu -e -sl 1 fros_normaltype_menu;
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Curvature
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "Curvature" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_3;
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "Filename Suffix : " -align "right";
+						textField -w 218 -fi "_curv" -ann "" -cc "frosSaveSuffix" fros_file_curv;
+					setParent ..;
+
+					gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+						gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor(($winw / 1.5)));	
+							textField -w 218 -fi "" -ann "Normal path" fros_curv_normal; 
+							
+							gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+								button 
+									-label "Normal path" 
+									-w 48 -h 22
+									-bgc 0.45 0.25 0.25
+									-ann ""
+									-command "frosSetNormalCurv";
+							setParent ..;
+						setParent ..;
+					setParent ..;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						checkBox 
+								-l "Use Normal map" 
+								-v 1
+								fros_check_curvnm;
+								
+						checkBox 
+								-l "World Space Nrml" 
+								-v 0
+								fros_check_curvpace;
+					setParent ..;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Algorithm :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_curv_menu;
+					menuItem -p fros_curv_menu -l "Per Pixel"		fros_curv_1;
+					menuItem -p fros_curv_menu -l "Per vertex"		fros_curv_2;
+					optionMenu -e -sl 1 fros_curv_menu;
+					
+					
+					text -l "Normal type :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.25
+						fros_curvtype_menu;
+					menuItem -p fros_curvtype_menu -l "OpenGL"	fros_curvtype_1;
+					menuItem -p fros_curvtype_menu -l "DirectX"	fros_curvtype_2;
+					optionMenu -e -sl 1 fros_curvtype_menu;
+
+
+					text -l "";
+					checkBox -v 0 -l "Enable Seams" frox_check_curvseams;
+					
+					text -l "Details (0-100) : " -align "right";
+					floatField -v 0.5 -min 0.0 -max 100.0 -pre 3 frox_curv_details;
+					
+					text -l "Seams (0-1000) : " -align "right";
+					floatField -v 1.0 -min 0.0 -max 1000.0 -pre 3 frox_curv_seams;
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Ambient Occlusion
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Ambient Occlusion (LP)" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_1;
+
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "Filename Suffix : " -align "right";
+						textField -w 218 -fi "_ao" -ann "" -cc "frosSaveSuffix" fros_file_ao;
+					setParent ..;
+
+					gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+						gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor(($winw / 1.5)));	
+							textField -w 218 -fi "" -ann "Normal path" fros_ao_normal; 
+							
+							gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+								button 
+									-label "Normal path" 
+									-w 48 -h 22
+									-bgc 0.45 0.25 0.25
+									-ann ""
+									-command "frosSetNormalAO";
+							setParent ..;
+						setParent ..;
+					setParent ..;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						checkBox 
+								-l "Use Normal map" 
+								-v 1
+								fros_check_aonm;
+								
+						checkBox 
+								-l "World Space Nrml" 
+								-v 0
+								fros_check_aospace;
+					setParent ..;	
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);	
+						text -l "";
+						
+						checkBox -v 0 -l "Invert vtx Normal" frox_check_aoinvert;
+					setParent ..;
+				setParent ..;
+
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Quality :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_aoquality_menu;
+					menuItem -p fros_aoquality_menu -l "Low"		fros_ao_quality1;
+					menuItem -p fros_aoquality_menu -l "Medium"		fros_ao_quality2;
+					menuItem -p fros_aoquality_menu -l "High"		fros_ao_quality3;
+					menuItem -p fros_aoquality_menu -l "Very High"	fros_ao_quality4;
+					optionMenu -e -sl 3 fros_aoquality_menu;
+					
+					text -l "Normal type :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.25
+						fros_aotype_menu;
+					menuItem -p fros_aotype_menu -l "OpenGL"	fros_ao_type1;
+					menuItem -p fros_aotype_menu -l "DirectX"	fros_ao_type2;
+					optionMenu -e -sl 1 fros_aotype_menu;
+					
+					text -l "Prec Bias (0-100) : " -align "right";
+					floatField -v 0.6 -min 0.0 -max 100.0 -pre 3 frox_ao_bias;
+					
+					text -l "Dist Fade (0-100) : " -align "right";
+					floatField -v 0.01 -min 0.0 -max 100.0 -pre 3 frox_ao_fade;
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+				
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Ambient Occlusion from High-Poly
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Ambient Occlusion from mesh" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_11;
+
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+						text -l "Filename Suffix : " -align "right";
+						textField -w 218 -fi "_aohp" -ann "" -cc "frosSaveSuffix" fros_file_aohp;
+					setParent ..;
+				setParent ..;
+
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);					
+				
+					text -l "(Secondary rays) " -align "right";
+					checkBox 
+						-v 1 
+						-l "Ignore backface"
+						check_aohp_secondarybackface;
+						
+					text -l "(Occluder bbox) " -align "right";
+					checkBox 
+						-v 1 
+						-l "Relative Bounding"
+						check_aohp_relativebbox;
+					
+					text -l "Anti-aliasing : " -align "right";
+
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_aoaa_menu;
+						
+					menuItem -p fros_aoaa_menu -l "None"			fros_aoaa_1;
+					menuItem -p fros_aoaa_menu -l "Subsampling 2x2"	fros_aoaa_2;
+					menuItem -p fros_aoaa_menu -l "Subsampling 4x4"	fros_aoaa_3;
+					menuItem -p fros_aoaa_menu -l "Subsampling 8x8" fros_aoaa_4;
+					optionMenu -e -sl 1 fros_aoaa_menu;
+					
+					
+					text -l "Distribution :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_aodistrib_menu;
+					menuItem -p fros_aodistrib_menu -l "Uniform"	fros_ao_distrib1;
+					menuItem -p fros_aodistrib_menu -l "Cosine"	fros_ao_distrib2;
+					optionMenu -e -sl 1 fros_aodistrib_menu;
+					
+					text -l "Attenuation :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_aoatt_menu;
+					menuItem -p fros_aoatt_menu -l "None"	fros_aoatt1;
+					menuItem -p fros_aoatt_menu -l "Linear"	fros_aoatt2;
+					menuItem -p fros_aoatt_menu -l "Smooth"	fros_aoatt3;
+					optionMenu -e -sl 2 fros_aoatt_menu;
+					
+					
+					text -l "Rays (1-1000) : " -align "right";
+					floatField -v 64 -min 1 -max 1000 -pre 0 frox_aohp_rays;
+					
+					text -l "Spread angle : " -align "right";
+					floatField -v 180.0 -min 0 -max 180 -pre 1 frox_aohp_angle;
+					
+					text -l "Min Distance : " -align "right";
+					floatField -v 0.00001 -min 0 -max 0.01 -pre 5 frox_aohp_distmin;
+					
+					text -l "Max Distance : " -align "right";
+					floatField -v 0.1 -min 0 -max 1 -pre 4 frox_aohp_distmax;
+					
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+				
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Material ID colors
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Material IDs" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_10;				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_mid" -ann "" -cc "frosSaveSuffix" fros_file_mid;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					
+					text -l "Source : " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_field_midtype;
+						
+					menuItem -p fros_field_midtype -l "Low poly"			fros_field_midtype1;
+					menuItem -p fros_field_midtype -l "High poly"			fros_field_midtype2;
+					optionMenu -e -sl 1 fros_field_midtype;
+
+					
+					text -l "Anti-aliasing : " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_field_midaa;
+						
+					menuItem -p fros_field_midaa -l "None"				fros_field_midaa1;
+					menuItem -p fros_field_midaa -l "Subsampling 2x2"	fros_field_midaa2;
+					menuItem -p fros_field_midaa -l "Subsampling 4x4"	fros_field_midaa3;
+					menuItem -p fros_field_midaa -l "Subsampling 8x8" 	fros_field_midaa4;
+					optionMenu -e -sl 1 fros_field_midaa;
+					
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Position
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "Position" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_6;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_pos" -ann "" -cc "frosSaveSuffix" fros_file_pos;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Mode :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_pos_mode;
+					menuItem -p fros_pos_mode -l "All Axis"	fros_pos_mode1;
+					menuItem -p fros_pos_mode -l "One Axis"	fros_pos_mode2;
+					optionMenu -e -sl 1 fros_pos_mode;
+					
+					
+					text -l "Axis :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.25
+						fros_pos_axis;
+					menuItem -p fros_pos_axis -l "X"	fros_pos_axis1;
+					menuItem -p fros_pos_axis -l "Y"	fros_pos_axis2;
+					menuItem -p fros_pos_axis -l "Z"	fros_pos_axis3;
+					optionMenu -e -sl 1 fros_pos_axis;
+					
+					
+					text -l "Normalization :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_pos_norm;
+					menuItem -p fros_pos_norm -l "BBox"	fros_pos_norm1;
+					menuItem -p fros_pos_norm -l "BSphere"	fros_pos_norm2;
+					optionMenu -e -sl 1 fros_pos_norm;
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// UV to Texture
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "UVs to Texture" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_2;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_uv" -ann "" -cc "frosSaveSuffix" fros_file_uv;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Color mode :  " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.25
+						fros_svg_color;
+					menuItem -p fros_svg_color -l "Random"	fros_svg_color1;
+					menuItem -p fros_svg_color -l "Hue shift"	fros_svg_color2;
+					menuItem -p fros_svg_color -l "Grayscale"	fros_svg_color3;
+					menuItem -p fros_svg_color -l "Uniform"	fros_svg_color4;
+					menuItem -p fros_svg_color -l "Material ID color"	fros_svg_color5;
+					optionMenu -e -sl 2 fros_svg_color;
+					
+					
+					text -l "Padding (in pixels) : " -align "right";
+					intField -min 0 -max 2048 -v 0 fros_svg_padding;
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Vertex Color
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Vertex Colors from mesh" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_7;				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_vtx" -ann "" -cc "frosSaveSuffix" fros_file_vtx;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Anti-aliasing : " -align "right";
+					
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_field_vtxaa;
+						
+					menuItem -p fros_field_vtxaa -l "None"			fros_field_vtxaa_1;
+					menuItem -p fros_field_vtxaa -l "Subsampling 2x2"	fros_field_vtxaa_2;
+					menuItem -p fros_field_vtxaa -l "Subsampling 4x4"	fros_field_vtxaa_3;
+					menuItem -p fros_field_vtxaa -l "Subsampling 8x8" fros_field_vtxaa_4;
+					optionMenu -e -sl 1 fros_field_vtxaa;
+					
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Height map
+			//-------------------------------------------------------------------	
+			frameLayout -visible 1 -label "Height from mesh" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_4;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_height" -ann "" -cc "frosSaveSuffix" fros_file_height;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "";
+					checkBox -v 1 -l "Auto Normalization" fros_check_heightnormalize;
+					
+					text -l "Anti-aliasing : " -align "right";
+
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_heightaa_menu;
+						
+					menuItem -p fros_heightaa_menu -l "None"			fros_heightaa_1;
+					menuItem -p fros_heightaa_menu -l "Subsampling 2x2"	fros_heightaa_2;
+					menuItem -p fros_heightaa_menu -l "Subsampling 4x4"	fros_heightaa_3;
+					menuItem -p fros_heightaa_menu -l "Subsampling 8x8" fros_heightaa_4;
+					optionMenu -e -sl 1 fros_heightaa_menu;
+					
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// Thickness from mesh
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "Thickness from mesh" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_12;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_thk" -ann "" -cc "frosSaveSuffix" fros_file_thickness;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);												
+					text -l "(Occluder bbox) " -align "right";
+					checkBox 
+						-v 1 
+						-l "Relative Bounding"
+						check_thick_relativebbox;
+					
+					text -l "";
+					checkBox
+						-v 1
+						-l "Auto Normalization"
+						check_thick_normalization;
+						
+					text -l "Anti-aliasing : " -align "right";
+
+					optionMenu 
+						-label ""
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_thkaa_menu;
+						
+					menuItem -p fros_thkaa_menu -l "None"				fros_thkaa_1;
+					menuItem -p fros_thkaa_menu -l "Subsampling 2x2"	fros_thkaa_2;
+					menuItem -p fros_thkaa_menu -l "Subsampling 4x4"	fros_thkaa_3;
+					menuItem -p fros_thkaa_menu -l "Subsampling 8x8" 	fros_thkaa_4;
+					optionMenu -e -sl 1 fros_thkaa_menu;
+					
+					
+					text -l "Distribution :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_thkdistrib_menu;
+					menuItem -p fros_thkdistrib_menu -l "Uniform"	fros_thk_distrib1;
+					menuItem -p fros_thkdistrib_menu -l "Cosine"	fros_thk_distrib2;
+					optionMenu -e -sl 1 fros_thkdistrib_menu;
+					
+					
+					text -l "Rays (1-1000) : " -align "right";
+					floatField -v 64 -min 1 -max 1000 -pre 0 frox_thk_rays;
+					
+					text -l "Spread angle : " -align "right";
+					floatField -v 180.0 -min 0 -max 180 -pre 1 frox_thk_angle;
+					
+					text -l "Min Distance : " -align "right";
+					floatField -v 0.00001 -min 0 -max 0.01 -pre 5 frox_thk_distmin;
+					
+					text -l "Max Distance : " -align "right";
+					floatField -v 0.1 -min 0 -max 1 -pre 4 frox_thk_distmax;
+						
+				setParent ..;
+
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// World Space Direction
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "World Space Direction" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_8;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_dir" -ann "" -cc "frosSaveSuffix" fros_file_wsd;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor(($winw / 1.5)));	
+						textField -w 218 -fi "" -ann "Normal path" fros_wsd_filedir; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Dir path" 
+								-w 48 -h 22
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "frosSetDirectionFile";
+						setParent ..;
+					setParent ..;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Mode :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_wsd_mode;
+					menuItem -p fros_wsd_mode -l "OpenGL"	fros_wsd_mode1;
+					menuItem -p fros_wsd_mode -l "DirectX"	fros_wsd_mode2;
+					optionMenu -e -sl 1 fros_wsd_mode;
+					
+					
+					text -l "Input direction :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_wsd_dir;
+					menuItem -p fros_wsd_dir -l "From Texture"	fros_wsd_dir1;
+					menuItem -p fros_wsd_dir -l "From Vector"	fros_wsd_dir2;
+					optionMenu -e -sl 1 fros_wsd_dir;
+					
+					text -l "X : " -align "right";
+					floatField -v 0.0 -min 0.0 -max 1000000 -pre 2 fros_wsd_dirX;
+					
+					text -l "Y : " -align "right";
+					floatField -v 1.0 -min 0.0 -max 1000000 -pre 2 fros_wsd_dirY;
+					
+					text -l "Z : " -align "right";
+					floatField -v 0.0 -min 0.0 -max 1000000 -pre 2 fros_wsd_dirZ;
+				setParent ..;
+				
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+			separator -h 1 -w 216 -style "none";
+			
+			
+			
+			/////////////////////////////////////////////////////////////////////
+			// World Space Normals
+			//-------------------------------------------------------------------
+			frameLayout -visible 1 -label "World Space Normals" -collapsable 1 -borderStyle "out" -bgc 0.1 0.1 0.1 frame_9;
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Filename Suffix : " -align "right";
+					textField -w 218 -fi "_wsn" -ann "" -cc "frosSaveSuffix" fros_file_wsn;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor(($winw / 1.5)));	
+						textField -w 218 -fi "" -ann "Normal path" fros_wsn_filedir; 
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Norm path" 
+								-w 48 -h 22
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "frosSetWorldNormalFile";
+						setParent ..;
+					setParent ..;
+				setParent ..;
+				
+				gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);
+					text -l "Mode :  " -align "right";
+					optionMenu 
+						-label "" 
+						-w (floor($winw / 1.2)) -h 24
+						-ann ""
+						-cc ""
+						-bgc 0.2 0.2 0.2
+						fros_wsn_mode;
+					menuItem -p fros_wsn_mode -l "OpenGL"	fros_wsn_mode1;
+					menuItem -p fros_wsn_mode -l "DirectX"	fros_wsn_mode2;
+					optionMenu -e -sl 1 fros_wsn_mode;
+				setParent ..;
+				
+				separator -h 4 -w 200 -style "out";
+			setParent ..;
+			
+		setParent ..; //end scrolllayout
+		
+		
+			/////////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////////
+			/////////////////////////////////////////////////////////////////////////////////////////
+			
+			
+			
+			string $child3 = `scrollLayout -w ($winw + 25) -h 300 scroll3`;
+
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);	
+					text -l "Substance (sbsar) used as template :" -align "center";
+				setParent ..;
+				
+				gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw);	
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (floor($winw / 1.5));	
+						textField -fi "" fros_template_substance;
+						
+						gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw / 3);	
+							button 
+								-label "Load Sbsar" 
+								-w 48 -h 22 
+								-bgc 0.45 0.25 0.25
+								-ann ""
+								-command "frosSetSubstanceTemplate";
+						setParent ..;
+					setParent ..;
+				setParent ..;
+				
+					separator -h 8 -w 216 -style "none";
+				
+				gridLayout -numberOfColumns 3 -cellHeight 22 -cellWidth (floor($winw / 3));	
+					text -l "Seed : " -align "right";
+					floatField -min 0 -max 2147483647 -v 0 -pre 0 fros_field_randomseed;
+					
+					// text -l "";
+					button
+						-l "Generate"
+						-bgc 0.25 0.25 0.25
+						-c "frosUpdateRandomeSeed";
+					
+				setParent ..;
+
+				
+					string $floatform = `formLayout`;
+						checkBox -v 0 -l "New seed per mesh" fros_check_seed;
+					setParent ..;
+
+					formLayout -e
+						-attachForm  fros_check_seed  "left"  54
+					$floatform;
+					
+
+					separator -h 8 -w 216 -style "none";
+
+				gridLayout -numberOfColumns 1 -cellHeight 32 -cellWidth ($winw);	
+					button
+						-l "Refresh Inputs"
+						-bgc 0.34 0.29 0.40
+						-c "frosUpdateInputsUI";
+				setParent ..;
+				
+					separator -h 1 -w 216 -style "none";
+					
+				gridLayout -numberOfColumns 1 -cellHeight 40 -cellWidth ($winw);	
+					button
+						-l "Bake Template"
+						-bgc 0.49 0.08 0.12
+						-c "frosTemplateBake";
+				setParent ..;
+			
+					separator -h 8 -w 216 -style "none";
+			
+				frameLayout -bgc 0.1 0.1 0.1 -label "Substance Bake Size" -collapsable 1 -borderStyle "out";
+					
+					gridLayout -numberOfColumns 1 -cellHeight 32 -cellWidth ($winw);	
+						text -l "/!\\ The output size is dependant\n of the baked graph." -bgc 0.2 0.2 0.2 -align "center";
+					setParent ..;
+					
+					gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth ($winw / 2);	
+						text -l "Output size X = " -align "right";
+						optionMenu 
+							-label "" 
+							-w ($winw / 2) -h 22
+							-ann ""
+							-cc ""
+							-bgc 0.3 0.2 0.2
+							fros_templatemenu_x;
+						menuItem -p fros_templatemenu_x -l "8"					fros_templatemenu_x_10;
+						menuItem -p fros_templatemenu_x -l "16"					fros_templatemenu_x_9;
+						menuItem -p fros_templatemenu_x -l "32"					fros_templatemenu_x_8;
+						menuItem -p fros_templatemenu_x -l "64"					fros_templatemenu_x_7;
+						menuItem -p fros_templatemenu_x -l "128"				fros_templatemenu_x_6;
+						menuItem -p fros_templatemenu_x -l "256"				fros_templatemenu_x_5;
+						menuItem -p fros_templatemenu_x -l "512"				fros_templatemenu_x_4;
+						menuItem -p fros_templatemenu_x -l "1024"				fros_templatemenu_x_3;
+						menuItem -p fros_templatemenu_x -l "2048"				fros_templatemenu_x_2;
+						menuItem -p fros_templatemenu_x -l "4096"				fros_templatemenu_x_1;
+						optionMenu -e -sl 8 fros_templatemenu_x;
+						
+						
+						text -l "Output size Y = " -align "right";
+						optionMenu 
+							-label "" 
+							-w ($winw / 2) -h 22
+							-ann ""
+							-cc ""
+							-bgc 0.3 0.2 0.2
+							fros_templatemenu_y;
+						menuItem -p fros_templatemenu_y -l "8"					fros_templatemenu_y_10;
+						menuItem -p fros_templatemenu_y -l "16"					fros_templatemenu_y_9;
+						menuItem -p fros_templatemenu_y -l "32"					fros_templatemenu_y_8;
+						menuItem -p fros_templatemenu_y -l "64"					fros_templatemenu_y_7;
+						menuItem -p fros_templatemenu_y -l "128"				fros_templatemenu_y_6;
+						menuItem -p fros_templatemenu_y -l "256"				fros_templatemenu_y_5;
+						menuItem -p fros_templatemenu_y -l "512"				fros_templatemenu_y_4;
+						menuItem -p fros_templatemenu_y -l "1024"				fros_templatemenu_y_3;
+						menuItem -p fros_templatemenu_y -l "2048"				fros_templatemenu_y_2;
+						menuItem -p fros_templatemenu_y -l "4096"				fros_templatemenu_y_1;
+						optionMenu -e -sl 8 fros_templatemenu_y;
+							
+					setParent ..;
+					
+				setParent ..;
+				
+					separator -h 4 -w 216 -style "none";
+			
+				frameLayout -bgc 0.1 0.1 0.1 -label "Substance Input list" -collapsable 1 -borderStyle "out"  fros_template_list;
+					separator -h 1 -w 218 -style "none" fros_item_base;
+					
+					gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth ($winw) fros_item1;	
+						text -l "No substance loaded..." -align "center";
+					setParent ..;
+					
+				setParent ..;
+				
+			setParent ..;
+			
+			
+		
+	setParent; //tablayout
+	
+	tabLayout -edit
+		-tabLabel $child1 ("     Bake     ")
+		-tabLabel $child2 ("   Settings   ")
+		-tabLabel $child3 ("   Template   ")
+		$tabs;
+
+	// tabLayout -e -selectTabIndex 2 $tabs;
+		
+	
+	setParent; //columnlayout
+	setParent; //scrollLayout
+	
+    if( $mayaVersion >= $mayaVersionRequired )
+	{
+		//show the window with dock control
+		dockControl
+			-area			$defaultDockArea
+			-floating		$floating
+			-content		Winfros
+			-allowedArea	"left"
+			-allowedArea	"right"
+			-label			$frostitle
+			$dock;
+			
+
+		if(`window -q -height Winfros` < 600)
+			window -e -height 600 Winfros;
+	}
+	else
+	{
+		//show the window with the old system
+		showWindow Winfros;
+		
+		if(`window -q -height Winfros` < 600)
+			window -e -height 600 Winfros;
+	}
+	
+	
+	
+	//collapse some framelayout by default :
+	frameLayout -e -collapse 1 frame_1;
+	frameLayout -e -collapse 1 frame_2;
+	frameLayout -e -collapse 1 frame_3;
+	frameLayout -e -collapse 1 frame_4;
+	// frameLayout -e -collapse 1 frame_5;
+	frameLayout -e -collapse 1 frame_6;
+	frameLayout -e -collapse 1 frame_7;
+	frameLayout -e -collapse 1 frame_8;
+	frameLayout -e -collapse 1 frame_9;
+	frameLayout -e -collapse 1 frame_10;
+	frameLayout -e -collapse 1 frame_11;
+	frameLayout -e -collapse 1 frame_12;
+	
+	frameLayout -e -collapse 1 frame_naming;
+	frameLayout -e -collapse 1 frame_cagecreation;
+	frameLayout -e -collapse 1 frame_fbx;
+	frameLayout -e -collapse 1 frame_collada;
+	frameLayout -e -collapse 1 frame_obj;
+	frameLayout -e -collapse 1 frame_soft;
+
+	
+	//Update layout and fields
+	frosGetFolders();
+	frosDisableUIcage();
+	frosLoadNomenclature();
+	frosLoadSuffix();
+	
+	print ($frostitle + " is ready.\n");
+
+}
+
+//round a float to 3 digit maximum after the point
+global proc float roundf(float $i)
+{
+	float $temp = floor( abs($i) * 1000 + 0.5 ) / 1000;
+
+	if($i < 0)
+		$temp *= -1;
+	
+	return $temp;
+}
+
+
+
+global proc frosSaveNomenclature()
+{
+	string $lp = `textField -q -fi fros_multibake_lp`;
+	string $hp = `textField -q -fi fros_multibake_hp`;
+	string $cg = `textField -q -fi fros_multibake_cg`;
+	
+	optionVar -stringValue "frosMeshName_Low" $lp;
+	optionVar -stringValue "frosMeshName_High" $hp;
+	optionVar -stringValue "frosMeshName_Cage" $cg;
+}
+
+
+global proc frosLoadNomenclature()
+{
+	if( `optionVar -exists "frosMeshName_Low"`)
+		textField -e -fi (`optionVar -q "frosMeshName_Low"`) fros_multibake_lp;
+		
+	if( `optionVar -exists "frosMeshName_High"`)
+		textField -e -fi (`optionVar -q "frosMeshName_High"`) fros_multibake_hp;
+		
+	if( `optionVar -exists "frosMeshName_Cage"`)
+		textField -e -fi (`optionVar -q "frosMeshName_Cage"`) fros_multibake_cg;
+}
+
+
+
+global proc frosCreateShelfButton()
+{	
+	global string $gShelfTopLevel;
+	string $currentShelf = `tabLayout -q -st $gShelfTopLevel`;
+	setParent ($gShelfTopLevel + "|" + $currentShelf);
+	
+	shelfButton
+		-label "Substance Maya Toolset"
+		-annotation "Launch Substance Maya Toolset"
+		-image1 "froyok/fros_icologo.png" 
+		-command "source SubstanceMayaToolset.mel; SubstanceMayaToolset();"; //no need to make a new button, automatically update
+}
+
+
+
+global proc frosCreateEnvelope()
+{	
+	string $sel[] = `ls -sl`;
+	
+	string $cages[];
+	
+	for( $m in $sel)
+	{
+		select -r $m;
+		
+		
+		//-----------------------------------------------
+		//Is is a tranform without ashape (aka a group ?)
+		//-----------------------------------------------
+		int $onlyTransforms = true;
+		string $child[];
+		clear($child); //avoid possible Maya2013 bug in for() loops
+		$child = `listRelatives -children $m`;
+		
+		//check if lp is a group
+		if( `objectType -isType "transform" $m` )
+		{
+			//iterate children and see if they're all transforms themselves...
+			if( size($child) != 0 )
+			{
+				for( $i in $child )
+				{
+					if(`nodeType $i` != "transform")
+					{
+						$onlyTransforms = false;
+						break;
+					}
+				}
+			}
+			
+		}
+		
+		
+		//-----------------------------------------------
+		//Create envelope name
+		//-----------------------------------------------
+		string $name = $m;
+		string $cage_suffix = "_cage";
+		if( `textField -q -fi fros_multibake_cg` != "" )
+			$cage_suffix = `textField -q -fi fros_multibake_cg`;
+		
+		string $lp_suffix = "_lp";
+		if( `textField -q -fi fros_multibake_lp` != "" )
+		{
+			$lp_suffix = `textField -q -fi fros_multibake_lp`;
+			
+			$name = startString( $name, size( $name ) - size( $lp_suffix ) );
+		}
+		
+		$name += $cage_suffix;
+		
+		
+		//-----------------------------------------------
+		// Create a new Envelope
+		//-----------------------------------------------
+		string $Envelopes[] = `duplicate -name $name $m`;
+		string $Envelope = $Envelopes[0];
+		
+		//Was HP a group ? If yes, we combine the copy before convertion
+		if($onlyTransforms)
+		{
+			string $merge[] = `polyUnite -ch false $Envelope`;
+			setAttr ($merge[0] + ".vertexNormalMethod") 0;
+			delete -ch $merge[0];
+			
+			if( `objExists $Envelope` )
+				delete $Envelope;
+				
+			rename $merge[0] $Envelope;
+		}
+		
+		
+		//-----------------------------------------------
+		//Triangulate before inflate ?
+		//-----------------------------------------------
+		if( `checkBox -q -v fros_cage_triangulate` )
+		{
+			select -r $Envelope;
+			polyTriangulate -constructionHistory 1;
+			delete -constructionHistory $Envelope;
+		}
+		
+		
+		// Create the Envelope shader if it doesn't exist already
+		string $EnvelopeShader = "surfaceSamplingEnvelopeShader";
+		string $EnvelopeShadingGroup = $EnvelopeShader + "SG";
+		if( size( `ls $EnvelopeShadingGroup` ) == 0 )
+		{
+			string $shader = `shadingNode -asShader lambert -name $EnvelopeShader`;
+			setAttr ($shader + ".color") 1.0 0.5 0.5;
+			setAttr ($shader + ".transparency") 0.5 0.5 0.5;
+			string $group = `sets -renderable true -noSurfaceShader true -empty -name ($EnvelopeShader + "SG")`;
+			connectAttr -f ($shader + ".outColor") ($group + ".surfaceShader");
+		}
+		
+		// Throw the Envelope shader on the new Envelope
+		sets -e -forceElement $EnvelopeShadingGroup $Envelope;
+		
+		
+		//-----------------------------------------------
+		// Now throw a face extrude on the Envelope 
+		//-----------------------------------------------
+		float $offset = `floatField -q -v fros_slider_cage`;
+		
+		if( (`optionMenu -q -sl fros_cage_type` == 1) )
+		{
+			string $modifier[] = `polyMoveFacet -ch 1 -localTranslateZ $offset $Envelope`;
+			polyMoveFacet -e -worldSpace off $modifier[0];
+		}
+		else
+		{
+			string $modifier[] = `polyMoveVertex -ch 1 -localTranslateZ $offset $Envelope`;
+			polyMoveVertex -e -worldSpace off $modifier[0];
+		}
+		
+		
+		
+		$cages[ size( $cages ) ] = $Envelope;
+		frosCageInflate();
+	}
+	
+	select -r $cages;
+}
+
+
+
+global proc frosCageInflate()
+{
+	string $sel[] = `ls -sl -o`;
+	
+	for($m in $sel)
+	{	
+		select -r $m;
+		
+		//list connections
+		string $FF[] = `listRelatives $m`;
+		
+		if( `objExists $FF[0]`)
+		{
+			string $GG[] = `listConnections $FF[0]`;
+		
+			//find node
+			string $nbtes;
+			for( $i in $GG )
+			{
+				if ( `nodeType $i` == "polyMoveFace" ) 
+				{
+					setAttr ($i + ".localTranslateZ") (`floatField -q -v fros_slider_cage`);
+				}
+				else if ( `nodeType $i` == "polyMoveVertex" ) 
+				{
+					setAttr ($i + ".localTranslateZ") (`floatField -q -v fros_slider_cage`);
+				}
+			}
+		}
+	}
+	
+	select -r $sel;
+}
+
+
+
+global proc frosCageStep(int $input)
+{
+	float $step 	= `floatField -q -v fros_step_cage`;
+	float $current 	= `floatField -q -v fros_slider_cage`;
+
+	if($input)
+		floatField -e -v ($current + $step) fros_slider_cage;
+	else
+		floatField -e -v ($current - $step) fros_slider_cage;
+		
+	frosCageInflate();
+}
+
+
+
+global proc frosOpenExportFolder()
+{
+	string $path = `textField -q -fi fros_path_export`;
+	if($path != "")
+	{
+		$path = toNativePath($path); //slash to double slash
+		system("explorer \"" + $path + "\"");
+	}
+}
+
+
+
+global proc frosSetSBSFolder()
+{
+	string $path[] = `fileDialog2 -fm 3 -cap "Select the Substance Designer Folder"`;
+	if($path[0] != "") //update only if valid, otherwise keep blank/current path
+	{
+		string $filename = $path[0] + "/";    
+		textField -e -fi $filename fros_path_sbs; //update path
+		
+		optionVar -stringValue "SubstanceMayaToolsetPath" $filename;
+	}
+}
+
+
+global proc frosSetWorldNormalFile()
+{
+	//put the default folder as the export folder
+	string $exp = `textField -q -fi fros_path_export`;
+	
+	if($exp != "")
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal file" -dir $exp`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_wsn_filedir;
+		}
+	}
+	else
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal file"`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_wsn_filedir;
+		}
+	}
+}
+
+
+global proc frosSetDirectionFile()
+{
+	//put the default folder as the export folder
+	string $exp = `textField -q -fi fros_path_export`;
+	
+	if($exp != "")
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Direction file" -dir $exp`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_wsd_filedir;
+		}
+	}
+	else
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Direction file"`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_wsd_filedir;
+		}
+	}
+}
+
+
+global proc frosSetBatchFolder()
+{
+	string $path[] = `fileDialog2 -fm 3 -cap "Select the Batch Tool Folder"`;
+	if($path[0] != "") //update only if valid, otherwise keep blank/current path
+	{
+		string $filename = $path[0] + "/";    
+		textField -e -fi $filename fros_path_batch; //update path
+		
+		optionVar -stringValue "frosBatchPath" $filename;
+		
+		
+		//add mikkt by default plugin (if missing)
+		if( `textField -q -fi fros_path_plugin` == "")
+		{
+			textField -e -fi ($filename + "plugins/tangentspace/mikktspace.dll") fros_path_plugin;
+			optionVar -stringValue "frosPluginPath" ($filename + "plugins/tangentspace/mikktspace.dll");
+		}
+	}
+}
+
+
+global proc frosSetPlugin()
+{
+	string $path[];
+
+	
+	//Batch tool already set ? Set default path
+	if( `textField -q -fi fros_path_batch` != "")
+	{
+		string $startpath = `textField -q -fi fros_path_batch` + "plugins/tangentspace/";
+		$path = `fileDialog2 -fm 1 -dir $startpath -cap "Select a Tangent space plugin (*.dll)"`;
+	}
+	else
+		$path = `fileDialog2 -fm 1 -cap "Select a Tangent space plugin (*.dll)"`;
+	
+	
+	//update only if valid, otherwise keep blank/current path
+	if($path[0] != "")
+	{
+		string $filename = $path[0];    
+		textField -e -fi $filename fros_path_plugin; //update path
+		
+		optionVar -stringValue "frosPluginPath" $filename;
+	}
+}
+
+
+
+global proc frosSetExportFolder()
+{	
+	string $path[] = `fileDialog2 -fm 3 -cap "Select Export Folder"`;
+	if($path[0] != "") //update only if valid, otherwise keep blank/current path
+	{
+		string $filename = $path[0] + "/";    
+		textField -e -fi $filename fros_path_export; //update path
+		
+		optionVar -stringValue "frosExportPath" $filename;
+	}
+}
+
+
+global proc frosSetNormalAO()
+{	
+	//put the default folder as the export folder
+	string $exp = `textField -q -fi fros_path_export`;
+	
+	if($exp != "")
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal map" -dir $exp`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_ao_normal;
+		}
+	}
+	else
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal map"`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_ao_normal;
+		}
+	}
+}
+
+
+global proc frosSetNormalCurv()
+{	
+	//put the default folder as the export folder
+	string $exp = `textField -q -fi fros_path_export`;
+	
+	if($exp != "")
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal map" -dir $exp`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_curv_normal;
+		}
+	}
+	else
+	{
+		string $path[] = `fileDialog2 -fm 1 -cap "Select Normal map"`;
+		if($path[0] != "") //update only if valid, otherwise keep blank/current path
+		{
+			string $filename = $path[0];    
+			textField -e -fi $filename fros_curv_normal;
+		}
+	}
+}
+
+
+
+global proc frosGetFolders()
+{	
+	//Batch
+	if( `optionVar -exists "frosBatchPath"`)
+	{
+		string $filename = `optionVar -q "frosBatchPath"`;
+		textField -e -fi $filename fros_path_batch;
+	}
+	
+	//Export path
+	if( `optionVar -exists "frosExportPath"`) //update only if the optionVar exists
+	{
+		string $filename = `optionVar -q "frosExportPath"`;
+		textField -e -fi $filename fros_path_export; //update path
+	}
+	
+	//Plugin path
+	if( `optionVar -exists "frosPluginPath"`) //update only if the optionVar exists
+	{
+		string $filename = `optionVar -q "frosPluginPath"`;
+		textField -e -fi $filename fros_path_plugin; //update path
+	}
+}
+
+
+
+global proc frosGetMesh(int $type)
+{
+	string $sel[] = `ls -sl`;
+	
+	if(size($sel) != 0)
+	{
+		if($type == 1)
+			textField -e -fi $sel[0] fros_mesh_hp;
+		else if($type == 2)
+			textField -e -fi $sel[0] fros_mesh_lp;
+		else
+			textField -e -fi $sel[0] fros_mesh_cage;
+	}
+	else
+	{
+		if($type == 1)
+			textField -e -fi "" fros_mesh_hp;
+		else if($type == 2)
+			textField -e -fi "" fros_mesh_lp;
+		else
+			textField -e -fi "" fros_mesh_cage;
+	}
+
+}
+
+
+global proc frosToggleDock()
+{
+	if(!`checkBox -q -v fros_check_dock`)
+	{
+		optionVar -intValue "frosDocked" 0;
+		print `optionVar -q "frosDocked"`;
+	}
+	else
+	{
+		optionVar -intValue "frosDocked" 1;
+		print `optionVar -q "frosDocked"`;
+	}
+
+	SubstanceMayaToolset();
+}
+
+
+
+global proc frosDisableUIcage()
+{
+/*
+	if(!`checkBox -q -v fros_check_cage`)
+	{
+		textField -e -en 0 -fi "-----------------------------------" fros_mesh_cage;
+		button -e -en 0 fros_button_getcage;
+	}
+	else
+	{
+		textField -e -en 1 -fi "" fros_mesh_cage;
+		button -e -en 1 fros_button_getcage;
+	}
+*/
+}
+
+
+global proc frosDisableUIhighpoly()
+{
+	if(`checkBox -q -v fros_check_hpout`)
+	{
+		textField -e -en 0 -fi "-----------------------------------" fros_mesh_hp;
+		button -e -en 0 fros_button_gethp;
+	}
+	else
+	{
+		textField -e -en 1 -fi "" fros_mesh_hp;
+		button -e -en 1 fros_button_gethp;
+	}
+}
+
+
+
+
+
+
+
+global proc frosCheckFBX()
+{
+	//////////////////////////////////////////////////////
+	//export settings
+	if(`pluginInfo -q -loaded "fbxmaya"`)
+	{				
+		//========================
+		//FBX Settings
+		//========================
+		float $fbxv = `pluginInfo -q -version fbxmaya`;
+		
+		//-----------------------------------------------------
+		//mesh settings
+		FBXExportSmoothingGroups -v 								`checkBox -q -v fros_checkFBXsmoothgrp`;
+		FBXExportHardEdges -v  										`checkBox -q -v fros_checkFBXsplit`;
+		FBXExportQuickSelectSetAsCache -v 	 						`checkBox -q -v fros_checkFBXsels`;
+		FBXProperty Export|IncludeGrp|Geometry|AnimationOnly -v 0;	//animation only = convert to null
+		FBXExportInputConnections -v 	 							`checkBox -q -v fros_checkFBXconnections`;
+		FBXExportSmoothMesh -v	 									`checkBox -q -v fros_checkFBXsmoothmsh`;
+		FBXExportTangents -v 										`checkBox -q -v fros_checkFBXbinormal`;
+		
+		//-----------------------------------------------------
+		//animation settings disabled
+		FBXExportBakeComplexAnimation -v 0;
+		
+		//-----------------------------------------------------
+		//others settings (cameras, lights, and so on)
+		FBXExportConstraints -v 0;
+		FBXExportCameras -v 0;
+		FBXExportLights -v 0;
+		
+		
+		//-----------------------------------------------------
+		//Collada settings
+		FBXExportColladaFrameRate 30.0;
+		FBXExportColladaSingleMatrix `checkBox -q -v fros_collada_matrix`;
+		FBXExportColladaTriangulate `checkBox -q -v fros_collada_tri`;
+		
+		
+		
+		//-----------------------------------------------------
+		//Compatibility (commands depending of fbx plugin version)
+		if($fbxv >= 2012)
+			FBXExportTriangulate -v `checkBox -q -v fros_checkFBXtriangulate`;
+		
+		if($fbxv >= 2013)
+			FBXExportSkeletonDefinitions -v 0;
+		else
+			FBXExportCharacter -v 0;
+		
+		if($fbxv >= 2014)
+			FBXExportReferencedAssetsContent -v `checkBox -q -v fros_checkFBXreference`;
+		else
+			FBXExportReferencedContainersContent -v `checkBox -q -v fros_checkFBXreference`;
+		
+
+		//-----------------------------------------------------
+		//Export format
+		FBXExportFileVersion FBX201100; //set 2011 by default
+		
+		if(`optionMenu -q -v fros_fbx_version_menu` == "2009")
+			FBXExportFileVersion FBX200900;
+		else if(`optionMenu -q -v fros_fbx_version_menu` == "2010")
+			FBXExportFileVersion FBX201000;
+		else if(`optionMenu -q -v fros_fbx_version_menu` == "2012")
+			FBXExportFileVersion FBX201200;
+		else if(`optionMenu -q -v fros_fbx_version_menu` == "2013")
+			FBXExportFileVersion FBX201300;
+		else if(`optionMenu -q -v fros_fbx_version_menu` == "2014")
+			FBXExportFileVersion FBX201400;
+		
+	}
+}
+
+
+
+global proc string frosExportLP(string $export, string $lp, string $name)
+{
+	float $oriPos[3];
+	string $oriParent = "";
+	string $group = "";
+
+	string $child[];
+	clear($child); //avoid possible Maya2013 bug in for loops
+	int $onlyTransforms = true;
+	
+	
+	//////////////////////////////////////////////////////
+	//Export LP mesh
+	$lp = $export + $lp;
+
+	//Do we need to export the mesh ?
+	if( !`checkBox -q -v fros_check_exportmesh` )
+	{
+		if(`optionMenu -q -v fros_mesh1_menu` == "FBX")
+		{
+			$lp += ".fbx";
+		}
+		else if(`optionMenu -q -v fros_mesh1_menu` == "DAE") 
+		{
+			$lp += ".dae";
+		}
+		else //OBJ
+		{
+			$lp +=  ".obj";
+		}
+		
+		return $lp;
+	}
+	
+
+	select -r $name;
+	
+	
+	//-------------------------------------------------
+	//move object to 0,0,0 (and put it back to its previous position)
+	if(`checkBox -q -v fros_check_pivot`)
+	{
+		//get mesh information
+		$oriPos = `xform -q -piv -ws $name`;
+		
+		//move mesh for export
+		move -ws -r (-1 * $oriPos[0]) (-1 * $oriPos[1]) (-1 * $oriPos[2]) $name;
+		refresh;
+	}
+	
+	
+	//-------------------------------------------------
+	//Triangulate ?
+	if( `checkBox -q -v fros_check_triangulate` )
+	{
+		$child = `listRelatives -children $name`;
+		
+		//check if lp is a group
+		if( `objectType -isType "transform" $name` )
+		{
+			//iterate children and see if they're all transforms themselves...
+			if( size($child) != 0 )
+			{
+				for( $i in $child )
+				{
+					if(`nodeType $i` != "transform")
+					{
+						$onlyTransforms = false;
+						break;
+					}
+				}
+			}
+			
+		}
+
+		//Was HP a group ? If yes, we combine the copy before convertion
+		if($onlyTransforms)
+		{
+			for($c in $child)
+			{
+				select -r $c;
+				
+				polyTriangulate -constructionHistory 1;
+				
+				//go back to object mode
+				selectMode -object; //convert to object
+				select -r $c;
+			}
+		}
+		else
+		{
+			select -r $name;
+			
+			polyTriangulate -constructionHistory 1;
+			
+			//go back to object mode
+			selectMode -object; //convert to object
+			select -r $name;
+		}
+
+		select -r $name;
+	}
+	
+	
+	//-------------------------------------------------
+	//Export file
+	if(`optionMenu -q -v fros_mesh1_menu` == "FBX")
+	{
+		$lp += ".fbx";
+
+		FBXExport -f $lp -s;
+	}
+	else if(`optionMenu -q -v fros_mesh1_menu` == "DAE") 
+	{
+		$lp += ".dae";
+		
+		if(`pluginInfo -q -loaded "COLLADAMaya"`)
+		{
+			string $option;
+			
+			$option = "bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=0;";
+			$option = $option + "cgfxFileReferences=0;isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;";
+			$option = $option + "exportPolygonMeshes=1;exportLights=0;exportCameras=0;exportJointsAndSkin=0;";
+			$option = $option + "exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;exportTexCoords=1;exportNormals=1;";
+			$option = $option + "exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;exportTexTangents=1;exportTangents=1;";
+			$option = $option + "exportReferencedMaterials=0;exportMaterialsOnly=0;exportXRefs=0;dereferenceXRefs=0;";
+			$option = $option + "exportCameraAsLookat=0;cameraXFov=0;cameraYFov=0;doublePrecision=0;";
+			
+			file -force -options $option -typ "OpenCOLLADA exporter" -pr -es $lp;
+		}
+		else
+		{
+			warning "Exported using FBX Collada, OpenCOLLADA not found.";
+			
+			float $fbxv = `pluginInfo -q -version fbxmaya`;
+			
+			if($fbxv >= 2014)
+			{
+				file -force 
+					-options "v=0;"
+					-typ "DAE_FBX export" 
+					-pr -es $lp;
+			}
+			else
+			{
+				FBXExport 
+					-f $lp 
+					-s -caller "FBXDAEMayaTranslator";
+			}
+		}
+	}
+	else //OBJ
+	{
+		$lp +=  ".obj";
+		
+		string $settings = "groups=" + (`checkBox -q -v fros_checkOBJgroups`);
+		$settings += ";ptgroups=" + (`checkBox -q -v fros_checkOBJpoint`);
+		$settings += ";materials=" + (`checkBox -q -v fros_checkOBJmaterials`);
+		$settings += ";smoothing=" + (`checkBox -q -v fros_checkOBJsmoothing`);
+		$settings += ";normals=" + (`checkBox -q -v fros_checkOBJnormals`);
+		
+		file -op $settings 
+			-f //force
+			-chn 1 //channels
+			-sh 0 //shaders
+			-exp 0 //expressions
+			-con 0 //constraint
+			-ch 0 //construction history
+			-typ "OBJexport" 
+			-pr //preserve reference
+			-es //export selected
+			$lp;
+
+	}
+	
+	
+	//-------------------------------------------------
+	//Triangulated ? If yes we remove the last node (which is the trangulation)	
+	if( `checkBox -q -v fros_check_triangulate` )
+	{		
+		//LP was a group ?
+		if($onlyTransforms)
+		{			
+			for($c in $child)
+			{
+				
+				//select multiple times to ensure we ar ein object mode
+				select -r $c;
+				selectMode -object;
+				select -r $c;
+
+				//delete the triangulate node
+				string $FF[] = `listRelatives $c`;
+				string $GG[] = `listConnections $FF[0]`;
+				
+				for($p in $GG)
+				{
+					if( startString($p, 7) == "polyTri" )
+					{
+						select -r $p; 
+						delete;
+						break;
+					}
+				}
+				
+				//reselect the object
+				select -r $c;
+				selectMode -object;
+				select -r $c;
+			}
+		}
+		else
+		{
+			//select multiple times to ensure we ar ein object mode
+			select -r $name;
+			selectMode -object;
+			select -r $name;
+
+			//delete the triangulate node
+			string $FF[] = `listRelatives $name`;
+			string $GG[] = `listConnections $FF[0]`;
+			
+			for($p in $GG)
+			{
+				if( startString($p, 7) == "polyTri" )
+				{
+					select -r $p; 
+					delete;
+					break;
+				}
+			}
+			
+			//reselect the object
+			select -r $name;
+			selectMode -object;
+			select -r $name;
+		}
+		
+		select -r $name;
+	}
+	
+	
+	
+	
+	if(`checkBox -q -v fros_check_pivot`)
+	{
+		move -ws -r $oriPos[0] $oriPos[1] $oriPos[2] $name;
+		refresh;
+	}
+	
+	return $lp;
+}
+
+
+global proc string[] frosExportHP(string $export, string $hp, string $cage)
+{
+	float $oriPos[3];
+	string $temp = "";
+	
+	//Do we need to export the mesh ?
+	if( !`checkBox -q -v fros_check_exportmesh` )
+	{
+		//Cage Mesh
+		if($cage != "")
+		{
+			$cage = $export + $cage;
+
+			if(`optionMenu -q -v fros_mesh1_menu` == "FBX")
+			{
+				$cage += ".fbx";
+			}
+			else if(`optionMenu -q -v fros_mesh1_menu` == "DAE") 
+			{
+				$cage += ".dae";
+			}
+			else //OBJ
+			{
+				$cage +=  ".obj";	
+			}
+		}
+	
+		//HP mesh
+		if($hp != "")
+		{
+			$hp = $export + $hp;
+
+			if(`optionMenu -q -v fros_mesh2_menu` == "FBX")
+				$hp += ".fbx";
+			else if(`optionMenu -q -v fros_mesh2_menu` == "DAE") 
+				$hp += ".dae";
+			else //OBJ		
+				$hp +=  ".obj";
+		}
+		
+		string $r[2];
+		$r[0] = $hp;
+		$r[1] = $cage;
+		return $r;
+	}
+	
+	
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	//Export Cage mesh
+	if($cage != "")
+	{
+		select -r $cage;
+		
+		//move to Origin ?
+		if(`checkBox -q -v fros_check_pivot`)
+		{
+			//get mesh information
+			$oriPos = `xform -q -piv -ws $cage`;
+			
+			//move mesh for export
+			move -ws -r (-1 * $oriPos[0]) (-1 * $oriPos[1]) (-1 * $oriPos[2]) $cage;
+		}
+		
+		
+		$cage = $export + $cage;
+
+		if(`optionMenu -q -v fros_mesh1_menu` == "FBX")
+		{
+			$cage += ".fbx";
+
+			FBXExport -f $cage -s; 
+		}
+		else if(`optionMenu -q -v fros_mesh1_menu` == "DAE") 
+		{
+			$cage += ".dae";
+			
+			if(`pluginInfo -q -loaded "COLLADAMaya"`)
+			{
+				string $option;
+				
+				$option = "bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=0;";
+				$option = $option + "cgfxFileReferences=0;isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;";
+				$option = $option + "exportPolygonMeshes=1;exportLights=0;exportCameras=0;exportJointsAndSkin=0;";
+				$option = $option + "exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;exportTexCoords=1;exportNormals=1;";
+				$option = $option + "exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;exportTexTangents=1;exportTangents=1;";
+				$option = $option + "exportReferencedMaterials=0;exportMaterialsOnly=0;exportXRefs=0;dereferenceXRefs=0;";
+				$option = $option + "exportCameraAsLookat=0;cameraXFov=0;cameraYFov=0;doublePrecision=0;";
+				
+				file -force -options $option -typ "OpenCOLLADA exporter" -pr -es $cage;
+			}
+			else
+			{
+				warning "Exported using FBX Collada, OpenCOLLADA not found.";
+				
+				float $fbxv = `pluginInfo -q -version fbxmaya`;
+				
+				if($fbxv >= 2014)
+				{
+					file -force 
+						-options "groups=1;ptgroups=1;materials=1;smoothing=1;normals=1" 
+						-typ "DAE_FBX export" 
+						-pr -es $cage;
+				}
+				else
+				{
+					FBXExport 
+						-f $cage 
+						-s -caller "FBXDAEMayaTranslator";
+				}
+			}
+		}
+		else //OBJ
+		{
+			$cage +=  ".obj";
+			
+			string $settings = "groups=" + (`checkBox -q -v fros_checkOBJgroups`);
+			$settings += ";ptgroups=" + (`checkBox -q -v fros_checkOBJpoint`);
+			$settings += ";materials=" + (`checkBox -q -v fros_checkOBJmaterials`);
+			$settings += ";smoothing=" + (`checkBox -q -v fros_checkOBJsmoothing`);
+			$settings += ";normals=" + (`checkBox -q -v fros_checkOBJnormals`);
+			
+			file -op $settings 
+				-f //force
+				-chn 1 //channels
+				-sh 0 //shaders
+				-exp 0 //expressions
+				-con 0 //constraint
+				-ch 0 //construction history
+				-typ "OBJexport" 
+				-pr //preserve reference
+				-es //export selected
+				$cage;
+				
+				
+		}
+		
+		//Move cage back
+		if(`checkBox -q -v fros_check_pivot`)
+		{
+			move -ws -r $oriPos[0] $oriPos[1] $oriPos[2] $cage;
+		}
+		
+	}	
+
+
+	
+	
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////
+	if($hp != "")
+	{		
+		string $copy = ($hp + "_exportcopy_" + int(`rand 1000`));
+		$temp = $hp;
+		
+		
+		//---------------------------------------------------------------------
+		//move object to 0,0,0 (and put it back to its previous position)
+		if(`checkBox -q -v fros_check_pivot`)
+		{
+			//get mesh information
+			$oriPos = `xform -q -piv -ws $cage`;
+			
+			//move mesh for export
+			move -ws -r (-1 * $oriPos[0]) (-1 * $oriPos[1]) (-1 * $oriPos[2]) $temp;
+			refresh;
+		}
+		
+		
+		//---------------------------------------------------------------------
+		//Convert smooth preview to polygon
+		if( `checkBox -q -v fros_check_smooth` )
+		{
+			//give a random name for the working copy to avoid any possible conflict
+			int $onlyTransforms = true;
+			string $child[];
+			clear($child); //avoid possible Maya2013 bug in for loops
+			
+			//check if the HP is a group
+			if( `objectType -isType "transform" $hp` )
+			{
+				string $child[] = `listRelatives -children $hp`;
+
+				//iterate children and see if they're all transforms themselves...
+				if( size($child) != 0 )
+				{
+					for( $i in $child )
+					{
+						if(`nodeType $i` != "transform")
+						{
+							$onlyTransforms = false;
+							break;
+						}
+					}
+				}
+				
+			}			
+			
+			//duplicate HP
+			duplicate -name $copy $hp;
+			select -r $copy;
+			
+			//Was HP a group ? If yes, we combine the copy before convertion
+			if($onlyTransforms)
+			{
+				string $merge[] = `polyUnite -ch false $copy`;
+				$copy = $merge[0];
+				setAttr ($copy + ".vertexNormalMethod") 0;
+			}
+			
+			select -r $copy;
+
+			
+			//smooth preview to poly
+			CreatePolyFromPreview();
+		}
+		else
+			select -r $hp;
+			
+		
+		
+		$hp = $export + $hp;
+		
+		
+		
+		if(`optionMenu -q -v fros_mesh2_menu` == "FBX")
+		{
+			$hp += ".fbx";
+			
+			FBXExport -f $hp -s; 
+		}
+		else if(`optionMenu -q -v fros_mesh2_menu` == "DAE") 
+		{
+			$hp += ".dae";
+			
+			if(`pluginInfo -q -loaded "COLLADAMaya"`)
+			{
+				string $option;
+				
+				$option = "bakeTransforms=0;relativePaths=0;copyTextures=0;exportTriangles=0;";
+				$option = $option + "cgfxFileReferences=0;isSampling=0;curveConstrainSampling=0;removeStaticCurves=1;";
+				$option = $option + "exportPolygonMeshes=1;exportLights=0;exportCameras=0;exportJointsAndSkin=0;";
+				$option = $option + "exportAnimations=0;exportInvisibleNodes=0;exportDefaultCameras=0;exportTexCoords=1;exportNormals=1;";
+				$option = $option + "exportNormalsPerVertex=1;exportVertexColors=1;exportVertexColorsPerVertex=1;exportTexTangents=1;exportTangents=1;";
+				$option = $option + "exportReferencedMaterials=0;exportMaterialsOnly=0;exportXRefs=0;dereferenceXRefs=0;";
+				$option = $option + "exportCameraAsLookat=0;cameraXFov=0;cameraYFov=0;doublePrecision=0;";
+				
+				file -force -options $option -typ "OpenCOLLADA exporter" -pr -es $hp;
+			}
+			else
+			{
+				warning "Exported using FBX Collada, OpenCOLLADA not found.";
+				
+				float $fbxv = `pluginInfo -q -version fbxmaya`;
+				
+				if($fbxv >= 2014)
+				{
+					file -force 
+						-options "groups=1;ptgroups=1;materials=1;smoothing=1;normals=1" 
+						-typ "DAE_FBX export" 
+						-pr -es $hp;
+				}
+				else
+				{					
+					FBXExport 
+						-f $hp 
+						-s -caller "FBXDAEMayaTranslator";
+				}
+			}
+		}
+		else //OBJ
+		{			
+			$hp +=  ".obj";
+			
+			string $settings = "groups=" + (`checkBox -q -v fros_checkOBJgroups`);
+			$settings += ";ptgroups=" + (`checkBox -q -v fros_checkOBJpoint`);
+			$settings += ";materials=" + (`checkBox -q -v fros_checkOBJmaterials`);
+			$settings += ";smoothing=" + (`checkBox -q -v fros_checkOBJsmoothing`);
+			$settings += ";normals=" + (`checkBox -q -v fros_checkOBJnormals`);
+			
+			file -op $settings 
+				-f //force
+				-chn 1 //channels
+				-sh 0 //shaders
+				-exp 0 //expressions
+				-con 0 //constraint
+				-ch 0 //construction history
+				-typ "OBJexport" 
+				-pr //preserve reference
+				-es //export selected
+				$hp;
+		}
+		
+		
+		if( `checkBox -q -v fros_check_smooth` )
+		{
+			delete $copy;
+		}
+		
+		if(`checkBox -q -v fros_check_pivot`)
+		{
+			move -ws -r $oriPos[0] $oriPos[1] $oriPos[2] $temp;
+			refresh;
+		}
+	}
+	
+	string $r[2];
+	$r[0] = $hp;
+	$r[1] = $cage;
+	return $r;
+}
+
+
+
+
+global proc frosSingleBake()
+{
+	//save user selection
+	string $sel[] = `ls -sl`;
+	
+	//////////////////////////////////////////////////////
+	//Var setups
+	string $mesh[2];
+	
+	string $batch = `textField -q -fi fros_path_batch`;
+	string $export = `textField -q -fi fros_path_export`;
+	
+	
+	string $lp = `textField -q -fi fros_mesh_lp`;
+	if($lp == "" && size($sel) != 0)
+		$lp = $sel[0];
+	
+	
+	
+	string $name = $lp;
+	string $format = `optionMenu -q -v fros_format_menu`;
+	string $compression = `optionMenu -q -v fros_compression_menu`;
+	string $hp = "";
+	string $cage = "";
+
+	$compression = tolower($compression);
+	$format = tolower($format);
+	
+	//UV set
+	int $uvset = 0;
+	if(`optionMenu -q -sl fros_uv_menu` == 2)
+		$uvset = 1;
+	else if(`optionMenu -q -sl fros_uv_menu` == 3)
+		$uvset = 2;
+		
+	//texture size
+	int $txtsize = 0; //32
+	
+	if(`optionMenu -q -sl fros_size_menu` == 8)
+		$txtsize = 7; //4096
+	else if(`optionMenu -q -sl fros_size_menu` == 7)
+		$txtsize = 6; //2048
+	else if(`optionMenu -q -sl fros_size_menu` == 6)
+		$txtsize = 5; //1024
+	else if(`optionMenu -q -sl fros_size_menu` == 5)
+		$txtsize = 4; //512
+	else if(`optionMenu -q -sl fros_size_menu` == 4)
+		$txtsize = 3; //256
+	else if(`optionMenu -q -sl fros_size_menu` == 3)
+		$txtsize = 2; //128
+	else if(`optionMenu -q -sl fros_size_menu` == 2)
+		$txtsize = 1; //64
+		
+	
+	//////////////////////////////////////////////////////
+	//EXPORT
+	select -clear;
+	int $ngons = 0;
+	
+	//Check if mesh is valid, if yes check for nGons
+	if($lp == "")
+		error "No low poly to export, bake cancelled.";
+	else
+	{
+		//select mesh (with convertion to avoid components)
+		select -r $lp; //select only 1
+		selectMode -object; //convert to object
+		select -r $lp;
+		
+		//select n-gons
+		polySelectConstraint -mode 3 -type 0x0008 -size 3; 
+		polySelectConstraint -disable; 
+		selectMode -component;
+		
+		string $selng[] = `filterExpand -fullPath 1 -expand 1 -sm 34`;
+
+		$ngons = size($selng);
+
+		//revert selection mode
+		selectMode -object;
+		select -r $lp;
+	}
+	
+	select -clear;
+	
+	//Ask if we want to export mesh with nGons ?
+	string $result = "";
+	if( $ngons > 0 )
+	{
+		$result = `confirmDialog -title "Export nGons ?" -message ($ngons + " n-gons found on \"" + $lp + "\" : do you wish to continue ?")
+			-button "Yes" -button "Select nGons" -button "No"
+			
+			-defaultButton "No"
+			-cancelButton "No" -dismissString "No"`;
+	}
+	
+	//If we don't export the mesh, get the nGons ?
+	if($result == "No")
+	{
+		//retrieve user selection
+		select -r $sel;
+		print "Bake cancelled";
+		return;
+	}
+	else if($result == "Select nGons")
+	{
+		//select mesh (with convertion to avoid components)
+		select -r $lp; //select only 1
+		selectMode -object; //convert to object
+		select -r $lp;
+		
+		//select n-gons
+		polySelectConstraint -mode 3 -type 0x0008 -size 3; 
+		polySelectConstraint -disable; 
+		selectMode -component;
+		
+		string $selng[] = `filterExpand -fullPath 1 -expand 1 -sm 34`;
+		
+		hilite -r $lp;
+		selectType -smp 0 -sme 0 -smf 1 -smu 0 -pv 0 -pe 0 -pf 1 -puv 0;
+
+		print ($ngons + " nGons selected on \"" + $lp + "\"");
+		
+		return;
+	}
+	
+		
+		
+	
+	frosCheckFBX();
+	
+	$lp = frosExportLP($export, $lp, $name);
+
+	//Export HP Mesh & Cage (only if needed)
+	if(`checkBox -q -v frosCheck_map_height`
+	|| `checkBox -q -v frosCheck_map_normal`
+	|| `checkBox -q -v frosCheck_map_aohp`
+	|| `checkBox -q -v frosCheck_map_thick`)
+	{
+		//Export HP ?
+		if(`checkBox -q -v fros_check_hpout`)
+		{
+			//size of the "lp" prefix to change, default is 2 (because = "lp")
+			int $size = 2;
+			if(`textField -q -fi fros_multibake_lp` != "")
+				$size = size(`textField -q -fi fros_multibake_lp`);
+		
+		
+			//if HP is out of scene, create HP name from the LP
+			if(`textField -q -fi fros_multibake_hp` != "")
+			{
+				$ext = `textField -q -fi fros_multibake_hp`;
+				$hp = startString($name, size($name) - $size) + $ext;
+			}
+			else
+				$hp = startString($name, size($name) - 2) + "hp";
+			
+			
+			$hp = $export + $hp;
+
+			if(`optionMenu -q -v fros_mesh2_menu` == "FBX")
+			{
+				$hp += ".fbx";
+			}
+			else if(`optionMenu -q -v fros_mesh2_menu` == "DAE") 
+			{
+				$hp += ".dae";
+			}
+			else
+			{
+				$hp +=  ".obj";
+			}
+			
+			
+			if(`checkBox -q -v fros_check_cage` && (`textField -q -fi fros_mesh_cage` != "") )
+			{
+				$cage = `textField -q -fi fros_mesh_cage`;
+			}
+			
+			$mesh = frosExportHP($export, "", $cage); //ignore HP because it's already out of maya
+			$mesh[0] = $hp; //manual override
+		}
+		else
+		{
+			$hp = `textField -q -fi fros_mesh_hp`;
+			
+			$mesh = frosExportHP($export, $hp, $cage); //export HP and cage
+		}
+	}
+	
+	
+	//Normal map auto-load ?
+	if(`checkBox -q -v fros_check_loadnormal`)
+	{		
+		string $normal = "\"" + $export + $name + (`textField -q -fi fros_file_normal`) + "." + $format + "\"";
+		
+		textField -e -fi $normal fros_ao_normal;
+		textField -e -fi $normal fros_curv_normal;
+		textField -e -fi $normal fros_wsn_filedir;		
+	}
+	
+	//////////////////////////////////////////////////////
+	//BAKE
+	string $command = frosBake(	$batch, 
+								$export, 
+								$lp, 
+								$name, 
+								$format, 
+								$compression,
+								$mesh[0], //hp
+								$mesh[1], //cage
+								$uvset, 
+								$txtsize);
+								
+	// Multi Bat file
+	if(`filetest -s ($export + "bake_" + $name + ".bat")`) //remove it
+		sysFile -del ("\"" + $export + "bake_" + $name + ".bat\""); 
+	
+	//"
+	//open file, not in append, we rewrite it
+	$fileid = `fopen ($export + "bake_" + $name + ".bat") "w"`;
+	
+	//content
+	fprint $fileid ($command + "\n");
+	
+	if( !`checkBox -q -v fros_check_batch`)
+	{
+		string $path = $export + "bake_" + $name + ".bat";
+		$path = substituteAllString($path, "/", "\\");
+		
+		fprint $fileid ("\n\ndel \"" +  $path + "\" & pause");
+	}
+	else
+		fprint $fileid ("\n\npause");
+		
+	fclose $fileid;
+	
+	//run batch
+	system("start \"" + $export + "bake_"+ $name + ".bat\"");
+	
+	
+	
+	//"
+	
+	select -r $sel;
+}
+
+
+global proc frosMultiBake()
+{
+	string $sel[] = `ls -sl`;
+	
+	//////////////////////////////////////////////////////
+	//Check at least that one mesh is selected
+	if(size($sel) <= 0)
+		error "No mesh selected : nothing to export.";
+		
+
+		
+	//////////////////////////////////////////////////////
+	//Var setups
+	//----------------------------------------------------
+	string $batch = `textField -q -fi fros_path_batch`;
+	string $export = `textField -q -fi fros_path_export`;
+	string $format = `optionMenu -q -v fros_format_menu`;
+	string $compression = `optionMenu -q -v fros_compression_menu`;
+	string $lp = "";
+	string $name = "";
+	string $hp = "";
+	string $cage = "";
+	string $mesh[2];
+	
+	$compression = tolower($compression);
+	$format = tolower($format);
+	
+	//UV set
+	int $uvset = 0;
+	if(`optionMenu -q -sl fros_uv_menu` == 2)
+		$uvset = 1;
+	else if(`optionMenu -q -sl fros_uv_menu` == 3)
+		$uvset = 2;
+		
+	//texture size
+	int $txtsize = 0;  //32
+	if(`optionMenu -q -sl fros_size_menu` == 8)
+		$txtsize = 7; //4096
+	else if(`optionMenu -q -sl fros_size_menu` == 7)
+		$txtsize = 6; //2048
+	else if(`optionMenu -q -sl fros_size_menu` == 6)
+		$txtsize = 5; //1024
+	else if(`optionMenu -q -sl fros_size_menu` == 5)
+		$txtsize = 4; //512
+	else if(`optionMenu -q -sl fros_size_menu` == 4)
+		$txtsize = 3; //256
+	else if(`optionMenu -q -sl fros_size_menu` == 3)
+		$txtsize = 2; //128
+	else if(`optionMenu -q -sl fros_size_menu` == 2)
+		$txtsize = 1; //64
+	
+	
+	
+	//////////////////////////////////////////////////////
+	// Checks
+	//----------------------------------------------------
+	if( !`checkBox -q -v frosCheck_map_normal`
+	&&  !`checkBox -q -v frosCheck_map_curv`
+	&&  !`checkBox -q -v frosCheck_map_ao`
+	&&  !`checkBox -q -v frosCheck_map_aohp`
+	&&  !`checkBox -q -v frosCheck_map_height`
+	&&  !`checkBox -q -v frosCheck_map_pos`
+	&&  !`checkBox -q -v frosCheck_map_uv`
+	&&  !`checkBox -q -v frosCheck_map_thick`
+	&&  !`checkBox -q -v frosCheck_map_mids`
+	&&  !`checkBox -q -v frosCheck_map_vtx`
+	&&  !`checkBox -q -v frosCheck_map_wdir`
+	&&  !`checkBox -q -v frosCheck_map_wnor` )
+	{
+		confirmDialog 
+			-title "No baker selected"
+			-message "No baker have been selected. Bake process is cancelled.       "
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}	
+
+	
+	
+	
+	//----------------------------------------------
+	//Check path for the batch tools
+	if($batch == "" || $batch == " ")
+	{
+		confirmDialog 
+			-title "Batch tools path is empty" 
+			-message "The path to the Batch Tools is empty, please check        \nthe \"Software Settings\" frame to setup the path."
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	//Check if path is valid
+	if(!(`filetest -d $batch`))
+	{
+		confirmDialog 
+			-title "Batch path doesn't exist" 
+			-message "The folder/path to the Batch Tools doesn't exist.       "
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	
+	//----------------------------------------------
+	//Check tangent plugin
+	string $plugin = `textField -q -fi fros_path_plugin`;
+	if( $plugin == "" || $plugin == " " )
+	{
+		confirmDialog
+			-title "Tangent Space path is empty" 
+			-message "The path to the Tangent Space plugin is empty, please check          \nthe \"Software Settings\" frame to setup the path."
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	//Check if path is valid
+	if(!`filetest -s $plugin`)
+	{
+		confirmDialog 
+			-title "Tangent space plugin doesn't exist" 
+			-message "The tangent space plugin dll file doesn't exist.       "
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	
+	//----------------------------------------------
+	//Check path for the export of the txt/meshes
+	if($export == "" || $export == " ")
+	{
+		confirmDialog 
+			-title "Export path is empty" 
+			-message "The destination folder for exporting texture and meshes is empty.       "
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	//Check if export path is valid
+	if(!`filetest -d $export`)
+	{
+		confirmDialog 
+			-title "Export path doesn't exist" 
+			-message "The destination folder/path doesn't exist.       "
+			-icon "critical" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		return;
+	}
+	
+	
+	//----------------------------------------------
+	//Check for Export plugins
+	if( (!`pluginInfo -q -loaded "fbxmaya"`) && (`pluginInfo -q -loaded "objExport"`) )
+	{
+		confirmDialog 
+			-title "Export plugin"
+			-message "FBX pluging is not loaded, OBJ will be used instead.       "
+			-icon "information" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		
+		optionMenu -e -sl 1 fros_mesh1_menu;
+		optionMenu -e -sl 1 fros_mesh2_menu;
+	}
+	
+	if( (`pluginInfo -q -loaded "fbxmaya"`) && (!`pluginInfo -q -loaded "objExport"`) )
+	{
+		confirmDialog 
+			-title "Export plugin"
+			-message "OBJ pluging is not loaded, FBX will be used instead.       "
+			-icon "information" //"question", "information", "warning" and "critical"
+			-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+		
+		optionMenu -e -sl 2 fros_mesh1_menu;
+		optionMenu -e -sl 2 fros_mesh2_menu;
+	}
+	
+	if( (!`pluginInfo -q -loaded "fbxmaya"`) && (!`pluginInfo -q -loaded "objExport"`) )
+	{
+		error("OBJ or FBX plugin must be loaded to be able to export meshes.");
+	}
+	
+	
+	
+
+
+
+	//////////////////////////////////////////////////////
+	//EXPORT
+	frosCheckFBX();
+	
+	
+	//////////////////////////////////////////////////////
+	//BATCH
+	string $finalcommand[];
+	string $finalfiles[];
+
+	//////////////////////////////////////////////////////
+	string $m;
+	for($m in $sel)
+	{	
+		int $bar = 0;
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			//set the loading popup
+			progressWindow
+				-title "Exporting Meshes"
+				-progress 0
+				-minValue 0
+				-maxValue 4
+				-status "Exporting..."
+				-isInterruptable false;
+		}
+
+	
+		//reset variables
+		$lp = "";
+		$hp = "";
+		$hpsaved = "";
+		$cage = "";
+		$name = "";
+		$mesh = { "", "" };
+		
+		
+		//get current low-poly		
+		$name = $m;
+		$lp = frosExportLP($export, $m, $name);
+		
+		
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			$bar += 1;
+			progressWindow -e -pr $bar;
+		}
+		
+		
+		//Export HP Mesh & Cage (only if needed)
+		if(`checkBox -q -v frosCheck_map_height` 
+		|| `checkBox -q -v frosCheck_map_normal`
+		|| `checkBox -q -v frosCheck_map_vtx`
+		|| (`checkBox -q -v frosCheck_map_mids` && (`optionMenu -q -sl fros_field_midtype` != 1))
+		|| `checkBox -q -v frosCheck_map_aohp`)
+		{
+			//size of the low-poly suffix to change
+			//if no suffix provided, we just have to add hp and cg for the other meshes
+			int $size = 0;
+			if(`textField -q -fi fros_multibake_lp` != "")
+				$size = size(`textField -q -fi fros_multibake_lp`);
+				
+			
+			//convert lp to hp
+			//if HP is out of scene, create HP name from the LP
+			if(`textField -q -fi fros_multibake_hp` != "")
+			{
+				$ext = `textField -q -fi fros_multibake_hp`;
+				$hp = startString($name, size($name) - $size) + $ext;
+			}
+			else
+				$hp = $name;
+				
+			$hpsaved = $hp;
+			
+			//generate cage name from low poly mesh
+			if(`textField -q -fi fros_multibake_cg` != "")
+			{
+				$ext = `textField -q -fi fros_multibake_cg`;
+				$cage = startString($name, size($name) - $size) + $ext;
+			}
+			else
+				$cage = $name;
+
+			//If we can't find the cage in the scene
+			//we don't bake with a cage
+			if(!`objExists $cage`)
+				$cage = "";
+			
+			//check if HP exists in scene
+			if(`objExists $hp`)
+			{
+				$mesh = frosExportHP($export, $hp, $cage); //export HP and cage
+				
+				print "Cage = \n";
+				print $mesh[1];
+			}
+			else
+			{
+				string $hpname = $hp;
+				string $ext = "";
+
+				if(`optionMenu -q -v fros_mesh2_menu` == "FBX")
+					$ext = ".fbx";
+				else if(`optionMenu -q -v fros_mesh2_menu` == "DAE") 
+					$ext = ".dae";
+				else
+					$ext =  ".obj";
+				
+				$hp = $export + $hp + $ext;
+				
+				$mesh = frosExportHP($export, "", $cage); //ignore HP because it's already out of maya
+				$mesh[0] = $hp; //manual override
+				
+				
+				//check if the hp exists in the export folder (and is greater than 0)
+				if(!`filetest -s $hp`)
+				{
+					//reselect the LP(s)
+					select -r $sel;
+					
+					progressWindow -endProgress;
+					
+					confirmDialog
+						-title "HP doesn't exist" 
+						-message ("The High-Poly mesh \"" + $hpsaved + $ext + "\" doesn't exist in        \n\"" + $export + "\".")
+						-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+						
+						
+					return;
+				
+					/*
+					//No file ? Check if a folder exists
+					string $folder = $export + $hpname;
+					if(`filetest -d $folder`)
+					{
+						//getFileList command require forward slash on Windows
+						$folder = fromNativePath( $folder ) + "/";
+						
+						//list all the meshes under the folder
+						string $meshlist[] = `getFileList -folder $folder -filespec ("*." + $ext)`;
+			
+						//Folder is empty ? Try with upercase extension
+						if( size( $meshlist ) == 0 )
+						{
+							$ext = toupper($ext);
+							$meshlist = `getFileList -folder $folder -filespec ("*" + $ext)`;
+						}
+						
+						$mesh[0] = "";
+						$counter = 0;
+						for( $m in $meshlist )
+						{
+							if($counter == 0)
+								$mesh[0] = $mesh[0] + (toNativePath($folder) + $m + "\""); //\"
+							else if($counter == (size($meshlist) - 1) )
+								$mesh[0] = $mesh[0] + (" \"" + toNativePath($folder) + $m); //\"
+							else
+								$mesh[0] = $mesh[0] + (" \"" + toNativePath($folder) + $m + "\"");
+							
+							$counter += 1;
+						}
+
+					}
+					else
+					{
+						//reselect the LP(s)
+						select -r $sel;
+						
+						progressWindow -endProgress;
+						
+						confirmDialog
+							-title "HP doesn't exist" 
+							-message ("The High-Poly mesh \"" + $hp + $ext + "\" doesn't exist in\n\"" + $export + "\".       ")
+							-button "OK" -defaultButton "OK" -cancelButton "OK" -dismissString "OK";
+							
+							
+						return;
+					}
+					*/
+					
+				}
+			}
+			
+		}
+		
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			$bar += 1;
+			progressWindow -e -pr $bar;
+		}
+		
+		
+		//Clean mesh name (remove "lp" end to get nice filenames
+		int $size = size(`textField -q -fi fros_multibake_lp`);
+		$name = startString($name, size($name) - $size);
+		
+		
+		//Normal map auto-load ?
+		if(`checkBox -q -v fros_check_loadnormal`)
+		{
+			string $normal = "\"" + $export + $name + (`textField -q -fi fros_file_normal`) + "." + $format + "\"";
+
+			textField -e -fi $normal fros_ao_normal;
+			textField -e -fi $normal fros_curv_normal;
+			textField -e -fi $normal fros_wsn_filedir;		
+		}
+		
+		
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			$bar += 1;
+			progressWindow -e -pr $bar;
+		}
+		
+		
+		//setup bake command
+		$finalcommand[size($finalcommand)] = frosBake(	$batch, 
+														$export, 
+														$lp, 
+														$name, 
+														$format, 
+														$compression,
+														$mesh[0], //hp
+														$mesh[1], //cage
+														$uvset, 
+														$txtsize) + ("\n\n");
+														
+														
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			$bar += 1;
+			progressWindow -e -pr $bar;
+		}
+		
+		
+		//check if file alreayd exists
+		if(`filetest -s ($export + "bake_" + $name + ".bat")`) //remove it
+			sysFile -del ($export + "bake_" + $name + ".bat"); 
+		
+		//open file, not in append, we rewrite it
+		$fileid = `fopen ($export + "bake_"+ $name + ".bat") "w"`;
+		
+		//content
+		fprint $fileid ($finalcommand[size($finalcommand) - 1] + "\n");
+
+		fclose $fileid;
+		
+		//add batch
+		$finalfiles[size($finalfiles)] = ("call \"" + $export + "bake_" + $name + ".bat\"");//"
+		
+		
+		if( `checkBox -q -v fros_check_exportmesh` )
+		{
+			progressWindow -endProgress;
+		}
+	}
+	
+	
+	//check if file alreayd exists
+	if(`filetest -s ($export + "bake_multi.bat")`) //remove it
+		sysFile -del ($export + "bake_multi.bat"); 
+	
+	
+	//open file, not in append, we rewrite it
+	$fileid = `fopen ($export + "bake_multi.bat") "w"`;
+	
+	
+	//content
+	string $l;
+	for($l in $finalfiles)
+	{
+		fprint $fileid ($l + "\n");
+	}
+	
+	
+	//Delete batch file, unless the used specified he wanted to keep them
+	if( !`checkBox -q -v fros_check_batch`)
+	{
+		for($l in $finalfiles)
+		{			
+			//isolate script path
+			string $del = substituteAllString($l, "call ", "");
+			$del = substituteAllString($del, "/", "\\");
+			
+			//write the delete command
+			fprint $fileid (("\n\ndel ") + $del); //delete the batch and exit
+		}
+	}
+	
+	//End of batch + remove multi batch file
+	fprint $fileid ("\n\ndel \"%~f0\"&pause"); //delete the batch and exit
+	// fprint $fileid ("\n\npause");
+	
+	//close batch file, we finished to write it
+	fclose $fileid;
+
+	//LAUNCH
+	system("start " + $export + "bake_multi.bat");
+	
+	//reselect the LP(s)
+	select -r $sel;
+}
+
+
+
+global proc string frosBake(	string $batch, 			//exe to batcher
+								string $export, 		//export path
+								string $lp, 			//low poly path
+								string $name, 			//low poly name only
+								string $format, 		//texture format
+								string $compression, 	//raw or dxt
+								string $hp, 			//hp mesh path
+								string $cage, 			//cage path, if empty, no cage exported
+								int $uvset, 			//0, 1 or 2
+								int $txtsize) 			//size output
+{
+	//check batch tools path
+	if(`textField -q -fi fros_path_batch` != "")
+	{
+		//export path
+		if(`textField -q -fi fros_path_export`)
+		{
+			//////////////////////////////////////////////////////
+			//output command construction
+			string $command = "echo off\necho.\necho.\n ";
+			
+			string $plugin = `textField -q -fi fros_path_plugin`;
+			
+			
+			//-------------------------------------------------------
+			//Normal map
+			if(`checkBox -q -v frosCheck_map_normal`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+
+				
+				$command += 
+						"normal-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_normal`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $hp + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --antialiasing " + ((`optionMenu -q -sl fros_field_normalaa`) - 1))
+						+ (" --map-type " + ((`optionMenu -q -sl fros_normal_menu`) - 1) )
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						+ (" --normal-invert " + ((`optionMenu -q -sl fros_normaltype_menu`) - 1) )
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+				
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+				}
+				else
+					$command += " --use-cage false";
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Normal From Mesh : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}			
+			
+			
+			
+			//Ambient occlusion from mesh
+			if(`checkBox -q -v frosCheck_map_aohp`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+
+				string $b2 = "true";
+				if(!`checkBox -q -v check_aohp_secondarybackface`)
+					$b2 = "false";				
+					
+				string $bbox = "true";
+				if(!`checkBox -q -v check_aohp_relativebbox`)
+					$bbox = "false";
+				
+				$command += 
+						"ambient-occlusion-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_aohp`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $hp + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --antialiasing " + ((`optionMenu -q -sl fros_aoaa_menu`) - 1))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						
+						+ (" --nb-second-rays " + (`floatField -q -v frox_aohp_rays`))
+						+ (" --min-dist " + (`floatField -q -v frox_aohp_distmin`))
+						+ (" --max-dist " + (`floatField -q -v frox_aohp_distmax`))
+						+ (" --spread-angle " + (`floatField -q -v frox_aohp_angle`))
+						+ (" --ray-distrib " + ((`optionMenu -q -sl fros_aodistrib_menu`) - 1))
+						+ (" --attenuation " + ((`optionMenu -q -sl fros_aoatt_menu`) - 1))
+						+ (" --max-dist-relative-scale " + $bbox)
+						+ (" --ignore-backface-secondary " + $b2)
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+				
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+				}
+				else
+					$command += " --use-cage false";
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Ambient Occlusion From Mesh : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			
+
+			
+			//-------------------------------------------------------
+			//Thickness
+			if(`checkBox -q -v frosCheck_map_thick`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+
+				string $z = "true";
+				if(!`checkBox -q -v check_thick_normalization`)
+					$z = "false";				
+					
+				string $bbox = "true";
+				if(!`checkBox -q -v check_thick_relativebbox`)
+					$bbox = "false";
+				
+				$command += 
+						"thickness-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_thickness`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $hp + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --antialiasing " + ((`optionMenu -q -sl fros_thkaa_menu`) - 1))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						
+						+ (" --nb-second-rays " + (`floatField -q -v frox_thk_rays`))
+						+ (" --min-dist " + (`floatField -q -v frox_thk_distmin`))
+						+ (" --max-dist " + (`floatField -q -v frox_thk_distmax`))
+						+ (" --spread-angle " + (`floatField -q -v frox_thk_angle`))
+						+ (" --ray-distrib " + ((`optionMenu -q -sl fros_thkdistrib_menu`) - 1))
+						+ (" --max-dist-relative-scale " + $bbox)
+						+ (" --auto-normalize " + $z)
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+				
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+				}
+				else
+					$command += " --use-cage false";
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Thickness From Mesh : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			
+			//Ambient occlusion
+			if(`checkBox -q -v frosCheck_map_ao`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "false";
+				if(`checkBox -q -v frox_check_aoinvert`)
+					$n = "true";
+					
+				string $w = "false";
+				if(`checkBox -q -v fros_check_aospace`)
+					$w = "true";
+					
+				$command += 
+						"ambient-occlusion"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_ao`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --use-neighbors false")
+						+ (" --normal-invert " + $n)
+						+ (" --details " + (`floatField -q -v frox_ao_bias`))
+						+ (" --spread " + (`floatField -q -v frox_ao_fade`))
+						+ (" --quality " + (`optionMenu -q -sl fros_aoquality_menu`))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+					
+				if( (`textField -q -fi fros_ao_normal` != "") && (`checkBox -q -v fros_check_aonm`))
+				{
+					$command += (" --normal " + (`textField -q -fi fros_ao_normal`));
+					$command += (" --normal-world-space " + $w);
+					$command += (" --normal-format " + ((`optionMenu -q -sl fros_aotype_menu`) - 1) );
+				}
+
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Ambient Occlusion : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//UV to SVG
+			if(`checkBox -q -v frosCheck_map_uv`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				$command += 
+						"uv-map"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_uv`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --padding " + (`intField -q -v fros_svg_padding`))
+						+ (" --mode " + ((`optionMenu -q -sl fros_svg_color`) - 1))
+						;
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" UVs : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//Curvature
+			if(`checkBox -q -v frosCheck_map_curv`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $w = "false";
+				if(`checkBox -q -v fros_check_curvpace`)
+					$w = "true";
+					
+				$command += 
+						"curvature"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_curv`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --details " + (`floatField -q -v frox_curv_details`))
+						+ (" --algorithm " + ((`optionMenu -q -sl fros_curv_menu`) - 1))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+					
+				//The user want a normal input ?
+				if( (`textField -q -fi fros_curv_normal` != "") && (`checkBox -q -v fros_check_curvnm`))
+				{
+					$command += (" --normal " + (`textField -q -fi fros_curv_normal`));
+					$command += (" --normal-world-space " + $w);
+					$command += (" --normal-format " + ((`optionMenu -q -sl fros_curvtype_menu`) - 1) );
+				}
+				
+				//The user wants seams in his curvature ?
+				if(`checkBox -q -v frox_check_curvseams`)
+				{
+					$command += (" --enable-seams true");
+					$command += (" --seams-power " + (`floatField -q -v frox_curv_seams`));
+				}
+				else
+					$command += (" --enable-seams false");
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Curvature : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//Heigthmap
+			if(`checkBox -q -v frosCheck_map_height`)
+			{
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+					
+				string $z = "true";
+				if(!`checkBox -q -v fros_check_heightnormalize`)
+					$z = "false";
+				
+				$command += 
+						"height-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_height`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $hp + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --antialiasing " + ((`optionMenu -q -sl fros_heightaa_menu`) - 1))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+					
+					
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+					$command += (" --auto-normalize false");
+				}
+				else
+				{
+					$command += " --use-cage false";
+					$command += (" --auto-normalize " + $z);
+				}
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Height : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+
+
+			//Position
+			if(`checkBox -q -v frosCheck_map_pos`)
+			{
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				$command += 
+						"position"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_pos`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --mode " + ((`optionMenu -q -sl fros_pos_mode`) - 1) )
+						+ (" --axis " + ((`optionMenu -q -sl fros_pos_axis`) - 1) )
+						+ (" --normalization " + ((`optionMenu -q -sl fros_pos_norm`) - 1) )
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+				
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+					
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Position : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}		
+			
+			
+			//Vertex colors
+			if(`checkBox -q -v frosCheck_map_vtx`)
+			{
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+				
+				$command += 
+						"color-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_vtx`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $hp + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --color-source 0") //force vertex color source
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						+ (" --antialiasing " + (`optionMenu -q -sl fros_field_vtxaa` - 1))
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+					
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+				}
+				else
+					$command += " --use-cage false";
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Vertex Colors : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//Materials colors
+			if(`checkBox -q -v frosCheck_map_mids`)
+			{
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				string $n = "true";
+				if(!`checkBox -q -v fros_check_global_normals`)
+					$n = "false";
+					
+				string $b = "true";
+				if(!`checkBox -q -v fros_check_global_bbox`)
+					$b = "false";
+					
+				string $f = "true";
+				if(!`checkBox -q -v fros_check_global_backface`)
+					$f = "false";
+					
+				string $m = $lp;
+				if( `optionMenu -q -sl fros_field_midtype` != 1 )
+					$m = $hp;
+					
+
+				$command += 
+						"color-from-mesh"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_mid`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --highdef-mesh \"" + $m + "\"")
+						+ (" --average-normals " + $n)
+						+ (" --relative-to-bbox " + $b)
+						+ (" --ignore-backface " + $f)
+						+ (" --color-source 1") //force Material color source
+						+ (" --max-frontal " + (`floatField -q -v fros_field_global_frontdist`))
+						+ (" --max-rear " + (`floatField -q -v fros_field_global_reardist`))
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						+ (" --antialiasing " + (`optionMenu -q -sl fros_field_midaa` - 1))
+						;
+						
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+					
+				if( $cage != "" && (`checkBox -q -v fros_check_cage`))
+				{
+					$command += " --use-cage true";
+					$command += (" --cage-mesh \"" + $cage + "\"");
+				}
+				else
+					$command += " --use-cage false";
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" Material IDs : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//World Space direction
+			if(`checkBox -q -v frosCheck_map_wdir`)
+			{
+				$command += "echo -------------------------------------\n";
+				$command += "echo Computing...\n";
+				$command += ("\"" + $batch + "sbsbaker.exe\" ");
+				
+				$command += 
+						"world-space-direction"
+						+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+						+ (" --inputs \"" + $lp + "\"")
+						+ (" --output-path \"" + $export + "\"")
+						+ (" --output-format " + $format)
+						+ (" --output-format-compression " + $compression)
+						+ (" --output-name " + $name + (`textField -q -fi fros_file_wsd`))
+						+ (" --output-size " + $txtsize)
+						+ (" --uv-set " + $uvset)
+						+ (" --normal-format " + ((`optionMenu -q -sl fros_wsd_mode`) - 1) )
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+				
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+				
+				if( (`textField -q -fi fros_wsd_filedir` != "") && (`optionMenu -q -sl fros_wsd_dir` == 1) )
+				{
+					$command += (" --direction 0");
+					$command += (" --direction-file " + (`textField -q -fi fros_wsd_filedir`));
+				}
+				else
+				{
+					$command += (" --direction 1");
+					$command += (" --direction-x " + (`floatField -q -v fros_wsd_dirX`) );
+					$command += (" --direction-y " + (`floatField -q -v fros_wsd_dirY`) );
+					$command += (" --direction-z " + (`floatField -q -v fros_wsd_dirZ`) );
+				}
+				
+				$command += "\n";
+				$command += "echo -------------------------------------\n";
+				$command += "echo \"" + $name + "\" World Space Direction : DONE\n";
+				$command += "echo =====================================\n";
+				$command += "echo.\necho.\n";
+			}
+			
+			
+			//World Space Normals
+			if(`checkBox -q -v frosCheck_map_wnor`)
+			{
+				if(`textField -q -fi fros_wsn_filedir` != "")
+				{
+					$command += "echo Computing...\n";
+					$command += ("\"" + $batch + "sbsbaker.exe\" ");
+					
+					$command += 
+							"normal-world-space"
+							+ (" --tangent-space-plugin \"" + $plugin + "\"" )
+							+ (" --inputs \"" + $lp + "\"")
+							+ (" --output-path \"" + $export + "\"")
+							+ (" --output-format " + $format)
+							+ (" --output-format-compression " + $compression)
+							+ (" --output-name " + $name + (`textField -q -fi fros_file_wsn`))
+							+ (" --output-size " + $txtsize)
+							+ (" --uv-set " + $uvset)
+							+ (" --normal " + (`textField -q -fi fros_wsn_filedir`))
+							+ (" --normal-format " + ((`optionMenu -q -sl fros_wsn_mode`) - 1) )
+						+ (" --dilation-width " + (`floatField -q -v fros_field_dilatation`))
+						;
+				
+				if( `checkBox -q -v fros_check_diffusion`)
+					$command += " --apply-diffusion true";
+				else
+					$command += " --apply-diffusion false";
+							
+					$command += "\necho.";
+					$command += "echo -------------------------------------\n";
+					$command += "echo \"" + $name + "\" World Space Normal : DONE\n";
+					$command += "echo =====================================\n";
+					$command += "echo.\necho.\n";
+				}
+				else
+				{
+					warning "No normal map specified, world space normal bake ignored.";
+				}
+			}
+			
+
+			return $command;
+		}
+		else
+		{
+			error "Export folder not specified, bake cancelled.";
+			return "";
+		}
+	}
+	else
+	{
+		error "Batch tools folder not specified, bake cancelled.";
+		return "";
+	}
+}
+
+
+
+
+global proc frosUpdateUI()
+{
+/*
+	int $type = `optionMenu -q -sl fros_bake_type_menu`;
+	
+	//Ambient occlusion
+	if($type == 1)
+		frameLayout -e -visible 1 frame_1;
+	else
+		frameLayout -e -visible 0 frame_1;
+		
+	//UV to SVG
+	if($type == 2)
+		frameLayout -e -visible 1 frame_2;
+	else
+		frameLayout -e -visible 0 frame_2;
+		
+	//Curvature
+	if($type == 3)
+		frameLayout -e -visible 1 frame_3;
+	else
+		frameLayout -e -visible 0 frame_3;
+		
+	
+	//Materials
+	if($type == 4)
+		frameLayout -e -visible 1 frame_3;
+	else
+		frameLayout -e -visible 0 frame_3;
+	
+		
+	//Height map
+	if($type == 5)
+		frameLayout -e -visible 1 frame_4;
+	else
+		frameLayout -e -visible 0 frame_4;
+		
+	//Normal map
+	if($type == 6)
+		frameLayout -e -visible 1 frame_5;
+	else
+		frameLayout -e -visible 0 frame_5;
+		
+	//Position
+	if($type == 7)
+		frameLayout -e -visible 1 frame_6;
+	else
+		frameLayout -e -visible 0 frame_6;
+		
+	//Vertex colors
+	if($type == 8)
+		frameLayout -e -visible 1 frame_7;
+	else
+		frameLayout -e -visible 0 frame_7;
+		
+	//World space direction
+	if($type == 9)
+		frameLayout -e -visible 1 frame_8;
+	else
+		frameLayout -e -visible 0 frame_8;
+		
+	//World space normals
+	if($type == 10)
+		frameLayout -e -visible 1 frame_9;
+	else
+		frameLayout -e -visible 0 frame_9;
+*/
+}
+
+
+
+
+global proc frosCenterPivot(string $mesh)
+{
+	select -r $mesh;
+	makeIdentity -apply true -t 1 -r 1 -s 1 -n 0;
+	$Pos = `xform -q -piv -ws`;
+	move -a  (-1 *  $Pos[0]) (-1*$Pos[1] ) (-1*$Pos[2]) ;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+global proc frosSetSubstanceTemplate()
+{	
+	//put the default folder as the export folder
+	string $exp = `textField -q -fi fros_path_export`;
+	string $path[];
+	
+	if($exp != "")	
+		$path = `fileDialog2 -fm 1 -cap "Select Substance (sbsar)" -dir $exp`;
+	else
+		$path = `fileDialog2 -fm 1 -cap "Select Substance (sbsar)"`;
+	
+	if($path[0] != "") //update only if valid, otherwise keep blank/current path
+	{
+		textField -e -fi $path[0] fros_template_substance;
+
+		// if(`textField -q -fi fros_template_substance` != "")
+		frosUpdateInputsUI();
+	}
+}
+
+
+
+global proc frosUpdateInputsUI()
+{
+	if(`textField -q -fi fros_template_substance` == "")
+		error "No Substance loaded...";
+	
+	//////////////////////////////////////////////////////////
+	string $sbsarResults[] = frosTemplateWriteInputs();
+	string $result[] = frosTemplateGetInputs($sbsarResults);
+	string $colors[] = frosTemplateGetColors($sbsarResults);
+	
+	
+	//////////////////////////////////////////////////////////
+	//query and clear current UI
+	string $s;
+	string $ui[] = `frameLayout -q -childArray fros_template_list`;
+	
+	for($s in $ui)
+	{
+		if($s != "fros_item_base");
+		deleteUI $s;
+	}
+	
+	int $counter = 0;
+	
+	//temp to refresh UI
+	gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (218 / 2) -bgc 0.2 0.2 0.2 ("fros_item" + $counter);
+		text -l "";
+		text -l "temp" -align "left";
+	setParent fros_template_list;
+	
+	//add new image input items
+	for($s in $result)
+	{
+		$counter += 1;
+		
+		gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (218 / 2) -bgc 0.2 0.2 0.2 ("fros_item" + $counter);
+			optionMenu 
+				-label ""
+				-w (floor(218 / 2.2)) -h 22
+				-ann ""
+				-cc "frosUpdateUI"
+				-bgc 0.1 0.1 0.1
+				("fros_menu_item" + $counter);
+			
+			text -l $s -align "left";
+		setParent fros_template_list;
+		
+		
+		menuItem -p ("fros_menu_item" + $counter) -l "Ambient Occlu"		("fros_element" + $counter + "_1");
+		menuItem -p ("fros_menu_item" + $counter) -l "UV to Texture"			("fros_element" + $counter + "_2");
+		menuItem -p ("fros_menu_item" + $counter) -l "Curvature"			("fros_element" + $counter + "_3");
+		menuItem -p ("fros_menu_item" + $counter) -l "Height map" 			("fros_element" + $counter + "_4");
+		menuItem -p ("fros_menu_item" + $counter) -l "Normal map" 			("fros_element" + $counter + "_5");
+		menuItem -p ("fros_menu_item" + $counter) -l "Position" 			("fros_element" + $counter + "_6");
+		menuItem -p ("fros_menu_item" + $counter) -l "Vertex Color" 		("fros_element" + $counter + "_7");
+		menuItem -p ("fros_menu_item" + $counter) -l "World Direction" 		("fros_element" + $counter + "_8");
+		menuItem -p ("fros_menu_item" + $counter) -l "World Normals" 		("fros_element" + $counter + "_9");
+		menuItem -p ("fros_menu_item" + $counter) -l "Material IDs" 		("fros_element" + $counter + "_10");
+		
+		
+		optionMenu -e -sl 1 ("fros_menu_item" + $counter);
+		
+		if(`gmatch $s "*uvs*"`)
+			optionMenu -e -sl 2 ("fros_menu_item" + $counter);
+		
+		if(`gmatch $s "*curv*"`)
+			optionMenu -e -sl 3 ("fros_menu_item" + $counter);
+			
+		if(`gmatch $s "*norm*"`)
+			optionMenu -e -sl 5 ("fros_menu_item" + $counter);
+			
+		if(`gmatch $s "*vtx*"` 
+		|| `gmatch $s "*diffu*"` 
+		|| `gmatch $s "*base*"`)
+			optionMenu -e -sl 7 ("fros_menu_item" + $counter);
+			
+		if(`gmatch $s "*heigh*"`)
+			optionMenu -e -sl 4 ("fros_menu_item" + $counter);
+			
+		if(`gmatch $s "*pos*"`)
+			optionMenu -e -sl 6 ("fros_menu_item" + $counter);
+			
+		if(`gmatch $s "*ids*"`
+		|| `gmatch $s "*mat*"` 
+		|| `gmatch $s "*mid*"`
+		|| `gmatch $s "*mids*"` )
+			optionMenu -e -sl 10 ("fros_menu_item" + $counter);
+	}
+	
+	//add new color items
+	for($s in $colors)
+	{
+		$counter += 1;
+		
+		gridLayout -numberOfColumns 2 -cellHeight 22 -cellWidth (218 / 2) -bgc 0.2 0.2 0.2 ("fros_item" + $counter);
+			gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth (floor(218 / 2.1)) -bgc 0.2 0.2 0.2;
+				button
+					-l "Set Color"
+					-bgc 0 0 0
+					-c ("frosSetTemplateColor button_fros_item" + $counter)
+					("button_fros_item" + $counter);
+			setParent ("fros_item" + $counter);
+			
+			text -l $s -align "left";
+		setParent fros_template_list;
+	}
+	
+	
+	if(size($result) == 0 && size($colors) == 0)
+	{
+		gridLayout -numberOfColumns 1 -cellHeight 22 -cellWidth (218) -bgc 0.2 0.2 0.2 ("fros_item1");
+			text -l "No input(s)" -align "center";
+		setParent fros_template_list;
+	}
+	
+	//delete the incorret tab (bug created by maya)
+	deleteUI "fros_item0";
+	
+	
+	//feedback message
+	string $sbs = `textField -q -fi fros_template_substance`;
+	string $buffer[];
+	tokenize $sbs "/" $buffer;
+	
+	if(size($result) <= 0)
+		print ("Found no parameters in \"" + $buffer[size($buffer) - 1] + "\"");
+	else if(size($result) == 1)
+		print ("Found " + size($result) + " parameter in \"" + $buffer[size($buffer) - 1] + "\"");
+	else
+		print ("Found " + size($result) + " parameters in \"" + $buffer[size($buffer) - 1] + "\"");
+}
+
+
+
+global proc string[] frosTemplateWriteInputs()
+{
+	string $batch = `textField -q -fi fros_path_batch`;
+	string $substance = `textField -q -fi fros_template_substance`;
+	
+	/////////////////////////////////////////////////////////////////////
+	//check if result file alreayd exists
+	if(`filetest -s ($batch + "fros_result.txt")`) //remove it
+		sysFile -del ($batch + "fros_result.txt");
+	
+	string $command = "\"" + $batch + "sbsrender.exe\" info " + "\"" + $substance + "\" >> \"" + $batch + "fros_result.txt\"";
+
+
+	
+	/////////////////////////////////////////////////////////////////////
+	//open file, not in append, we rewrite it
+	if(`filetest -s ($batch + "fros_result.bat")`) //remove it
+		sysFile -del ($batch + "fros_result.bat"); 
+	
+	
+	$fileid = `fopen ($batch + "fros_result.bat") "w"`;
+	
+	//content
+	$command = "\"" + $batch + "sbsrender.exe\" info " + "\"" + $substance + "\"";
+	print "\n";
+	
+	fprint $fileid ($command + "\n");
+	fclose $fileid;
+	
+	
+	/////////////////////////////////////////////////////////////////////
+	//Read sbsrender feedback and store it in an array
+	string $lines[];
+	$pipe = popen( "\"" + $batch + "fros_result.bat\"", "r" );
+	
+	while ( !feof( $pipe ) ) 
+		$lines[size( $lines )] = fgetline( $pipe );
+		
+	pclose( $pipe );
+	
+	return $lines;
+}
+
+
+
+global proc string[] frosTemplateGetInputs(string $inputs[])
+{	
+	//-------------------------------------------------------------------
+	//process lines to find an input parameter
+	string $s;
+	string $file[];
+
+	for($s in $inputs)
+	{		
+		string $buffer[];
+		$s = substituteAllString($s, "\n", "");
+		tokenize $s " " $buffer;
+
+		int $i = 0;
+		for($i = 0; $i < size($buffer); $i++)
+		{
+			if($buffer[$i] == "INPUT")
+			{
+				if($buffer[$i + 2] == "IMAGE")
+					$file[size($file)] = $buffer[$i + 1];
+			}
+			
+		}
+	}
+	
+	return $file;
+}
+
+
+
+global proc string[] frosTemplateGetColors(string $inputs[])
+{	
+	//-------------------------------------------------------------------
+	//process lines to find a input/color parameter
+	string $s;
+	string $file[];
+
+	for($s in $inputs)
+	{
+		string $buffer[];
+		$s = substituteAllString($s, "\n", "");
+		tokenize $s " " $buffer;
+
+		int $i = 0;
+		for($i = 0; $i < size($buffer); $i++)
+		{
+			if($buffer[$i] == "INPUT")
+			{
+				if($buffer[$i + 2] == "FLOAT3" || $buffer[$i + 2] == "FLOAT4")
+					$file[size($file)] = $buffer[$i + 1];
+			}
+			
+		}
+	}
+	
+	print $file;
+	
+	return $file;
+}
+
+
+
+
+
+global proc frosTemplateBake()
+{
+	string $sel[] = `ls -sl`;
+	
+	if(size($sel) <= 0)
+		error "No mesh selected, impossible to bake Inputs";
+
+	string $export = `textField -q -fi fros_path_export`;
+	string $batch = `textField -q -fi fros_path_batch`;
+	string $substance = `textField -q -fi fros_template_substance`;
+	string $format = `optionMenu -q -v fros_format_menu`;
+	string $compression = `optionMenu -q -v fros_compression_menu`;
+		
+	$compression = tolower($compression);
+	$format = tolower($format);
+	
+	if($batch == "")
+		error "Batch tools path is empty, impossible to bake.";
+
+	if($batch == "")
+		error "Export path is empty, impossible to bake.";
+		
+	if($substance == "")
+		error "Substance (sbsar) path is empty, nothing to bake.";
+		
+	//output size settings
+	int $size_x = 0;
+	int $size_y = 0;
+	int $size = 0;
+
+	$size = `optionMenu -q -v fros_templatemenu_x`;
+	
+	if($size == 4096)
+		$size_x = 12;
+	else if($size == 2048)
+		$size_x = 11;
+	else if($size == 1024)
+		$size_x = 10;
+	else if($size == 512)
+		$size_x = 9;
+	else if($size == 256)
+		$size_x = 8;
+	else if($size == 128)
+		$size_x = 7;
+	else if($size == 64)
+		$size_x = 6;
+	else if($size == 32)
+		$size_x = 5;
+	else if($size == 16)
+		$size_x = 4;
+	else
+		$size_x = 3;
+	
+	
+	$size = `optionMenu -q -v fros_templatemenu_y`;
+
+	if($size == 4096)
+		$size_y = 12;
+	else if($size == 2048)
+		$size_y = 11;
+	else if($size == 1024)
+		$size_y = 10;
+	else if($size == 512)
+		$size_y = 9;
+	else if($size == 256)
+		$size_y = 8;
+	else if($size == 128)
+		$size_y = 7;
+	else if($size == 64)
+		$size_y = 6;
+	else if($size == 32)
+		$size_y = 5;
+	else if($size == 16)
+		$size_y = 4;
+	else
+		$size_y = 3;
+	
+	
+
+	///////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////		
+	//Iterate on all the meshes
+	string $finalcommand[];
+	
+	for($e in $sel)
+	{
+		string $command = "";
+		string $i = "";
+		string $inputs[];
+		
+		//get mesh name without its attributes
+		string $name = startString($e, size($e) - size(`textField -q -fi fros_multibake_lp`));
+			
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////	
+		//command setup
+		$command = ("\"" + $batch + "sbsrender.exe\" render \"" + $substance + "\"");
+		$command += (" --output-path \"" + $export + "\"");
+		$command += (" --output-format " + $format);
+		$command += (" --output-format-compression " + $compression);
+		$command += " --set-value $outputsize@" + $size_x + "," + $size_y;
+		
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////	
+		//random seed
+		if(`checkBox -q -v fros_check_seed`)
+			$command += " --set-value $randomseed@" + frosGetRandomSeed();
+		else
+			$command += " --set-value $randomseed@" + (`floatField -q -v fros_field_randomseed`);
+			
+		
+		
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////
+		//inputs
+		string $ui[] = `frameLayout -q -childArray fros_template_list`;
+
+		
+		for($s in $ui)
+		{		
+			//iterate only on gridlayout, ignore separator
+			if(`objectTypeUI $s` == "gridLayout")
+			{
+				string $child[] = `gridLayout -q -childArray $s`;
+
+				//if not a text, it's an input !
+				if(`objectTypeUI $child[0]` != "staticText")
+				{
+					//-----------------------------------------------------------------------
+					//Image input ?
+					if(`objectTypeUI $child[0]` == "popupMenu")
+					{
+						//input name
+						string $i = `text -q -l $child[1]`;
+						
+						//type of texture to load ?
+						string $m = "";
+						
+						if(`optionMenu -q -v $child[0]` == "UV to Texture")
+						{
+							if(`textField -q -fi fros_file_uv` != "")
+								$m = `textField -q -fi fros_file_uv`;
+							else
+								$m = "_uv";
+						}
+						else if(`optionMenu -q -v $child[0]` == "Curvature")
+						{
+							if(`textField -q -fi fros_file_curv` != "")
+								$m = `textField -q -fi fros_file_curv`;
+							else
+								$m = "_curv";
+						}
+						else if(`optionMenu -q -v $child[0]` == "Height map")
+						{
+							if(`textField -q -fi fros_file_height` != "")
+								$m = `textField -q -fi fros_file_height`;
+							else
+								$m = "_height";
+						}					
+						else if(`optionMenu -q -v $child[0]` == "Normal map")
+						{
+							if(`textField -q -fi fros_file_normal` != "")
+								$m = `textField -q -fi fros_file_normal`;
+							else
+								$m = "_norm";
+						}					
+						else if(`optionMenu -q -v $child[0]` == "Position")
+						{
+							if(`textField -q -fi fros_file_pos` != "")
+								$m = `textField -q -fi fros_file_pos`;
+							else
+								$m = "_pos";
+						}					
+						else if(`optionMenu -q -v $child[0]` == "Vertex Color")
+						{
+							if(`textField -q -fi fros_file_vtx` != "")
+								$m = `textField -q -fi fros_file_vtx`;
+							else
+								$m = "_vtx";
+						}
+						else if(`optionMenu -q -v $child[0]` == "World Direction")
+						{
+							if(`textField -q -fi fros_file_wsd` != "")
+								$m = `textField -q -fi fros_file_wsd`;
+							else
+								$m = "_dir";
+						}	
+						else if(`optionMenu -q -v $child[0]` == "World Normals")
+						{
+							if(`textField -q -fi fros_file_wsn` != "")
+								$m = `textField -q -fi fros_file_wsn`;
+							else
+								$m = "_wsn";
+						}
+						else if(`optionMenu -q -v $child[0]` == "Material IDs")
+						{
+							if(`textField -q -fi fros_file_mid` != "")
+								$m = `textField -q -fi fros_file_mid`;
+							else
+								$m = "_mid";
+						}
+						else
+						{
+							if(`textField -q -fi fros_file_ao` != "")
+								$m = `textField -q -fi fros_file_ao`;
+							else
+								$m = "_ao";
+						}
+						
+						$inputs[size($inputs)] = (" --set-entry " + $i + "@\"" + $export + $name + $m + "." + $format + "\"");
+					}
+					
+					//-----------------------------------------------------------------------
+					//Button ?
+					if(`objectTypeUI $child[0]` == "gridLayout")
+					{
+						string $child2[] = `gridLayout -q -childArray $child[0]`;
+						
+						//query color
+						float $col[3] = `button -q -bgc $child2[0]`;
+						string $i = `text -q -l $child[1]`;
+						
+						$inputs[size($inputs)] = (" --set-value " + $i + "@" + roundf($col[0]) + "," + roundf($col[1]) + "," + roundf($col[2])  + ",1" );					
+					}
+				}
+			}
+			
+
+		}
+		
+		for($i in $inputs)
+			$command += $i;
+		
+		$command += " --output-name " + $name + "_{outputNodeName}";
+
+		$finalcommand[size($finalcommand)] = $command;
+		
+		clear($inputs);
+	}
+	
+	///////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////
+	//batch file
+	
+	if(`filetest -s ("\"" + $export + "bake_template.bat\"")`) //remove it
+		sysFile -del ("\"" + $export + "bake_template.bat\""); 
+	
+	//open file, not in append, we rewrite it
+	$fileid = `fopen ($export + "bake_template.bat") "w"`;
+	
+	//content
+	for($l in $finalcommand)
+		fprint $fileid ($l + "\n\n");
+	
+	if( !`checkBox -q -v fros_check_batch`)
+	{
+		string $path = $export + "bake_template.bat";
+		$path = substituteAllString($path, "/", "\\");
+		
+		fprint $fileid ("\ndel \"" + $path + "\" & pause");
+	}
+	else
+		fprint $fileid ("\n\npause");
+		
+	fclose $fileid;
+	
+	//run batch
+	system("start \"" + $export + "bake_template.bat\"");
+	
+	
+}
+
+
+
+global proc frosSetTemplateColor(string $item)
+{
+	//query the current color
+	float $col[3] = `button -q -bgc $item`;
+	
+	//query the new color
+	colorEditor -rgbValue $col[0] $col[1] $col[2];
+	
+	if (`colorEditor -query -result`) 
+	{		
+		float $values[3] = `colorEditor -query -rgb`;
+		print ("\"" + $item + "\" color = " + $values[0] + " " + $values[1] + " " + $values[2] + "\n");
+
+		//update
+		$col[0] = $values[0];
+		$col[1] = $values[1];
+		$col[2] = $values[2];
+		button -e -bgc $col[0] $col[1] $col[2] $item;
+	}
+}
+
+
+
+global proc int frosGetRandomSeed()
+{
+	float $seed = `rand 2147483647`;
+	
+	return floor($seed);
+}
+
+
+
+global proc frosUpdateRandomeSeed()
+{
+	floatField -e -v (frosGetRandomSeed()) fros_field_randomseed;
+}
+
+
+
+global proc frosSaveSuffix()
+{
+	string $bakers[] = {
+							"normal",
+							"aohp",
+							"thickness",
+							"ao",
+							"uv",
+							"curv",
+							"height",
+							"pos",
+							"vtx",
+							"mid",
+							"wsd",
+							"wsn"
+						};
+	
+	
+	for($file in $bakers)
+	{
+		string $name = "fros_file_" + $file;
+		
+		optionVar -stringValue $name (`textField -q -fi $name`);
+	}
+}
+
+
+
+global proc frosLoadSuffix()
+{
+	string $bakers[] = {
+							"normal",
+							"aohp",
+							"thickness",
+							"ao",
+							"uv",
+							"curv",
+							"height",
+							"pos",
+							"vtx",
+							"mid",
+							"wsd",
+							"wsn"
+						};
+	
+	
+	for($file in $bakers)
+	{
+		string $name = "fros_file_" + $file;
+		
+		if( `optionVar -exists $name` )
+		{
+			string $content = (`optionVar -q $name`);
+			textField -e -fi $content $name;
+		}
+		
+	}
+}
+
+
+
+global proc frosSetGlobalNormal()
+{
+	int $type = `optionMenu -q -sl fros_globalnormal_menu`;
+	
+	string $list[] = {
+						"fros_normaltype_menu",
+						"fros_curvtype_menu",
+						"fros_aotype_menu",
+						"fros_wsd_mode",
+						"fros_wsn_mode"
+					 };
+
+	for($menu in $list)
+	{
+		optionMenu -e -sl $type $menu;
+	}
+}
+
+
+
+global proc frosSetGlobalAntiAliasing()
+{
+	int $type = `optionMenu -q -sl fros_globalaa_menu`;
+	
+	string $list[] = {
+						"fros_field_normalaa",
+						"fros_field_midaa",
+						"fros_field_vtxaa",
+						"fros_heightaa_menu",
+						"fros_thkaa_menu",
+						"fros_aoaa_menu"
+					 };
+					 
+	for($menu in $list)
+	{
+		optionMenu -e -sl $type $menu;
+	}
+}

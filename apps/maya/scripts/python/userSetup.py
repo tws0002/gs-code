@@ -40,6 +40,8 @@ def autoInitMustacheProject():
     
 
 def gs_restore_pwd():
+    ''' In some versions of maya (2016) tooltips would crash when loading icons if the current working directory was a unc path. 
+    This restores the cwd/pwd to a local path for safety'''
     m_install = ''
     try:
         m_install = os.environ['ST_MAYA_DIR']
@@ -50,6 +52,7 @@ def gs_restore_pwd():
         cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')", lowestPriority=False)
 
 def gs_pluginLoad(plugin=''):
+    ''' customized wrapper for plugin loading that measures and reports the plugin load time'''
     start_time = time.time()
     if plugin != '':
         try:
@@ -61,13 +64,10 @@ def gs_pluginLoad(plugin=''):
             raise
 
 
-
-    #os.environ['MAYA_PLUG_IN_PATH'] = tmp 
-    #os.environ['MAYA_SCRIPT_PATH'] = tmp2
-
 def gs_autoload(local_only=False):
-    #gs_load_deferred_modules()
-
+    ''' Alternative to Autodesk's built in plugin autoloader, This removes network paths from the maya search paths while maya loads local
+    plugins. Any network plugin load will fail, but a follow up routine restores the network path and attempts to load the failed plugins again.
+    This technique dramatically speeds up the load time of maya, which can get slow if there are numerous network plugin search paths '''
 
     plugs = os.environ.get('GS_MAYA_AUTOLOAD')
     # temporarily remove network paths from mayas search paths, this speeds up load time dramatically
@@ -167,15 +167,32 @@ def gs_load_deferred_modules():
         else:
             os.environ['MAYA_SHELF_PATH'] = os.environ['GS_MAYA_SHELF_PATH']
 
+def gs_remove_junk_shelves():
+    ''' sometimes plugins are written poorly and create permanant shelves in the user prefs at load time. (VRAY) this removes them '''
+    shelves =['shelf_Elementacular.mel','shelf_VRay.mel', 'uvShelf_Custom.mel']
+    maya_ver = cmds.about(v=True)
+    user_shelf_path = os.path.join(os.environ['MAYA_APP_DIR'],maya_ver,'prefs','shelves')
+    for s in shelves:
+        f = os.path.join(user_shelf_path,s)
+        if os.path.exists(f):
+            os.remove(f) 
+            
+
 def init():
     #initLogo()
     gs_set_renderlayer_mode()
+    gs_remove_junk_shelves()
 
     # avoid autoload on batch render since scenefile will automatically require the plugins it needs
     if not cmds.about(batch=True):
         cmds.evalDeferred("gs_autoload(local_only=True)")
+        gs_restore_pwd()
         cmds.evalDeferred("initMustache()")
         cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
+    else:
+        # maya doesn't properly add the requires flag to scenefiles for these plugins, so we have to force it to load in batchmode
+        cmds.loadPlugin("AbcExport")
+        cmds.loadPlugin("AbcImport")
 
     gs_restore_pwd()
 

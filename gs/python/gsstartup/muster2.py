@@ -33,14 +33,14 @@ JOB_ENGINE = {
         'c4d': '1107',
     }
 
-if (os.environ['GSBRANCH'].split('/')[-1]) == 'dev':
-    JOB_ENGINE = {
-        'ae': '1202',
-        'modo': '1204',
-        'nuke': '1205',
-        'maya': '1206',
-        'c4d': '1207',
-    }
+# if (os.environ['GSBRANCH'].split('/')[-1]) == 'dev':
+#     JOB_ENGINE = {
+#         'ae': '1202',
+#         'modo': '1204',
+#         'nuke': '1205',
+#         'maya': '1206',
+#         'c4d': '1207',
+#     }
 
 
 MUSTERDICT  =   {}
@@ -287,11 +287,14 @@ def get_chunk_start_time(jobid, chunkid):
 def main():
     parser = argparse.ArgumentParser(description='GS Maya launcher.')
     parser.add_argument('-j', '--jsoncmd', dest='jsoncmd', help='If specified, will take a dictionary of Muster flags to be submitted.')
+    parser.add_argument('-p', '--pools', action='store_true', help='If specified, will print pools.')
     args = parser.parse_args()
 
     if args.jsoncmd:
         jsoncmd = args.jsoncmd
         output = submit(json.loads(jsoncmd))
+    elif args.pools:
+        print get_pools()
     else:
         MUSTERDICT['pools'] = get_pools()
         with open(MUSTERJSON, 'w') as f:
