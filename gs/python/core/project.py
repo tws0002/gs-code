@@ -87,7 +87,7 @@ class StudioProject():
         result = filepath.replace('<', '(?P<')
         result = result.replace('>', '>[^{0}]*)'.format(lstr))
         for e in exclude:
-            rgx_path = rgx_path.replace('{0}[^/]*', '{0}.*'.format(e))
+            result = result.replace('{0}[^{1}]*'.format(e,lstr), '{0}.*'.format(e))
         return str(result)
 
     def get_path(self, object_dict):
@@ -117,9 +117,7 @@ class StudioProject():
         task_file_match = False
 
         for var, val in self.vars.iteritems():
-            rgx_path = val.replace('<', '(?P<')
-            rgx_path = rgx_path.replace('>', '>[^/]*)')
-            rgx_path = rgx_path.replace('<server>[^/]*', '<server>.*')
+            rgx_path = self.template_to_regex(filepath=val, limiters=['/'], exclude=['<server>'])
             rp = re.compile(rgx_path)
             #print ('checking path_vars: {0}'.format(var))
             if rp.match(split_path[0]):
@@ -133,25 +131,12 @@ class StudioProject():
         for task, data in self.task_structs.iteritems():
 
             if 'work_path' in data:
-                #task_path = data['work_path']
-                ## turn into a regex with capture groups
-                #rgx_path = task_path.replace('<', '(?P<')
-                #rgx_path = rgx_path.replace('>', '>[^/]*)')
-                ## allow file share to contain multiple directories
-                #rgx_path = rgx_path.replace('<server>[^/]*', '<server>.*')
-
                 # should cache converted regexs
                 rgx_path = self.template_to_regex(filepath=data['work_path'], limiters=['/'], exclude=['<server>'])
 
-                #task_file = data['work_file']
-                #rgx_file = task_file.replace('<', '(?P<')
-                #rgx_file = rgx_file.replace('>', '>[^_\.]*)')
-                ## allow shot to contain multiple underscores
-                #rgx_file = rgx_file.replace('<shot>[^_\.]*', '<shot>.*')
-                #rgx_file = rgx_file.replace('<asset>[^_\.]*', '<asset>.*')
                 rgx_file = self.template_to_regex(filepath=data['work_file'], limiters=['_','.'], exclude=['<shot>','<asset>'])
 
-                #print ("rgx_path={0}".format(rgx_path))
+                #print ("task:{1} rgx_file={0}".format(rgx_file,task))
 
                 rp = re.compile(rgx_path)
                 rf = re.compile(rgx_file)
