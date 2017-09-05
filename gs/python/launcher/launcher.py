@@ -101,6 +101,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # load the process env from the config files
     process_env = StudioEnvironment()
 
+    # load studiotools env vars
+    process_env.load_app_config_file(filepath=app_config, app='studiotools', version=version)
+    process_env.load_app_config(process_env.app_data, 'studiotools', version)
+
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
     # workgroups vars should be able to override any other vars
@@ -116,6 +120,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if os.path.isfile(proj_app):
         process_env.append_app_config_file(filepath=proj_app, app=app, version=version)
 
+    process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version)
+    process_env.load_app_config(process_env.app_data, app, version)
 
     if 'GSBRANCH' in os.environ:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':

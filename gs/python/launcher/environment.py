@@ -24,38 +24,38 @@ class StudioEnvironment():
         print ("Loading file path {0}".format(filepath))
         dataMap = self.get_config_file(filepath)
         self.app_data = dataMap
-        self.load_app_config(self.app_data, app, version)
+        #self.load_app_config(self.app_data, app, version)
 
     def load_module_config_file(self, filepath, module, version):
         dataMap = self.get_config_file(filepath)
         self.module_data = dataMap
-        self.load_module_config(self.module_data, module, version)
+        #self.load_module_config(self.module_data, module, version)
 
     def load_workgroup_config_file(self, filepath, workgroup=None, app=None, version=''):
         dataMap = self.get_config_file(filepath)
         self.workgroup_data = dataMap
-        self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
+        #self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
 
     def append_app_config_file(self, filepath, app=None, version=None):
         dataMap = self.get_config_file(filepath)
         if type(self.app_data) == type(dict()):
             print ("Appending App Config File = {0}".format(filepath))
             self.config_merge(self.app_data,dataMap)
-            self.load_app_config(self.app_data, app, version)
+            #self.load_app_config(self.app_data, app, version)
 
     def append_workgroup_config_file(self, filepath, workgroup=None, app=None, version=''):
         dataMap = self.get_config_file(filepath)
         if type(self.workgroup_data) == type(dict()):
             print ("Appending Workgroup Config File = {0}".format(filepath))
             self.config_merge(self.workgroup_data,dataMap)
-            self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
+           # self.load_workgroup_config(self.workgroup_data, workgroup, app, version)
 
     def append_module_config_file(self, filepath, module, version):
         dataMap = self.get_config_file(filepath)
         if type(self.workgroup_data) == type(dict()):
             print ("Appending Module Config File = {0}".format(filepath))
             self.config_merge(self.module_data,dataMap)
-            self.load_module_config(self.module_data, module, version)
+            #self.load_module_config(self.module_data, module, version)
 
 
     def get_config_file(self,filepath):
