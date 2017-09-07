@@ -14,7 +14,7 @@ STUDIO = yaml.safe_load(f)
 f.close()
 print "Loaded Studio Config Successfully"
 
-os.environ['ST_JOB_SERVERS'] = STUDIO['file_shares']['jobs']['root_path']
+os.environ['ST_JOB_SERVERS'] = STUDIO['servers']['jobs']['root_path']
 
 
 f = open(CONFIG+"/projects_old.yml")

@@ -33,13 +33,13 @@ def init():
     return
 
 def list_servers():
-	for share in STUDIO['file_shares']:
-		print (share+": "+STUDIO['file_shares'][share]['root_path'])
+	for share in STUDIO['servers']:
+		print (share+": "+STUDIO['servers'][share]['root_path'])
 
 def list_jobs(share):
 	result = []
 	try:
-		path = STUDIO['file_shares'][share]['root_path']
+		path = STUDIO['servers'][share]['root_path']
 		for name in os.listdir(path):
 			if os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
 				result.append(name)
@@ -51,7 +51,7 @@ def list_shots(share,job):
 	result = []
 	try:
 		#path = PROJECT['data_structs'][share]['root_path']
-		path = STUDIO['file_shares'][share]['root_path']
+		path = STUDIO['servers'][share]['root_path']
 		path = os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','02_cg_scenes')
 		
 		for name in os.listdir(path):
@@ -64,7 +64,7 @@ def list_shots(share,job):
 def list_assets(share,job):
 	result = []
 	try:
-		path = STUDIO['file_shares'][share]['root_path']
+		path = STUDIO['servers'][share]['root_path']
 		path = os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','01_cg_elements','01_models')
 		
 		for name in os.listdir(path):
@@ -79,7 +79,7 @@ def list_assets(share,job):
 def list_scenes(share, job, shot):
 	valid_result = []
 	try:
-		path = STUDIO['file_shares'][share]['root_path']
+		path = STUDIO['servers'][share]['root_path']
 		paths = []
 		paths.append(os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','02_cg_scenes',shot))
 		paths.append(os.path.join(path,job,'03_production','01_cg','01_MAYA','scenes','01_cg_elements','01_models',shot))
