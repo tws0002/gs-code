@@ -130,24 +130,16 @@ vray:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
       versions:
-        '2.40.01':
+        '3.52.03':
           env:
-            ST_MAYA_VRAY: '2.40.01'
+            ST_MAYA_VRAY: '3.52.03'
           path:
             linux: /
             mac: /
             win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
           versions:
-        '3.30.02':
-          env:
-            ST_MAYA_VRAY: '3.30.02'
-          path:
-            linux: /
-            mac: /
-            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
-          versions:
-          - '2015'
           - '2016.5'
+          - '2017'
         '3.40.06':
           env:
             ST_MAYA_VRAY: '3.40.06'
@@ -158,6 +150,24 @@ vray:
           versions:
           - '2016.5'
           - '2017'
+        '3.30.02':
+          env:
+            ST_MAYA_VRAY: '3.30.02'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2015'
+          - '2016.5'
+        '2.40.01':
+          env:
+            ST_MAYA_VRAY: '2.40.01'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
 realflow:
   name: realflow
   show: false
@@ -314,6 +324,15 @@ fracturefx:
         MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/%ST_FRACFX%/win/%ST_MAYA%/shelves'
         FX_LCN_FILE: '%GSROOT%/bin/external/maya/modules/fracturefx/%ST_FRACFX%/win/%ST_MAYA%/config/fxlcn'
       versions:
+        '2.0.2':
+          env:
+            ST_FRACFX: '2.0.2'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '1.9.6':
           env:
             ST_FRACFX: '1.9.6'
@@ -621,6 +640,15 @@ slib:
   packages:
     maya:
       versions:
+        '2.23':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/slib/2.23/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2.02':
           env:
             MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/slib/2.02/win/%ST_MAYA%'
