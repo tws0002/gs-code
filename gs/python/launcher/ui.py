@@ -7,9 +7,12 @@ from utils import *
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import urllib2
-import subprocess
-import functools
+
+elapsed_time = time.time() - START_TIME
+print("Launcher PyQt loaded in {0} sec".format(elapsed_time))
+#import urllib2
+#import subprocess
+#import functools
 
 from environment import *
 from gsqt.widgets import *
@@ -25,15 +28,17 @@ import core.project
 
 class Launcher(QMainWindow):
 
-    
     #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
-    a_data = APPS
-    w_data = WORKGRP
+    a_data = {}
+    w_data = {}
     
     def __init__(self, parent=None):
 
         super(Launcher, self).__init__(parent)
 
+        elapsed_time = time.time() - START_TIME
+        print("Launcher window init start in {0} sec".format(elapsed_time))
+        #self.load_project_config("")
         self.update_gui = False
         self.resize(710, 450)
         self.app_layouts = {}
@@ -59,7 +64,7 @@ class Launcher(QMainWindow):
         # init ui elements
         self.icon_size = QSize(96, 96)
         self.title = "GS Launcher"
-        QPixmapCache.setCacheLimit(20480)
+        #QPixmapCache.setCacheLimit(20480)
 
         # stores handles to UI objects created
         self.ui = {}
@@ -70,6 +75,8 @@ class Launcher(QMainWindow):
 
         # main window frame, (central widget)
         self.load_style()
+        elapsed_time = time.time() - START_TIME
+        print("Launcher loading style in {0} sec".format(elapsed_time))
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.shadow = QGraphicsDropShadowEffect(self)
@@ -212,14 +219,19 @@ class Launcher(QMainWindow):
 
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
 
+        elapsed_time = time.time() - START_TIME
+        print("Launcher updating UI in {0} sec".format(elapsed_time))
+
         self.update_ui()
         self.read_settings()
 
     def update_ui(self):
-        
+        # prevent signals from being called while updating entire ui
+        self.ui['wdgt']['project_combo'].blockSignals(True)
         self.update_projects()
-        self.update_disp_groups()
-        self.update_apps()
+        #self.update_disp_groups()
+        #self.update_apps()
+        self.ui['wdgt']['project_combo'].blockSignals(False)
 
     def load_style(self):
         branch = 'base'
@@ -254,52 +266,115 @@ class Launcher(QMainWindow):
         else:
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
+    def get_project_config(self, project='',config_type='workgroup'):
+
+        proj_config = os.path.join(STUDIO['servers']['jobs']['root_path'],project,"03_production",".pipeline","config","{0}.yml".format(config_type))
+        #print ("Testing Project Config = {0}".format(proj_config))
+        found_config = ''
+        if os.path.isfile(proj_config):
+            found_config = proj_config
+            #print ("GS Launcher: loading local project {1} config:{0}").format(found_config,config_type)
+        return found_config 
+
+    def append_config_file(self, filepath, config_type):
+        dataMap = self.get_config_file(filepath)
+        origMap = None
+        if config_type == 'app':
+            origMap = self.a_data
+        elif config_type == 'workgroups':
+            origMap = self.w_data
+        if type(origMap) == type(dict()):
+            print ("Appending Config File = {0}".format(filepath))
+            # need to parse the new datamap and only overwrite key,value pairs, do not overwrite entire key,dict pairs
+            self.config_merge(origMap,dataMap)
+
+            #origMap.update(dataMap)
+
+    def config_merge(self, orig_dict, new_dict):
+        #print new_dict
+        for key, val in new_dict.iteritems():
+            if key in orig_dict:
+                if type(val) == type(dict()):
+                    self.config_merge(orig_dict[key],val)
+                else:
+                    orig_dict[key] = val
+            else:
+                orig_dict[key] = val
+
+
+    def get_config_file(self,filepath):
+        f = open(filepath)
+        # use safe_load instead load
+        dataMap = yaml.load(f, Loader=yaml.CLoader)
+        f.close()
+        #print ("Loaded Config File = {0}".format(filepath))
+        return dataMap
+
     def load_project_config(self,project_name):
         #print ("CHECKING FOR NEW CONFIG")
         wrkgrp_config = CONFIG+'/workgroups.yml'
         app_config = CONFIG+'/app.yml'
+        mod_config = CONFIG+'/modules.yml'
 
-        job_wrkgrp_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","workgroups.yml")
-        if os.path.isfile(job_wrkgrp_config):
-            wrkgrp_config = job_wrkgrp_config
-            print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
-        else:
-            wrkgrp_config = CONFIG+'/workgroups.yml'
-            #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
+        #job_wrkgrp_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","workgroups.yml")
+        #if os.path.isfile(job_wrkgrp_config):
+        #    wrkgrp_config = job_wrkgrp_config
+        #    print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
+        #else:
+        #    wrkgrp_config = CONFIG+'/workgroups.yml'
+        #    #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
+        #
+        #job_app_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","app.yml")
+        #if os.path.isfile(job_app_config):
+        #    app_config = job_app_config
+        #    print ("GS Launcher: loading local project app config:{0}").format(app_config)
+        #else:
+        #    app_config = CONFIG+'/app.yml'
+        #    #print ("GS Launcher: loading studio app config:{0}").format(app_config)
 
-        job_app_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","app.yml")
-        if os.path.isfile(job_app_config):
-            app_config = job_app_config
-            print ("GS Launcher: loading local project app config:{0}").format(app_config)
-        else:
-            app_config = CONFIG+'/app.yml'
-            #print ("GS Launcher: loading studio app config:{0}").format(app_config)
+        ###load the apps dictionary
+        ##f = open(wrkgrp_config)
+        ##self.w_data = None
+        ##self.w_data = yaml.safe_load(f)
+        ##f.close()
 
-        #load the apps dictionary
-        f = open(wrkgrp_config)
-        self.w_data = None
-        self.w_data = yaml.safe_load(f)
-        f.close()
+        self.w_data = self.get_config_file(wrkgrp_config)
+        proj_workgrp = self.get_project_config(project_name,'workgroups')
+        if (os.path.isfile(proj_workgrp)):
+            #print ("Found Project Workgroup Config = {0}".format(proj_workgrp))
+            self.append_config_file(proj_workgrp,'workgroups')
         
         ###load the modules dictionary
         ##f = open(CONFIG+"/modules.yml")
         ##MODULES = yaml.safe_load(f)
         ##f.close()
+        self.m_data = self.get_config_file(mod_config)
         
-        #load the workgroups dictionary
-        f = open(app_config)
-        self.a_data = None
-        self.a_data = yaml.safe_load(f)
-        f.close()
+        ###load the workgroups dictionary
+        ##f = open(app_config)
+        ##self.a_data = None
+        ##self.a_data = yaml.safe_load(f)
+        ##f.close()
+        self.a_data = self.get_config_file(app_config)
+        proj_app = self.get_project_config(project_name,'app')
+        if (os.path.isfile(proj_app)):
+            #print ("Project App Config = {0}".format(proj_app))
+            self.append_config_file(proj_app,'app')
 
     def set_project(self, project_name):
         try:
             #print ('Setting to Project: '+project_name)  
             #print (self.ui['wdgt']['project_combo'].currentText())
+            old_p = self.ui['wdgt']['project_combo'].currentText()
+    
             index = self.ui['wdgt']['project_combo'].findText(project_name)
             if index > -1:
                 self.ui['wdgt']['project_combo'].setCurrentIndex(index)
-
+    
+            # if project didn't change, still fire a signal so that the ui is updated
+            if (old_p == project_name):
+                self.proj_change(index)
+    
             #self.load_project_config(project_name)
             #self.update_disp_groups()
             #self.update_apps()
