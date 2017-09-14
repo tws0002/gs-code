@@ -260,7 +260,7 @@ class Submitter:
                             rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                             rsmusterflags['-sf'] = str(int(start)+i)
                             rsmusterflags['-bf'] = str(len(rsGpuString))
-                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
                             rendersubmit = muster2.submit(rsmusterflags)
                             i+=1
@@ -272,7 +272,7 @@ class Submitter:
                             rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                             rsmusterflags['-sf'] = str(int(start)+i)
                             rsmusterflags['-bf'] = str(len(rsGpuString))
-                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
                             rendersubmit = muster2.submit(rsmusterflags)
                             i+=1
@@ -315,7 +315,7 @@ class Submitter:
                         rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                         rsmusterflags['-sf'] = str(int(start)+i)
                         rsmusterflags['-bf'] = str(len(rsGpuString))
-                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
                         rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
@@ -327,7 +327,7 @@ class Submitter:
                         rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                         rsmusterflags['-sf'] = str(int(start)+i)
                         rsmusterflags['-bf'] = str(len(rsGpuString))
-                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
                         rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
@@ -967,9 +967,23 @@ class Submitter:
 #        for f in musterFolders:
 #            cmds.menuItem(l=f[0])
         poolCtrl = cmds.optionMenu(l='Muster pool:     ', parent=musterSettingsLayout, bgc=[1.0, 0.6, 0.7], cc=lambda *x: self.setImportantCtrl(poolCtrl, cameraCtrl, poolCtrl, prepassCtrl, prepassLayerCtrl, submitBtn), ann="The pool of computers dedicated to rendering your job. If you don't know which one to use, ask a supervisor.")
+        cpupools = []
+        gpupools = []
         pools = list(MUSTER_POOLS)
         for p in pools:
-            cmds.menuItem(l=p)
+            m = re.search('^GPU.*[^\-][^0123]$', p)
+            n = re.search('^GPU$', p)
+            o = re.search('^(?!GPU)', p)
+            if m or n:
+                gpupools.append(p)
+            elif o:
+                cpupools.append(p)
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            for g in gpupools:
+                cmds.menuItem(l=g)
+        else:
+            for c in cpupools:
+                cmds.menuItem(l=c)
         #####################################
         submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout,
             c=lambda *x: self.userSubmit( pool = cmds.optionMenu(poolCtrl, q=1, v=1),
