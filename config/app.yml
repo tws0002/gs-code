@@ -244,9 +244,10 @@ nuke:
   shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
+    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup;%GSBRANCH%/apps/nuke/icons'
     NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
+    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
   show: true
   tasks:

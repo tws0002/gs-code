@@ -677,6 +677,7 @@ animschoolpicker:
           versions:
           - '2015'
           - '2016.5'
+          - '2017'
 studiolibrary:
   name: studiolibrary
   show: true
@@ -793,13 +794,32 @@ qcmds:
             win32: /
           versions:
           - 'R17'
+lenscare:
+  name: lenscare
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/lenscare/%ST_LENSCARE%/%ST_NUKE%'
+      versions:
+        '1.44':
+          env:
+            ST_LENSCARE: '1.44'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
 neatvideo:
   name: neatvideo
   show: true
   packages:
     nuke:
       env:
-        ST_NUKE_PLUGINS: '%GSROOT%/bin/external/nuke/plugins/neatvideo/%ST_NEATVID%/%ST_NUKE%'
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/neatvideo/%ST_NEATVID%/%ST_NUKE%'
       versions:
         '4.0.9':
           env:
@@ -812,3 +832,141 @@ neatvideo:
           - '10.0'
           - '9.0'
           - '8.0'
+deflicker:
+  name: deflicker
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/deflicker/%ST_DEFLICKER%/%ST_NUKE%'
+      versions:
+        '1.0':
+          env:
+            ST_DEFLICKER: '1.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+twixtor:
+  name: twixtor
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/twixtor/%ST_TWIXTOR%/%ST_NUKE%'
+      versions:
+        '6.2.2':
+          env:
+            ST_TWIXTOR: '6.2.2'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+rsmb:
+  name: rsmb
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/rsmb/%ST_RSMB%/%ST_NUKE%'
+      versions:
+        '4.2.0':
+          env:
+            ST_RSMB: '4.2.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+caravr:
+  name: caravr
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/caravr/%ST_CARAVR%/%ST_NUKE%'
+      versions:
+        '1.0b3':
+          env:
+            ST_CARAVR: '1.0b3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+j_ops:
+  name: j_ops
+  show: true
+  packages:
+    nuke:
+      env:
+        ST_NUKE_JOPS: '%GSROOT%/bin/external/nuke/plugins/j_ops/%ST_JOPS%/%ST_NUKE%'
+        NUKE_PATH: '%ST_NUKE_JOPS%;%ST_NUKE_JOPS%/py;%ST_NUKE_JOPS%/ndk/%ST_NUKE_JOPS%/icons'
+      versions:
+        '2.3':
+          env:
+            ST_JOPS: '2.3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '9.0'
+opticalflares:
+  name: opticalflares
+  show: true
+  packages:
+    nuke:
+      env:
+        OPTICAL_FLARES_LICENSE_PATH: '%GSROOT%/bin/external/nuke/plugins/opticalflares/%ST_NUKE_OPTICALFLARES%/%ST_NUKE%/%BUILD%/%GS_OF_LIC_PATH%'
+        OPTICAL_FLARES_PATH: '%GSROOT%/bin/external/nuke/plugins/opticalflares/%ST_NUKE_OPTICALFLARES%/%ST_NUKE%/%BUILD%'
+        NUKE_PATH: '%OPTICAL_FLARES_PATH%'
+      versions:
+        '1.0.85':
+          env:
+            ST_NUKE_OPTICALFLARES: '1.0.85'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+      modes:
+        ui:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        cli:
+          env:
+            GS_OF_LIC_PATH: ''
+            BUILD: 'farm'
+        render:
+          env:
+            GS_OF_LIC_PATH: ''
+            BUILD: 'farm'
+        x:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        studio:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        assist:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'

@@ -105,6 +105,15 @@ default:
       title: 'Nuke'
       app: 'nuke'
       version: '10.0v5'
+      modules:
+        lenscare: '1.44'
+        neatvideo: '4.0.9'
+        deflicker: '1.0'
+        twixtor: '6.2.2'
+        rsmb: '4.2.0'
+        caravr: '1.0b3'
+        j_ops: '2.3'
+        opticalflares: '1.0.85'
     aftereffects:
       title: 'AE 2017'
       app: 'aftereffects'

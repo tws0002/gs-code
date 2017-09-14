@@ -120,8 +120,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if os.path.isfile(proj_app):
         process_env.append_app_config_file(filepath=proj_app, app=app, version=version)
 
-    process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version)
-    process_env.load_app_config(process_env.app_data, app, version)
+    process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version, mode)
+    process_env.load_app_config(process_env.app_data, app, version, mode)
 
     if 'GSBRANCH' in os.environ:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':
