@@ -50,8 +50,9 @@ class Submitter:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':
             base_mp_cache = os.path.join(os.environ['GSROOT'],'base','gs','python','gsstartup','muster.json')
             local_mp_cache = os.path.join(os.environ['GSBRANCH'],'gs','python','gsstartup','muster.json')
-            if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
-                shutil.copy2(base_mp_cache,local_mp_cache)
+            if os.path.isfile(base_mp_cache):
+                if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
+                    shutil.copy2(base_mp_cache,local_mp_cache)
 
         # if the mod date is more recent than 5 min ago load it, otherwise query muster
         #try:

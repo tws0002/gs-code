@@ -313,6 +313,7 @@ class AssetManager:
 
     def masterAsset(self, asset):
         user = self.M.user
+        ke = None
         if asset == '':
             cmds.error('No asset is checked out to master!')
         if self.isClean == False:
@@ -336,6 +337,34 @@ class AssetManager:
             pass
         else:
             self.updateAsset(asset, 'Autosaved before mastering')
+
+        # import any remaining references and remove namespaces
+        refs = cmds.file(q=1,r=1)
+        for ref in refs:
+            release = True
+            cmds.file(ref, ir=1)
+        """ empty namespaces of objects and then remove them. """
+        cmds.namespace(set=':') # go to root
+        namespaces = cmds.namespaceInfo(lon=1)
+        # ignore ref namespaces
+        refns = []
+        refs = cmds.file(q=1,r=1)
+        for ref in refs:
+            ns = cmds.file(ref,q=1,ns=1)
+            refns.append(ns)
+        deathCount = []
+        for ns in namespaces:
+            # we do NOT want to fuck with 'UI' or 'shared.' this will crash maya.
+            if ns != 'UI' and ns != 'shared' and ns not in refns:
+                # remove all objects from this namespace.
+                cmds.namespace(mv=(ns,':'),force=1)
+                try:
+                    cmds.namespace(rm=ns)
+                    deathCount.append(ns)
+                except:
+                    print('couldn\'t remove namespace: '+ns)
+
+        # rename and save master
         oldFileName = cmds.file(q=1, sn=1)
         cmds.file(rename=master)
         cmds.file(save=1, force=1)
@@ -349,8 +378,13 @@ class AssetManager:
                 print 'CACHE master asset updated for asset %s! %s' % (asset, cacheMaster)
                 cmds.file(oldFileName, open=1, force=1)
         cmds.file(rename=oldFileName)
+        cmds.file(rts=1)
         evalString = 'Master asset updated for asset %s! %s' % (asset, master)
         mel.eval('print \n"' + evalString + '"')
+        if release:
+            confirm = cmds.confirmDialog(title='Release Asset', message='Asset Master Complete. The Asset will now be released', icon='question', button=['OK'], defaultButton='OK', cancelButton='OK', dismissString='OK')
+            self.releaseAsset(asset)
+            cmds.file(new=1, force=1)
 
     def cloneAsset(self, asset, sourceFile, ext = '.mb', window = ''):
         user = self.M.user
