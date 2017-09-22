@@ -197,7 +197,7 @@ class Submitter:
 
         post_chunk_actions = ['C:\Windows\System32\cmd.exe /C C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/gs/python/sensu/post_chunk_action.py"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'])]
         if deep2matte:
-            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_action.py %%ATTR(start_frame) %%ATTR(end_frame) %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/')))
+            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_actionRS.py %%ATTR(start_frame) %%ATTR(end_frame) %s %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/'), os.path.dirname(cmds.file(q=1,sn=1)).replace('mustache_renderScenes','lighting')+'/_pipeline/sceneData.json'))
         
         musterflags = {}
         if majorver and minorver:
@@ -830,6 +830,7 @@ class Submitter:
         imagePlanesCtrl = cmds.checkBox(l='Render image planes', v=0, parent=mayaGlobalSettings, ann="Turn this option on if you want to render image planes, which you don't.")
         exr2tiffCtrl = cmds.checkBox(l='Post-convert EXR to TIFF', v=0, parent=mayaGlobalSettings, ann='Convert multichannel EXRs to TIFFs after rendering is completed.')
         deep2matteCtrl = cmds.checkBox(l='Post-convert Deep EXR to Matte', v=0, parent=mayaGlobalSettings, ann='Convert deep EXRs to matte EXR after rendering is completed.')
+        exportSceneDataBtn = cmds.button(l='export data for automatte',parent=mayaGlobalSettings, ann='export data for automatte conversion.',c=lambda *x: self.exportSceneData())
         vrayFormats = ['png',
          'jpg',
          'vrimg',
@@ -880,7 +881,9 @@ class Submitter:
          (exr2tiffCtrl, 'top', tm5 + lineHeight * 3),
          (exr2tiffCtrl, 'left', lm3),
          (deep2matteCtrl, 'top', tm5 + lineHeight * 4),
-         (deep2matteCtrl, 'left', lm3)])
+         (deep2matteCtrl, 'left', lm3),
+         (exportSceneDataBtn, 'top',tm5 + lineHeight * 5),
+         (exportSceneDataBtn, 'left',lm3)])
         #####################################
         vraySettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(vraySettingsLayout, 'top', 450)])
@@ -1080,6 +1083,27 @@ class Submitter:
         else:
             cmds.optionMenu(prepassLayerCtrl, e=1, en=0, bgc=[0.4, 0.4, 0.4])
             cmds.optionMenu(prepassLayerCtrl, e=1, sl=1)
+
+    def exportSceneData(self,*args):
+        import json
+        sceneDataPath=os.path.dirname(cmds.file(q=1,sn=1))+'/_pipeline/sceneData.json'
+        #sceneDataPath=cmds.fileDialog2(dialogStyle=2,fm=0)[0]     
+        sceneData={'asset':{},'material':{},'object':{}}
+        for sh in cmds.ls(g=1):
+            shadingGrps= cmds.listConnections(sh,type='shadingEngine')
+            if shadingGrps:
+                shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
+                asset=sh.split(':')[0]
+                id= abs(hash(sh)) % (10 ** 7)
+                if not asset in sceneData['asset'].keys():
+                    sceneData['asset'][asset]=[]
+                sceneData['asset'][asset].append(id)
+                if not shader in sceneData['material'].keys():
+                    sceneData['material'][shader]=[]
+                sceneData['material'][shader].append(id)
+                sceneData['object'][id]=sh
+        with open(sceneDataPath, 'w') as fp:
+            json.dump(sceneData, fp)
 
     def getEnabledRenderLayers(self, renderLayerControls, *args):
         enabledLayers = []

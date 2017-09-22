@@ -1,7 +1,7 @@
 Gizmo {
  addUserKnob {20 autoMatte}
  addUserKnob {4 matteType M {object material asset}}
- addUserKnob {22 update -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.update()\t"}
+ addUserKnob {22 update -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.updateIDs()\t"}
  addUserKnob {22 clear -STARTLINE T "import mlPipeline\nfrom mlPipeline import ml_automatteTools\nreload(ml_automatteTools)\nml_automatteTools.clear()\t"}
  addUserKnob {18 addID}
  addUserKnob {18 subtractID}
@@ -17,7 +17,7 @@ Gizmo {
  addUserKnob {43 IDMultiList l "" +STARTLINE}
  addUserKnob {43 matteMultiList l "" -STARTLINE}
  addUserKnob {20 endGroup n -1}
- knobChanged "n=nuke.thisNode() \nk=nuke.thisKnob() \nif k.name() == \"addID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.addMatte()\nif k.name() == \"subtractID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.subtractMatte()\nif k.name() == \"matteType\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.changeMatteType()\nif k.name() == \"namespace\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.update()"
+ knobChanged "n=nuke.thisNode() \nk=nuke.thisKnob() \nif k.name() == \"addID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.addMatte()\nif k.name() == \"subtractID\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.subtractMatte()\nif k.name() == \"matteType\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.changeMatteType()\nif k.name() == \"namespace\": \n import mlPipeline\n from mlPipeline import ml_automatteTools\n reload(ml_automatteTools)\n ml_automatteTools.updateIDs()"
 }
  Input {
   inputs 0
