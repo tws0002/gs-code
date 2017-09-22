@@ -98,6 +98,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     os.environ['GSINITIALS'] = initials
     os.environ['GSWORKGROUP'] = workgroup
     os.environ['SCRATCHDISK'] = utils.getScratchDrive()
+    utils.createTempDir()
 
     # load the process env from the config files
     process_env = StudioEnvironment()

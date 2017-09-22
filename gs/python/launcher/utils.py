@@ -74,6 +74,16 @@ def getScratchDrive():
             continue
     return scratch
 
+def createTempDir():
+    scratch_drive = getScratchDrive()
+    temp_dir = os.path.join(scratch_drive, 'Temp')
+    if temp_dir:
+        try:
+            os.makedirs(temp_dir)
+        except OSError:
+            if not os.path.isdir(temp_dir):
+                raise
+
 def copyDirTree(src,dest):
     try:
         shutil.copytree(src, dest)
@@ -81,6 +91,7 @@ def copyDirTree(src,dest):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dest)
         #else: raise
+        
 def updatePipelineFavorites():
     if HAS_PYWIN:
         # remove any gs pipelie favs
