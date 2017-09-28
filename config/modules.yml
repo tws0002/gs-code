@@ -130,6 +130,16 @@ vray:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
       versions:
+        '3.60.01':
+          env:
+            ST_MAYA_VRAY: '3.60.01'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2016.5'
+          - '2017'
         '3.52.03':
           env:
             ST_MAYA_VRAY: '3.52.03'

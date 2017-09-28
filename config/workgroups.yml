@@ -18,10 +18,10 @@ default:
         redshift: '2.5.13' # 0.81 sec startup cost
         studiolibrary: '1.26.2' # 0.5 startup cost
         substance: '1.2.2.0' # 0.22 sec startup cost
-        vray: '3.40.06' # 0.89 startup cost
+        vray: '3.60.01' # 0.89 startup cost
         soup: '2016.10.08' # 0.38 startup cost
         ## kind of used ##
-        #fracturefx: '1.9.6' # 2.89 sec startup cost, no actual plugin load
+        #fracturefx: '2.0.2' # 2.89 sec startup cost, no actual plugin load
         #fumefx: '4.0.3' # 2.33 startup cost, no actual plugin load
         #realflow: '2015.0.0.9' # 2.42 sec startup cost, no actual plugin load
         #be_openvdb: '1.0' # 1.67 sec startup cost, no actual plugin load
@@ -83,7 +83,7 @@ default:
       modules:
         qcmds: '0.21'
         #x-particles: '3.5.0391'
-        octane: '3.03.2'
+        #octane: '3.03.2'
         redshift: '2.5.13'
     modo:
       title: 'Modo 11.1v1'
@@ -200,6 +200,8 @@ default:
     - mudbox
     - mari
     - photoshop
+    - houdini
+    - houdini-fx
     Utilities:
     - muster
     - pythonshell
