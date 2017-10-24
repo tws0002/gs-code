@@ -5,7 +5,7 @@ from settings import *
 import yaml
 import re
 
-class StudioProject():
+class CoreParser():
     '''Class that reads a project config and parses and stores information about the folder structure here'''
 
     def __init__ (self):
@@ -69,10 +69,6 @@ class StudioProject():
         # then expand all vars with local and project config variables (run twice to ensure all vars are substituted)
         self.parse_task_subst()
         self.parse_task_subst()
-        return
-
-    def load_vars_from_project_model(self,proj_model):
-        ''' given a loaded project model, populate given vars and return a path with subsituted vars'''
         return
 
     def template_to_regex(self, filepath, limiters, exclude):
@@ -241,6 +237,7 @@ class StudioProject():
                         val = val.replace(('%'+match+'%'), os.environ[match])
                 self.task_structs[task][var] = val
 
+
     def test_file_paths(self):
 
         filepaths = []
@@ -272,16 +269,4 @@ class StudioProject():
         for d in test_dicts:
             print ("testing dict to path:{0}".format(d))
             self.get_path(d)
-
-    def create_task(self):
-        ''' create a task, this will be done using the config template, and will automatically create sequence, 
-        shots and assets as needed'''
-        # this will need to create the task and any standardized subfolders
-        return
-
-    def trash_task(self):
-        return
-
-    def create_job(self):
-        return
 

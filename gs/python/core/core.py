@@ -6,7 +6,8 @@ from settings import *
 
 import urllib2
 from subprocess import Popen, PIPE, STDOUT
-import project
+import parser
+import projects
 
 
 
@@ -21,16 +22,22 @@ import project
 # reads a project config and uses it for identifying information about the project
 # loads a given project into the datamodel based on the project config mapping
 
-def init():
+def main():
     # load the project config to enable the core to understand where files live on the server
     # based on this file, the core can map it to a data model storing information about the project
     config_path = (CONFIG+"/projects_old.yml")
-    project_struct = project.StudioProject()
-    project_struct.load_project_config_file(filepath=config_path)
+    core_parser = parser.CoreParser()
+    core_parser.load_project_config_file(filepath=config_path)
 
     # test the load matching
-    project_struct.test_file_paths()
+    core_parser.test_file_paths()
+    core_parser.test_dict_to_path()
+
+    cur_proj = projects.projects.CoreProject(core_parser)
+
     return
+
+
 
 def list_servers():
 	for share in STUDIO['servers']:
@@ -116,6 +123,7 @@ def load_project_model():
 	return
 
 
-init()
+#if __name__ == '__main__':
+main()
 
 
