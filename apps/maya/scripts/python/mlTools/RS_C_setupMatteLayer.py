@@ -49,7 +49,10 @@ def setupOverides():
     contents= cmds.editRenderLayerMembers(currentRenderLayer,q=1,fn=1)  
     if contents:
         for obj in contents:
-            cmds.editRenderLayerMembers(matteLayer,obj,nr=1) 
+            try:
+                cmds.editRenderLayerMembers(matteLayer,obj,nr=1) 
+            except:
+                pass
     cmds.editRenderLayerGlobals(currentRenderLayer=matteLayer)
     currentRenderLayer=matteLayer
 
@@ -89,11 +92,17 @@ def setupOverides():
     cmds.editRenderLayerAdjustment("redshiftOptions.exrForceMultilayer", layer=currentRenderLayer)
     cmds.editRenderLayerAdjustment("redshiftOptions.exrMultipart", layer=currentRenderLayer)
     cmds.editRenderLayerAdjustment("defaultRenderGlobals.enableDefaultLight",layer=currentRenderLayer)
+    cmds.editRenderLayerAdjustment("redshiftOptions.unifiedMaxSamples",layer=currentRenderLayer)#force antialiasing edges for mattes
+    cmds.editRenderLayerAdjustment("redshiftOptions.unifiedMinSamples",layer=currentRenderLayer)
     cmds.setAttr("redshiftOptions.aovEnableDeepOutput",1)
     cmds.setAttr("redshiftOptions.aovDeepMergeMode",1)
     cmds.setAttr("redshiftOptions.exrForceMultilayer",0)
     cmds.setAttr("redshiftOptions.exrMultipart",0)
+    cmds.setAttr("redshiftOptions.unifiedMaxSamples",32)
+    cmds.setAttr("redshiftOptions.unifiedMinSamples",32)
+
     cmds.setAttr("defaultRenderGlobals.enableDefaultLight",1)
+    cmds
 
     existingAovs=cmds.ls(type='RedshiftAOV')
     if not 'rsAov_ObjectID' in existingAovs:

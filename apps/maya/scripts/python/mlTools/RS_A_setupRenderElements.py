@@ -1,5 +1,3 @@
-
-
 lightAovs={ "rsAov_DiffuseFilter":"Diffuse Filter",
             "rsAov_DiffuseLighting":"Diffuse Lighting",
             "rsAov_GlobalIlluminationRaw":"Global Illumination Raw",
@@ -20,9 +18,6 @@ utilAovs={  "rsAov_AmbientOcclusion":"Ambient Occlusion",
             "rsAov_Normals":"Normals",
             "rsAov_ObjectID":"ObjectID"}
 matteAovs={  "rsAov_ObjectID":"ObjectID"}
-
-
-
 
 def main():
     import maya.cmds as cmds
@@ -62,9 +57,10 @@ def main():
                 cmds.rename(aov,utilAov)
         mel.eval("redshiftUpdateActiveAovList")  
 
-        #get list of all aovs, turn off all, foce settings
+        #get list of all aovs, turn off all, force settings
         existingAovs=cmds.ls(type='RedshiftAOV')
         for aov in existingAovs:
+            cmds.setAttr(aov+".enabled",0)
             #setPath and exr
             cmds.setAttr(aov+".filePrefix","<BeautyPath>/<RenderPass>/<BeautyFile>.<RenderPass>",type="string")
             cmds.setAttr(aov+".exrCompression", 4)

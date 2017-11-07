@@ -189,6 +189,7 @@ def init():
         gs_restore_pwd()
         cmds.evalDeferred("initMustache()")
         cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
+        cmds.evalDeferred("import mlTools;mlTools.init_mlTools_menu()")
     else:
         # maya doesn't properly add the requires flag to scenefiles for these plugins, so we have to force it to load in batchmode
         cmds.loadPlugin("AbcExport")

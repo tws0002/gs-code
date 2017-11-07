@@ -32,13 +32,13 @@ def main():
     layerAdj=cmds.editRenderLayerAdjustment(currentRenderLayer, query=True, layer=True )
     if layerAdj:
         for adj in layerAdj:
-            node,attr=adj.split('.')
-            if node:
-                try:#duplicate name errors
+            try:
+                node,attr=adj.split('.')
+                if node:
                     if cmds.nodeType(node)=='RedshiftVisibility':
                         existingVis.append([adj,cmds.getAttr(adj)])
-                except:
-                    pass
+            except:
+                pass
 
 
     if not "_Beauty" in currentRenderLayer:
