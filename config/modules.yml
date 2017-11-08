@@ -565,6 +565,36 @@ redshift:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%'
         MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%/bin/rendererDesc'
       versions:
+        '2.5.40':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.40'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
+        '2.5.32':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.32'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
+        '2.5.30':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.30'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
         '2.5.13':
           env:
             ST_MAYA_REDSHIFT: '2.5.13'

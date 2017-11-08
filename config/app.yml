@@ -247,8 +247,8 @@ nuke:
     NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup;%GSBRANCH%/apps/nuke/icons'
     NUKE_DISK_CACHE: '%SCRATCHDISK%/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: '%SCRATCHDISK%/Temp/Nuke_Cache'
-    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos'
-    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
+    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/gizmos'
+    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/scripts/python'
   show: true
   tasks:
   - comp
