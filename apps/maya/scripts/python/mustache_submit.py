@@ -90,8 +90,8 @@ class Submitter:
         imagePrefix = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
-        else:
-            imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imagePrefix = cmds.getAttr('redshiftOptions.imageFilePrefix')
         if not imagePrefix:
             return False
         imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
@@ -201,9 +201,9 @@ class Submitter:
         
         musterflags = {}
         if majorver and minorver:
-            musterflags['-add']             = '--package maya --major %s --minor %s --render -x %s -y %s' %(majorver, minorver, x, y)
+            musterflags['-add']             = '--job %s --package maya --major %s --minor %s --render -x %s -y %s' %(self.M.projectName, majorver, minorver, x, y)
         else:
-            musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
+            musterflags['-add']             = '--job %s --package maya --render -x %s -y %s' %(self.M.projectName, x, y)
 
         musterflags['-e']               = str(mtid)
         musterflags['-n']               = nameNoStamp
@@ -251,6 +251,7 @@ class Submitter:
                 i+=1
 
             if ascpupsubmit:
+                render_muster_ids = []
                 musterflags['-wait'] = ascpupsubmit
                 if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
                     if rsGpus == 1:
@@ -263,7 +264,11 @@ class Submitter:
                             rsmusterflags['-bf'] = str(len(rsGpuString))
                             rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            rendersubmit = muster2.submit(rsmusterflags)
+                            if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                                break
+                            else:
+                                rendersubmit = muster2.submit(rsmusterflags)
+                                render_muster_ids.append(rendersubmit)
                             i+=1
                     if rsGpus == 2:
                         rsGpuString = ['{0,1}', '{2,3}']
@@ -275,20 +280,26 @@ class Submitter:
                             rsmusterflags['-bf'] = str(len(rsGpuString))
                             rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            rendersubmit = muster2.submit(rsmusterflags)
+                            if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                                break
+                            else:
+                                rendersubmit = muster2.submit(rsmusterflags)
+                                render_muster_ids.append(rendersubmit)
                             i+=1
                     if rsGpus == 4:
                         rendersubmit = muster2.submit(musterflags)
+                        render_muster_ids.append(rendersubmit)
                 else:
                     rendersubmit = muster2.submit(musterflags)
-                if rendersubmit:
+                    render_muster_ids.append(rendersubmit)
+                if render_muster_ids:
                     ascpdownflags = {}
                     ascpdownflags['-e']         = '43'
                     ascpdownflags['-n']         = '%s Render Download' %(nameNoStamp)
                     ascpdownflags['-parent']    = '33409'
                     ascpdownflags['-group']      = self.M.projectName
                     ascpdownflags['-pool']      = 'ASPERA'
-                    ascpdownflags['-wait']      = rendersubmit
+                    ascpdownflags['-wait']      = ','.join(render_muster_ids)
                     
                     ascpdowncmd = ''
                     f = self.getDownloadFiles().replace(" ", "\ ").replace("//","/")
@@ -318,7 +329,10 @@ class Submitter:
                         rsmusterflags['-bf'] = str(len(rsGpuString))
                         rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        rendersubmit = muster2.submit(rsmusterflags)
+                        if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                            break
+                        else:
+                            rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 2:
                     rsGpuString = ['{0,1}', '{2,3}']
@@ -330,7 +344,10 @@ class Submitter:
                         rsmusterflags['-bf'] = str(len(rsGpuString))
                         rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        rendersubmit = muster2.submit(rsmusterflags)
+                        if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                            break
+                        else:
+                            rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 4:
                     rendersubmit = muster2.submit(musterflags)
@@ -484,6 +501,16 @@ class Submitter:
             else:
                 newPrefix = newPrefix + frameSuffix
             cmds.setAttr('vraySettings.fileNamePrefix', newPrefix, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imagePrefix = cmds.getAttr('redshiftOptions.imageFilePrefix')
+            newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
+            if newPrefix[-1] == '.':
+                newPrefix = newPrefix[:-1] + frameSuffix + '.'
+            else:
+                newPrefix = newPrefix + frameSuffix
+            cmds.setAttr('redshiftOptions.imageFilePrefix', newPrefix, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+
         else:
             imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
@@ -507,6 +534,9 @@ class Submitter:
         # restore image prefix without <scene> substitution
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', imagePrefix, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
         else:
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
 
@@ -540,6 +570,9 @@ class Submitter:
             #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
                 #imagePrefix = imagePrefix + '.'
             cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', result, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
         else:
             try:
                 cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
@@ -556,6 +589,8 @@ class Submitter:
         else:
             if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
                 result = cmds.getAttr('vraySettings.fileNamePrefix')
+            elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                result = cmds.getAttr('redshiftOptions.imageFilePrefix')
             else:
                 result = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         return result
@@ -661,6 +696,8 @@ class Submitter:
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             prf = str(cmds.getAttr('vraySettings.fileNamePrefix'))
             imgString = prf.strip('.')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imgString = cmds.getAttr('redshiftOptions.imageFilePrefix')
         else:
             imgString = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         if not imgString:
