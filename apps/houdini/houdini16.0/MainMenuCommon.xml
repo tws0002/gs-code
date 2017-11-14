@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mainMenu>
+  <menuBar>
+    <subMenu id="gs_submenu">
+      <label>GentScholar</label>
+      <scriptItem id="h.gs_comingsoon_item">
+        <label>COMING SOON!</label>
+        <scriptPath>$HSITE/scripts/gs_newscene.py</scriptPath>
+      </scriptItem>
+
+      <separatorItem/>
+      <scriptItem id="h.gs_newscene_item">
+        <label>New Scene</label>
+        <scriptPath>$HSITE/scripts/gs_newscene.py</scriptPath>
+      </scriptItem>
+
+      <separatorItem/>
+
+      <scriptItem id="h.gs_shots_item">
+        <label>Shot Manager</label>
+        <scriptPath>$HSITE/scripts/gs_shots.py</scriptPath>
+        <scriptArgs></scriptArgs>
+      </scriptItem>
+      <scriptItem id="h.gs_assets_item">
+        <label>Asset Manager</label>
+        <scriptPath>$HSITE/scripts/gs_shots.py</scriptPath>
+        <scriptArgs></scriptArgs>
+      </scriptItem>
+      <subMenu id="gs_toolsmenu">
+        <label>Tools</label>
+
+        <scriptItem id="h.gs_attr_to_maya_vtx_col_item">
+          <label>Create Maya Vertex Color Wrangle</label>
+          <scriptPath>$HSITE/scripts/gs_newscene.py</scriptPath>
+        </scriptItem>
+
+        <separatorItem/>
+
+        <scriptItem id="h.gs_alembic_rop_item">
+          <label>Create GS Alembic ROP</label>
+          <scriptPath>$HSITE/scripts/gs_newscene.py</scriptPath>
+        </scriptItem>
+
+        <scriptItem id="h.gs_mantra_rop_item">
+          <label>Create Mantra ROP</label>
+          <scriptPath>$HSITE/scripts/gs_shots.py</scriptPath>
+          <scriptArgs></scriptArgs>
+        </scriptItem>
+        <scriptItem id="h.gs_redshift_rop_item">
+          <label>Create Redshift ROP</label>
+          <scriptPath>$HSITE/scripts/gs_shots.py</scriptPath>
+          <scriptArgs></scriptArgs>
+        </scriptItem>
+      </subMenu>
+
+      <separatorItem/>
+
+      <scriptItem id="h.gs_submitrender">
+        <label>Submit Render To Muster</label>
+        <scriptPath>$HSITE/scripts/submit_muster.py</scriptPath>
+        <scriptArgs>-q -n light</scriptArgs>
+      </scriptItem>
+      <scriptItem id="h.gs_submitcache">
+        <label>Submit Alembics To Muster</label>
+        <scriptPath>$HSITE/scripts/submit_muster.py</scriptPath>
+        <scriptArgs>-q -n light</scriptArgs>
+      </scriptItem>
+    </subMenu>
+  </menuBar>
+</mainMenu>

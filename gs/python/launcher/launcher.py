@@ -183,7 +183,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     
     # need to clear out pyqt from path and pythonpath
     # these need to be handled on an app by app basis
-    env['PATH'] = os.environ['PATH']
+    env['PATH'] = ';'.join([env['PATH'],';'.join(sys.path)])#  os.environ['PATH']
     env['PATH'].replace('{0};'.format(PYQTPATH), '')
     env['PYTHONPATH'].replace('{0};'.format(PYQTPATH), '')
 

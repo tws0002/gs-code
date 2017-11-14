@@ -654,6 +654,22 @@ redshift:
             win32: /
           versions:
           - 'R18'
+    houdini:
+      env:
+        HOUDINI_PATH: '%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%;&'
+        HOUDINI_DSO_ERROR: '2'
+        REDSHIFT_COREDATAPATH: "%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%/core"
+        PATH: '%REDSHIFT_COREDATAPATH%/bin'
+      versions:
+        '2.5.40':
+          env:
+            ST_HOU_REDSHIFT: '2.5.40'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '16.0.75'
 be_openvdb:
   name: be_openvdb
   show: true
