@@ -1,4 +1,5 @@
 __author__ = 'adamb'
+''' contains the data model for storing project information in a database file'''
 
 class CoreModel():
 

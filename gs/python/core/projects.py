@@ -1,18 +1,24 @@
 __author__ = 'adamb'
+import os
 
-class CoreProject():
+class ProjectView():
 
-    def __init__(self, parser, ):
+    def __init__(self, pathParser ):
         ''' requires a pointer to the file parser to interpret paths and template paths'''
-        return
+        #if not isinstance(pathParser,classmethod):
+        #    raise TypeError
+
+        self.pathParser = pathParser
 
     def load_project_model(self, project_path='', use_cache=False):
         # load project path
+        self.pathParser.get_libraries(project_path)
         # for each library, load all library structures (assets 2d, assets 3d, shots,)
+
         # for each task struct
+        return
 
-
-
+    def load_libary(self,lib_name):
         return
 
     def load_proj_lib_model(self, lib_path):

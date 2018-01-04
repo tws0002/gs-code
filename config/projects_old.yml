@@ -35,12 +35,17 @@ status:
 # generic defined variables that can be substituted below by wrapping in %% characters
 path_vars:
   project_root: "<server>/projects/<job>"
-  asset_lib_2d: "<server>/projects/<job>/03_production/00_elements"
-  shot_lib_2d: "<server>/projects/<job>/03_production/02_composite"
-  asset_lib_3d: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
-  shot_lib_3d: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
+lib_templates:
+  'asset_lib_2d':
+    root_path: "<server>/projects/<job>/03_production/00_elements"
+  'shot_lib_2d':
+    root_path: "<server>/projects/<job>/03_production/02_composite"
+  'asset_lib_3d':
+    root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
+  'shot_lib_3d':
+    root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
 # defines template paths that can be inherited to task_structs, this saves space with common paths
-template_structs:
+asset_templates:
   'shot_2d':
     root_path: "<server>/projects/<job>/03_production/02_composite/<sequence>/<shot>"
     publish_path: "%root_path%"
@@ -59,7 +64,7 @@ template_structs:
     out_render_file: "<asset>_<version>.<ext>"
   'shot_3d':
     root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<shot>"
-    work_path: "%root_path%/<task>"
+    work_path: "%root_path%"
     work_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>.<ext>"
     publish_path: "%work_path%"
     publish_file: "%work_file%"
@@ -73,8 +78,8 @@ template_structs:
     render_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>"
   'asset_3d':
     root_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
-    work_path: "%root_path%/_versions"
-    work_file: "<asset>_<version>_<intials>.<ext>"
+    work_path: "%root_path%"
+    #work_file: "<asset>_<version>_<intials>.<ext>"
     publish_path: "%root_path%"
     publish_file: "<asset>.<ext>"
     private_path: "%root_path%/_scrap"
@@ -87,7 +92,7 @@ template_structs:
     render_file: "<asset>_<version>.<ext>"
 
 # Defines file locations specific to tasks
-task_structs: 
+task_templates: 
   'design':
     root_path: "<server>/projects/<job>/02_design"
     work_path: "%root_path%/work.<initials>/02_styleframes"
@@ -111,6 +116,8 @@ task_structs:
     render_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>"
   'model':
     inherits: 'asset_3d'
+    work_path: "%root_path%/_versions"
+    work_file: "<asset>_<version>_<intials>.<ext>"
   'cameras':
     inherits: 'shot_3d'
     work_path: "%root_path%/cameras"
