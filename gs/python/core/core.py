@@ -23,7 +23,7 @@ from settings import *
 def main():
     # load the project config to enable the core to understand where files live on the server
     # based on this file, the core can map it to a data model storing information about the project
-    config_path = (CONFIG+"/projects_old.yml")
+    config_path = (CONFIG+"/projects.yml")
     core_parser = paths.CoreParser()
     core_parser.load_project_config_file(filepath=config_path)
 
@@ -31,7 +31,7 @@ def main():
     core_parser.test_file_paths()
     core_parser.test_dict_to_path()
 
-    cur_proj = projects.ProjectView(core_parser)
+    cur_proj = projects.ProjectController(core_parser)
 
     return
 

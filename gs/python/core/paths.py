@@ -19,8 +19,11 @@ class CoreParser:
     def __init__(self):
         self.vars = {}
         self.lib_templates = {}
+        self.project_templates = {}
+        self.stage_templates = {}
         self.asset_templates = {}
         self.task_templates = {}
+        self.package_templates = {}
         self.project_data = {}
         return
 
@@ -80,6 +83,15 @@ class CoreParser:
             if key == 'lib_templates':
                 for lib, data in dataMap[key].iteritems():
                     self.lib_templates[lib] = dict(dataMap['lib_templates'][lib])
+            if key == 'stage_templates':
+                for proj, data in dataMap[key].iteritems():
+                    self.stage_templates[proj] = dict(dataMap['stage_templates'][proj])
+            if key == 'project_templates':
+                for proj, data in dataMap[key].iteritems():
+                    self.project_templates[proj] = dict(dataMap['project_templates'][proj])
+            if key == 'package_tempaltes':
+                for package, data in dataMap[key].iteritems():
+                    self.package_templates[package] = dict(dataMap['package_templates'][package])
 
         # load asset templates, although currently inherit calls are directly copied from the dataMap['asset_templates']
         for key, value in dataMap.iteritems():

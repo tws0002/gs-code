@@ -1,7 +1,7 @@
 __author__ = 'adamb'
-import os
+import os, shutil
 
-class ProjectView():
+class ProjectController():
 
     def __init__(self, pathParser ):
         ''' requires a pointer to the file parser to interpret paths and template paths'''
@@ -9,6 +9,40 @@ class ProjectView():
         #    raise TypeError
 
         self.pathParser = pathParser
+        self.activeProject = ''
+        self.activeStage = ''
+        self.activeAsset = ''
+        self.activeTask  = ''
+
+    def copy_templ_tree(self, src, dst):
+        ''' copies the template dir structure and substitutes any variable in filenames'''
+        shutil.copytree(src, dst)
+
+        #substitute path names with variables
+
+    def new_project(self, upl='//diskstation/jobs/new_project'):
+        ''''create a new project structure based on the job. given a url path to the job to create it will generate
+        the necessary dict and copy the template dir tree'''
+
+        # parse the given upl path, if it matches the template structure as a valid but non existant path then it is able
+        # to be created 
+        d = self.pathParser.parse_path(upl)
+        src = subst_template_path(upl=upl)
+
+        print 'src parsed path = {0}'.format(src)
+        #src = self.pathParser.project_templates['copy_tree']
+        dst = upl
+        #self.copy_templ_tree(src, dst)
+
+    def new_stage(self, name='production'):
+        ''' creates a new stage of production (pitch/previs/production)'''
+        return
+
+    def new_asset(self, template_type='shot_2d'):
+        '''creates a 3d asset or shot'''
+
+    def new_task(self, name= '', template_type='anim'):
+        ''' creates a new task for a specified path '''
 
     def load_project_model(self, project_path='', use_cache=False):
         # load project path
@@ -18,6 +52,7 @@ class ProjectView():
         # for each task struct
         return
 
+6
     def load_libary(self,lib_name):
         return
 

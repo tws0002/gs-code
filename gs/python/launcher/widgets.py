@@ -3,8 +3,9 @@ __author__ = 'adamb'
 import sys, os
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from settings import *
 
-RES = "\\\\scholar\\pipeline\\dev\\gs\\python\\launcher\\res"
+#RES = "\\\\scholar\\pipeline\\dev\\gs\\python\\launcher\\res"
 
 class CustomSortFilterProxyModel(QSortFilterProxyModel):
 

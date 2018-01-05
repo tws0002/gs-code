@@ -22,6 +22,8 @@ from widgets import *
 import yaml
 import core.core
 
+print ("RES="+RES)
+
 
 class Launcher(QMainWindow):
 
