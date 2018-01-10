@@ -1,4 +1,4 @@
-__author__ = 'adamb'
+w__author__ = 'adamb'
 
 from settings import *
 import launcher
@@ -18,11 +18,10 @@ from environment import *
 from gsqt.widgets import *
 from gsqt.stylesheets import *
 from widgets import *
+from dialogs import *
 
 import yaml
 import core.core
-
-print ("RES="+RES)
 
 
 class Launcher(QMainWindow):
@@ -40,7 +39,7 @@ class Launcher(QMainWindow):
         print("Launcher window init start in {0} sec".format(elapsed_time))
         #self.load_project_config("")
         self.update_gui = False
-        self.resize(910, 450)
+        self.resize(1100, 600)
         self.app_layouts = {}
         self.isLaunching = False
         self.lastLaunch = ''
@@ -51,6 +50,9 @@ class Launcher(QMainWindow):
 
         # pyQT settings framework (stores in user registry)
         self.settings = QSettings('gs', 'launcher')
+
+
+        self.controller = core.core.CoreController()
 
         # OLD load Style Sheet for overall UI appearance
         # sStyleSheet = StyleSheet().styleSheet(1)
@@ -97,6 +99,7 @@ class Launcher(QMainWindow):
         self.ui['lyt']['main'].addSpacing(40)
         self.ui['frm'].setLayout(self.ui['lyt']['main'])
         self.ui['wdgt']['sp1'] = QSplitter()
+
         self.ui['lyt']['main'].addWidget(self.ui['wdgt']['sp1'])
 
         # setup projects sidebar
@@ -104,6 +107,7 @@ class Launcher(QMainWindow):
         #self.ui['wdgt']['sidebar'].setHidden(True)
 
         self.ui['wdgt']['sidebar_list'] = QListWidget()
+        self.ui['wdgt']['sidebar_list'].setObjectName('Sidebar')
         self.ui['wdgt']['sidebar_list'].setMaximumHeight(25)
         self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
         self.ui['lyt']['sidebar_layout'] = QVBoxLayout(self.ui['wdgt']['sidebar'])
@@ -111,18 +115,21 @@ class Launcher(QMainWindow):
         # project list
         #self.ui['lbl']['workgroup_label'] = QLabel("Projects")
         self.ui['wdgt']['project_list'] = LchrTreeList()
+        self.ui['wdgt']['project_list'].setTitle("Projects")
 
 
         
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
         #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['lbl']['workgroup_label'])
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['project_list'])
+
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['sidebar'])
         self.ui['wdgt']['stack_widget'] = QStackedWidget()
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['stack_widget'])
+        self.ui['wdgt']['sp1'].setSizes([160, 500])
 
         sidebar_items = ['Apps','Design','Production']
-        proj_list = core.core.list_jobs('jobs')
+        proj_list = self.controller.get_projects_list('job_share') #core.core.list_jobs('jobs')
         self.ui['lyt']['stack_layouts'] = {}
         i = 0
 
@@ -143,17 +150,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['proj_cat']['Az'] = QStandardItem('A-Z')
 
         # load projects from core
-        project_dict = {}
-        project_dict['grp_a'] = {'name':'Recent','children':{}}
-        project_dict['grp_b'] = {'name':'A-Z','children':{}}
-        for proj in sorted(proj_list):
-            project_dict['grp_b']['children'][proj] = {}
-            project_dict['grp_b']['children'][proj]['name'] = proj
-            project_dict['grp_b']['children'][proj]['filepath'] = ""
-            project_dict['grp_b']['children'][proj]['status'] = "Active"
-
-        self.ui['wdgt']['project_list'].loadViewModelFromDict(project_dict)
-
+        self.update_projects_list()
 
         self.ui['lyt']['tab1_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Apps'])
         self.ui['lyt']['tab2_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Design'])
@@ -166,6 +163,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['scenes_pane'] = QWidget()
         self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['obj_pane'])
         self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['scenes_pane'])
+        self.ui['wdgt']['sp2'].setSizes([200,400])
         self.ui['lyt']['tab3_layout'].addWidget(self.ui['wdgt']['sp2'])
 
         # item_pane layout
@@ -173,15 +171,19 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['obj_tabs'] = QTabWidget()
         self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['obj_tabs'])
 
-        self.ui['wdgt']['shot_list'] = LchrTreeList()
-        self.ui['wdgt']['asset_list'] = LchrTreeList()
-        self.ui['wdgt']['shot_list'].tvw.setAlternatingRowColors(True)
-        self.ui['wdgt']['asset_list'].tvw.setAlternatingRowColors(True)
+        ##self.ui['wdgt']['shot_list'] = LchrTreeList()
+        ##self.ui['wdgt']['asset_list'] = LchrTreeList()
+        ##self.ui['wdgt']['shot_list'].tvw.setAlternatingRowColors(True)
+        ##self.ui['wdgt']['asset_list'].tvw.setAlternatingRowColors(True)
         #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['shot_list'])
         #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_list'])
 
-        self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['shot_list'],"Shots")
-        self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['asset_list'],"Assets")
+        # get asset_template types
+
+        # for each asset template type, create a tab widget for it
+        # update each asset type
+        ##self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['shot_list'],"Shots")
+        ##self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['asset_list'],"Assets")
 
         # scene_pane layout
         self.ui['lyt']['scene_layout'] = QVBoxLayout(self.ui['wdgt']['scenes_pane'])
@@ -191,6 +193,10 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['scene_list'].tvw.setAlternatingRowColors(True)
         self.ui['lyt']['scene_layout'].addWidget(self.ui['lbl']['scene_label'])
         self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
+        self.ui['lyt']['launch_lyt'] = QHBoxLayout()
+        self.ui['lyt']['launch_lyt'].addWidget(QPushButton('Launch'))
+        self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
+
 
 
         ## Old UI Tab View
@@ -286,12 +292,15 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.disp_grp_change)
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
 
+        # connect button signals
+        self.ui['wdgt']['project_list'].titlebtn1.clicked.connect(self.show_create_job)
+
         # set the project
         # self.ui['wdgt']['project_list'].selectionModel().selectionChanged.connect(self.proj_list_change)
         self.ui['wdgt']['project_list'].selectionChanged.connect(self.proj_list_selection_change)
         # set the shot object
-        self.ui['wdgt']['shot_list'].selectionChanged.connect(self.item_list_change)
-        self.ui['wdgt']['asset_list'].selectionChanged.connect(self.asset_list_change)
+        ## self.ui['wdgt']['shot_list'].selectionChanged.connect(self.item_list_change)
+        ##self.ui['wdgt']['asset_list'].selectionChanged.connect(self.asset_list_change)
 
         elapsed_time = time.time() - START_TIME
         print("Launcher updating UI in {0} sec".format(elapsed_time))
@@ -325,9 +334,15 @@ class Launcher(QMainWindow):
         qstr = QString(fh.read())
         self.setStyleSheet(qstr)
 
+    def show_create_job(self):
+        d = LauncherCreateJob(self)
+        d.exec_()
+
     def update_projects(self):
+        ''' this is for the old combobox project list. should be deprecated'''
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
+        # new way (temp disabled) # job_list = self.controller.get_projects_list('job_share')  #
         job_list = core.core.list_jobs('jobs')
         if job_list:
             for j in sorted(job_list,key=lambda v: v.upper()):
@@ -336,28 +351,82 @@ class Launcher(QMainWindow):
                 font.setPointSize(20)
                 font.setStyleStrategy(QFont.PreferAntialias);
                 item.setFont(font)
+                # need to append full project path in column
                 self.ui['mdl']['project_mdl'].appendRow(item)
         else:
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
-    def update_items_list(self,project_name):
-        item_list = core.core.list_shots('jobs',project_name)
 
+    def update_projects_list(self):
+        #item_list = core.core.list_shots('jobs',project_name)
+        item_list = self.controller.get_projects_list('job_share')
         # load projects from core
         item_dict = {}
-        item_dict['grp_a'] = {'name':'Shots','children':{}}
-        item_dict['grp_b'] = {'name':'Assets','children':{}}
+        item_dict['grp_a'] = {'name':'Recent','children':{}}
+        item_dict['grp_b'] = {'name':'A-Z','children':{}}
         for item in sorted(item_list):
-            item_dict['grp_a']['children'][item] = {}
-            item_dict['grp_a']['children'][item]['name'] = item
-            item_dict['grp_a']['children'][item]['filepath'] = ""
-            item_dict['grp_a']['children'][item]['status'] = "Active"
+            key = item.split('/')[-1]
+            item_dict['grp_b']['children'][key] = {}
+            item_dict['grp_b']['children'][key]['name'] = item.split('/')[-1]
+            item_dict['grp_b']['children'][key]['filepath'] = item
+            item_dict['grp_b']['children'][key]['status'] = "Active"
 
-        self.ui['wdgt']['shot_list'].loadViewModelFromDict(item_dict)   
+        # loads the above dictionary into a treeview as standard items
+        self.ui['wdgt']['project_list'].loadViewModelFromDict(item_dict)
 
-    def update_assets_list(self,project_name):
-        item_list = core.core.list_assets('jobs',project_name)
+    def update_asset_tabs(self,project_path):
+        '''
+        :param project_path: the path to the project to query for asset libraries
+        :return:
+        '''
+        # clear any current tabs
+        self.ui['wdgt']['obj_tabs'].clear()
+        # for each asset template type, create a tab widget for it
+        asset_type_list = self.controller.proj_controller.get_asset_type_list()
+        # update each asset type
+        for asset_type, dname in asset_type_list:
+            # create the widget if it doesn't exist
+            if not asset_type in self.ui['wdgt']:
+                self.ui['wdgt'][asset_type] = LchrTreeList()
+                self.ui['wdgt'][asset_type].tvw.setIndentation(15)
+                self.ui['wdgt'][asset_type].tvw.setRootIsDecorated(True)
+                self.ui['wdgt'][asset_type].selectionChanged.connect(self.item_list_change)
 
+            self.ui['wdgt'][asset_type].tvw.setAlternatingRowColors(True)
+            self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
+
+
+            self.update_items_list(project_path, asset_type)
+
+    def update_items_list(self,project_path, asset_type):
+        #item_list = core.core.list_shots('jobs',project_name)
+
+        # get top level assets
+        item_tuple = self.controller.proj_controller.get_assets_list(project_path, asset_type, '')
+        # load projects from core
+        item_dict = {}
+        #item_dict[asset_type] = {'name':asset_type,'children':{}}
+        for item in sorted(item_tuple[1]):
+            split_name = item.split('/')
+            if not split_name[0] in item_dict:
+                item_dict[split_name[0]] = {}
+                item_dict[split_name[0]]['name'] = split_name[0]
+                item_dict[split_name[0]]['filepath'] = '/'.join([item_tuple[0],split_name[0]])
+                item_dict[split_name[0]]['status'] = "Active"
+                item_dict[split_name[0]]['children'] = {}
+            if len(split_name) > 1:
+                item_dict[split_name[0]]['children'][split_name[1]] = {}
+                item_dict[split_name[0]]['children'][split_name[1]]['name'] = split_name[1]
+                item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
+                item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
+
+        print ("Asset_Type:{0} Asset_Data{1}".format(asset_type,item_tuple))
+        # loads the above dictionary into a treeview as standard items
+        self.ui['wdgt'][asset_type].loadViewModelFromDict(item_dict)
+
+    def update_assets_list(self,project_path, asset_type):
+        #item_list = core.core.list_assets('jobs',project_name)
+        item_list = self.controller.proj_controller.get_assets_list(project_path, asset_type)
         # load projects from core
         item_dict = {}
         item_dict['a_all'] = {'name':'A-Z','children':{}}
@@ -365,16 +434,18 @@ class Launcher(QMainWindow):
         item_dict['c_props'] = {'name':'Props','children':{}}
         item_dict['d_sets'] = {'name':'Sets','children':{}}
         for item in sorted(item_list):
-            item_dict['a_all']['children'][item] = {}
-            item_dict['a_all']['children'][item]['name'] = item
-            item_dict['a_all']['children'][item]['filepath'] = ""
-            item_dict['a_all']['children'][item]['status'] = "Active"
+            key = item.split('/')[-1]
+            item_dict['a_all']['children'][key] = {}
+            item_dict['a_all']['children'][key]['name'] = key
+            item_dict['a_all']['children'][key]['filepath'] = item
+            item_dict['a_all']['children'][key]['status'] = "Active"
 
         self.ui['wdgt']['asset_list'].loadViewModelFromDict(item_dict)   
         
     def update_scenes_list(self, project_name, shot_name):
 
         item_list = core.core.list_scenes('jobs',project_name, shot_name)
+        #item_list = self.controller.proj_controller.get_scenes_list(project_path, asset_type)
 
         # load projects from core
         item_dict = {}
@@ -673,11 +744,13 @@ class Launcher(QMainWindow):
 
 ############
     def proj_list_selection_change(self, selected, deselected):
-
+        ''' this updates the current project '''
 
         items = self.ui['wdgt']['project_list'].getSelectedItems()
+        for i in items:
+            print 'sel_item:{0}'.format(i.text())
         if len(items):
-            p = str(items[0].text()) 
+            p = str(items[1].text())
             print ('setting project to {0}'.format(p))
 
             # this appears to be a little slow!
@@ -694,13 +767,27 @@ class Launcher(QMainWindow):
             self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
             self.update_apps(display_grp=d_grp)
 
-            self.update_items_list(p)
-            self.update_assets_list(p)
+
+            # check if its an old project struct
+            if os.path.isdir('{0}/03_production'.format(p)):
+                config_path = '{0}/projects_old.yml'.format(CONFIG)
+                self.controller.proj_controller.set_config(config_path)
+            else:
+                config_path = '{0}/projects.yml'.format(CONFIG)
+                self.controller.proj_controller.set_config(config_path)
+
+            #self.update_items_list(p,'shot_3d')
+            #self.update_assets_list(p,'asset_3d')
+            self.update_asset_tabs(p)
 
     def item_list_change(self, selected, deselected):
-        items = self.ui['wdgt']['shot_list'].getSelectedItems()
-        if len(items):
-            s = str(items[0].text()) 
+        # from selection model returns QProxyFilterModel index
+        item_indx = self.sender().selectedIndexes()
+        if len(item_indx):
+            # convert/remap QProxyFilterModel index to StandardItemModel index to get the actual item
+            src_index = item_indx[0].model().mapToSource(item_indx[0]) # .itemFromIndex(item_index[0])
+            item =  item_indx[0].model().sourceModel().itemFromIndex(src_index)
+            s = str(item.text())
             print ('setting shot to {0}'.format(s))
             self.update_scenes_list(self.p_data['project_name'],s)
         else:

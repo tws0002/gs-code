@@ -1,18 +1,32 @@
 __author__ = 'adamb'
 import os, shutil
+import paths
+import time
+from glob import glob
+
 
 class ProjectController():
+    ''' Project controller's main job is to manipulate the data model (the file system) and provide the view (launcher ui)
+    this mainly handles interpreting the model (project template definitions) and creating a deleting data from the server'''
 
-    def __init__(self, pathParser ):
+    def __init__(self, config_path ):
         ''' requires a pointer to the file parser to interpret paths and template paths'''
         #if not isinstance(pathParser,classmethod):
         #    raise TypeError
 
-        self.pathParser = pathParser
+        # init with the default project config path
+        self.pathParser = paths.CoreParser()
+        self.pathParser.load_project_config_file(filepath=config_path)
+
         self.activeProject = ''
         self.activeStage = ''
         self.activeAsset = ''
         self.activeTask  = ''
+
+        self.activeProjectData = None
+
+    def set_config(self,config_path):
+        self.pathParser.load_project_config_file(filepath=config_path)
 
     def copy_templ_tree(self, src, dst):
         ''' copies the template dir structure and substitutes any variable in filenames'''
@@ -20,12 +34,13 @@ class ProjectController():
 
         #substitute path names with variables
 
-    def new_project(self, upl='//diskstation/jobs/new_project'):
+
+    def new(self, upl='//diskstation/jobs/new_project'):
         ''''create a new project structure based on the job. given a url path to the job to create it will generate
         the necessary dict and copy the template dir tree'''
 
         # parse the given upl path, if it matches the template structure as a valid but non existant path then it is able
-        # to be created 
+        # to be created
         d = self.pathParser.parse_path(upl)
         src = subst_template_path(upl=upl)
 
@@ -33,6 +48,57 @@ class ProjectController():
         #src = self.pathParser.project_templates['copy_tree']
         dst = upl
         #self.copy_templ_tree(src, dst)
+
+    def get_assets_list(self, upl, asset_type, asset_grp):
+        ''' given a project path (upl), returns a list of assets found in the assets lib_path defined in projects.yml
+
+        :param upl: universal project locator (project file system)
+        :param asset_type:
+        :param asset_grp: if there is a subfolder
+        :return: 2-tuple of asset_lib_path, list of assets (will include asset_group/asset_name if any are found)
+        '''
+        START_TIME = time.time()
+
+
+        asset_list = []
+        asset_lib_path = self.pathParser.get_asset_lib(upl, asset_type)
+        qualifier = self.pathParser.get_template_path('asset',asset_type,'qualifier_path')
+
+        if os.path.isdir(asset_lib_path):
+            #d_tuple = os.walk(p).next() #(dirpath, dirnames, filenames)
+            #if asset_grp != '':
+            #    asset_lib_path = '/'.join([asset_lib_path, asset_grp])
+            for base_dir in os.listdir(asset_lib_path):
+                full_path = '/'.join([asset_lib_path, base_dir])
+                if os.path.isdir(full_path) and not base_dir.startswith('.') and not base_dir.startswith('_'):
+                    sub_dirs = os.listdir(full_path)
+                    if qualifier != '' and qualifier in sub_dirs:
+                        asset_list.append(base_dir)
+                    else:
+                        for sub_dir in sub_dirs:
+                            full_sub_path = '/'.join([full_path, sub_dir])
+                            if os.path.isdir(full_sub_path):
+                                sub_grp_files = os.listdir(full_sub_path)
+                                if qualifier != '' and qualifier in sub_grp_files:
+                                    asset_list.append('/'.join([base_dir,sub_dir]))
+        else:
+            print ('asset_lib_path={0} not found'.format(asset_lib_path))
+
+        result = (asset_lib_path, asset_list)
+        elapsed_time = time.time() - START_TIME
+        print("ProjectController.get_assets_list() in {0} sec".format(elapsed_time))
+        return result
+
+    def get_asset_type_list(self):
+        '''
+
+        :return: 2-tuple of defined asset-type along with display-name
+        '''
+        result = []
+        for template in self.pathParser.asset_templates:
+            pair = (template,self.pathParser.get_template_path('asset',template,'display_name'))
+            result.append(pair)
+        return result
 
     def new_stage(self, name='production'):
         ''' creates a new stage of production (pitch/previs/production)'''
@@ -52,7 +118,6 @@ class ProjectController():
         # for each task struct
         return
 
-6
     def load_libary(self,lib_name):
         return
 

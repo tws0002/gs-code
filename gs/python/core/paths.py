@@ -9,9 +9,8 @@ import re
 class CoreParser:
     '''Class that reads a project config and parses and stores information about the folder structure here
     Core will internally pass file-based paths between functions as a means of communicating shot information
-    and then methods can use
-    the parser to turn the path into datasets. The parser also provides methods to read the server for list
-    of objects, assets, tasks, and files
+    and then methods can use the parser to turn the path into datasets. The parser also provides methods to read the server
+    for list of objects, assets, tasks, and files
     UPL - a concept is used here called a Uniform Project Locator, this is analagous to a URL (Uniform Resource Locator)
     it is a string that when parsed through a template, it tells you information about your location in the project'''
 
@@ -66,6 +65,15 @@ class CoreParser:
         print ("Loading Project file path {0}".format(filepath))
         dataMap = self.get_config_file(filepath)
         self.project_data = dataMap
+
+        self.vars = {}
+        self.lib_templates = {}
+        self.project_templates = {}
+        self.stage_templates = {}
+        self.asset_templates = {}
+        self.task_templates = {}
+        self.package_templates = {}
+
         self.load_project_config(self.project_data)
 
     def load_project_config(self, dataMap, version='1.0'):
@@ -162,6 +170,8 @@ class CoreParser:
         return result
 
     def subst_template_path(self, upl_dict=None, upl='', template_type='', template_name='', template_var='', template_file=''):
+        ''' given a dict it will return a substituted template path that matches the search qualifications'''
+
         result = ''
         # if no upl dict is provided, parse it from the upl string
         if not isinstance(upl_dict,dict):
@@ -359,18 +369,15 @@ class CoreParser:
 
         return result
 
-    def get_lib_path(self, project_path, lib_name):
-        ''' returns tuples of specified library path'''
-        result = ()
-        proj_d = self.parse_path(filepath=project_path, hint='var')
-        for lib, data in self.lib_templates.iteritems():
-            if lib_name in data:
-                result += (data['root_path'],)
+    def get_asset_lib(self, project_path, asset_type):
+        ''' returns list of items in the specified library path'''
+        result = self.subst_template_path(upl=project_path, template_type='asset', template_name=asset_type, template_var='lib_path')
 
         return result
 
     def get_lib_asset(self, lib_name, full_path=True):
-        ''' returns tuples of objects within library, essentially a list of sub directories of the specified path'''
+        ''' deprecated
+        returns tuples of objects within library, essentially a list of sub directories of the specified path'''
         result = ()
         for lib, data in self.lib_templates.iteritems():
             result += (lib,)

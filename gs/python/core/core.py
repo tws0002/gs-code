@@ -20,18 +20,57 @@ from settings import *
 # reads a project config and uses it for identifying information about the project
 # loads a given project into the datamodel based on the project config mapping
 
+
+class CoreController():
+    '''  The main funciton of core is to act as an interface between the data model (our file system, //scholar/projects) and views of that model (Launcher & other in-app tools)
+    This makes Core the 'controller' in standard model-view-controller software architecture. The primary way of interacting with the model is a psuedo REST API (representational
+    state transfer) wherby data is queried and manipulated with resource locators (in this case the filesystem paths) to locate and query data on the file server '''
+
+    def __init__(self):
+        pass
+        # config path should eventually be set by studio.yml
+        self.config_path = (CONFIG+"/projects.yml")
+        # load the Project Controller that interacts with project data
+        self.proj_controller = projects.ProjectController(self.config_path)
+
+        # load up project shares on server
+
+        # load up list of jobs found in project shares
+
+    def get_file_shares(self, share_type):
+        share_paths = []
+        for share in STUDIO['servers']:
+            if share_type == '':
+                share_paths.append(STUDIO['servers'][share]['root_path'])
+            else:
+                if share_type == STUDIO['servers'][share]['share_type']:
+                    share_paths.append(STUDIO['servers'][share]['root_path'])
+        return share_paths
+
+    def get_projects_list(self, proj_type):
+        result = []
+        file_share_list = self.get_file_shares('job_share')
+        for j in sorted(file_share_list,key=lambda v: v.upper()):
+            for name in os.listdir(j):
+                fp = '/'.join([j,name])
+                if os.path.isdir(fp) and not name.startswith('.') and not name.startswith('_'):
+                    result.append(fp)
+        return result
+
+
+
+
+
+
 def main():
+    ''' this is run if the core.py script is executed directly (not imported)'''
     # load the project config to enable the core to understand where files live on the server
     # based on this file, the core can map it to a data model storing information about the project
-    config_path = (CONFIG+"/projects.yml")
-    core_parser = paths.CoreParser()
-    core_parser.load_project_config_file(filepath=config_path)
+
 
     # test the load matching
-    core_parser.test_file_paths()
-    core_parser.test_dict_to_path()
-
-    cur_proj = projects.ProjectController(core_parser)
+    self.core_parser.test_file_paths()
+    self.core_parser.test_dict_to_path()
 
     return
 
@@ -95,6 +134,7 @@ def list_scenes(share, job, shot):
 
 
         for p in paths:
+            # iterates all subtree looking for patterns that match the glob *.mb
             result = [y for x in os.walk(p) for y in glob(os.path.join(x[0], '*.mb'))]
             for name in result:
                 if not os.path.isdir(os.path.join(p,name)) and not name.startswith('.') and not name.startswith('_'):

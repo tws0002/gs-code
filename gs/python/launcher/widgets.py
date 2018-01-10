@@ -5,8 +5,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from settings import *
 
-#RES = "\\\\scholar\\pipeline\\dev\\gs\\python\\launcher\\res"
-
 class CustomSortFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self, parent, title=""):
@@ -233,9 +231,7 @@ class LchrTreeList(QWidget):
 
     qlyt = None
 
-    # config flags
-    alwaysExpand = True
-    showFirstColOnly = True
+
 
     # remapped signals
     selectionChanged = None
@@ -243,22 +239,40 @@ class LchrTreeList(QWidget):
     def __init__(self, parent=None):
         super(LchrTreeList, self).__init__(parent)
 
+        # config flags
+        self.alwaysExpand = True
+        self.showFirstColOnly = True
+
+
         self.qlyt = QVBoxLayout(self)
+        self.qtblyt = QHBoxLayout()
+        self.qtblyt.setContentsMargins(0,0,0,0)
+
+        self.title = QLabel('')
         self.le = QLineEdit()
         self.tvw = QTreeView()
         model = QStandardItemModel(self.tvw)
+        self.titlebtn1 = QPushButton('New')
+        #self.titlebtn2 = QPushButton('Config')
 
+        self.qtblyt.addWidget(self.title)
+        self.qtblyt.setStretchFactor(self.title,1)
+        self.qtblyt.addWidget(self.titlebtn1)
+        #self.qtblyt.addWidget(self.titlebtn2)
+        self.qlyt.addLayout(self.qtblyt)
         self.qlyt.addWidget(self.le)
         self.qlyt.addWidget(self.tvw)
 
-        self.le.setObjectName('LchrList')
+        self.le.setObjectName('LchrListFilter')
+        self.title.setObjectName('LchrListLabel')
         self.le.setPlaceholderText('Search')
         self.tvw.setUniformRowHeights(True)
         self.tvw.setIndentation(8)
         self.tvw.setRootIsDecorated(False)
         self.tvw.setExpandsOnDoubleClick(True)
         self.tvw.setHeaderHidden(True)
-        self.tvw.setItemsExpandable(False)
+        self.tvw.setItemsExpandable(True)
+        self.tvw.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.setModel(model)
 
@@ -280,6 +294,9 @@ class LchrTreeList(QWidget):
     def lineEdit(self):
         return self.le
 
+    def setTitle(self,title):
+        self.title.setText(title)
+
     def setModel(self, stdItemModel):
         self.sm = stdItemModel
         # create an internal proxy model and connect that instead
@@ -294,11 +311,12 @@ class LchrTreeList(QWidget):
         self.tvw.clearSelection()
         qregex = QRegExp(regExpStr)
         self.pm.setFilterRegExp(qregex)
+        self.tvw.expandAll()
   		
 
     def filterListEditChanged(self):
         regstr = self.le.text()
-        if len(regstr) < 3:
+        if len(regstr) < 3 and len(regstr) > 0:
             regstr = '^{0}'.format(regstr)
 
         self.setFilterRegExpStr(regstr)
@@ -348,15 +366,18 @@ class LchrTreeList(QWidget):
             this is a quickway to set lots of data with minimal QT CustomSortFilterProxyModel
         '''
         self.sm.clear()
-
+        #print(modelDict)
         # get list of headers
         headers_list = ['name']
-        for key in sorted(modelDict):
-            item = sorted(modelDict[key])
-            for subkey in item:
-                if subkey not in headers_list and subkey != 'children':
-                    headers_list.append(subkey)
+        for grp in sorted(modelDict):
+            if 'children' in modelDict[grp]:
+                #item = sorted(modelDict[grp]['children'])
+                for item in sorted(modelDict[grp]['children']):
+                    for header in sorted(modelDict[grp]['children'][item]):
+                        if header not in headers_list and header != 'children':
+                            headers_list.append(header)
 
+        #print ("HEADERS LIST = {0}".format(headers_list))
         # recursively load the dict and any children items
         item_list = self.procLoadDictToQItem(self.sm,headers_list,modelDict)
 

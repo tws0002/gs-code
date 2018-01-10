@@ -6,7 +6,6 @@ from settings import *
 from utils import *
 # from ui import *
 from environment import *
-import core.projects
 
 #PYQTPATH = os.path.join(ROOT,'lib','python','pyqt4','4.10.3')
 
