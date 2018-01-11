@@ -18,6 +18,7 @@ aftereffects:
   - grade
   - conform
   - mix
+  file_types: 'aep'
   versions:
     'CC 2014':
       name: After Effects CC 2014
@@ -105,6 +106,10 @@ maya:
     MAYA_DISABLE_CLIC_IPM: '1'
     MAYA_DISABLE_CIP: '1'
   show: true
+  file_types: 'mb,ma'
+  flags:
+    file: '-file'
+    project: '-proj'
   versions:
     '2015':
       name: Autodesk Maya
@@ -255,6 +260,7 @@ nuke:
   - grade
   - track
   - roto
+  file_types: 'nk;nk~;nk.autosave'
   versions:
     '11.0v1':
       name: Nuke
@@ -362,6 +368,7 @@ premiere:
   - grade
   - conform
   - mix
+  file_types: 'prproj'
   versions:
     'CC 2015.3':
       name: Premiere
@@ -422,6 +429,7 @@ photoshop:
   - shade
   - light
   - comp
+  file_types: 'psd,psb,tif,png,tga'
   versions:
     'CC 2015.5':
       name: Photoshop CC 2015.5
@@ -454,6 +462,7 @@ illustrator:
   tasks:
   - design
   - light
+  file_types: 'ai'
   versions:
     'CC 2015.3':
       name: Illustrator CC 2015.3
@@ -486,6 +495,7 @@ indesign:
   tasks:
   - design
   - light
+  file_types: 'indd'
   versions:
     'CC 2015':
       name: InDesign CC 2015
@@ -549,6 +559,7 @@ zbrush:
   tasks:
   - design
   - model
+  file_types: 'ztl,zbr'
   versions:
     '4R8':
       name: ZBrush 4R8
@@ -584,6 +595,7 @@ cinema4d:
   env:
     C4D_PLUGINS_DIR: '%GSROOT%/base/apps/cinema4d/scripts/python'
     C4D_BROWSERLIBS: '%GSROOT%/bin/external/cinema4d/browserlib/%ST_C4D%'
+  file_types: 'c4d'
   versions:
     'R18':
       name: Cinema 4D
@@ -634,6 +646,7 @@ modo:
   - model
   env:
     RLM_LICENSE: '4101@laxlic01'
+  file_types: 'lxo'
   versions:
     '11.1v1':
       name: Modo
@@ -738,6 +751,7 @@ mari:
   env:
         RLM_LICENSE: '4101@laxlic01'
         MARI_SCRIPT_PATH: '%GSROOT%/base/apps/mari/scripts'
+  file_types: 'mari'
   versions:
     '3.3v1':
       name: Mari
@@ -791,6 +805,7 @@ mudbox:
   tasks:
   - design
   - texture
+  file_types: 'mbx'
   versions:
     '2017':
       name: Mudbox
@@ -834,6 +849,7 @@ mudbox:
   tasks:
   - design
   - texture
+  file_types: 'max,3ds'
   versions:
     '2016':
       name: 3D Studio
@@ -871,6 +887,7 @@ houdini:
   - fx
   - light
   - anim
+  file_types: 'hip,hipnc,hiplc'
   versions:
     '15.5.607':
       name: Houdini

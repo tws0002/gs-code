@@ -10,6 +10,8 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent, title=""):
         super(CustomSortFilterProxyModel, self).__init__(parent)
 
+        self.filter_parents = False
+
     def filterAcceptsRow(self, row_num, source_parent):
         ''' Overriding the parent function '''
         # Check if the current row matches
@@ -28,11 +30,15 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
         ''' Traverse to the root node and check if any of the
             ancestors match the filter
         '''
-        while parent.isValid():
-            if self.filter_accepts_row_itself(parent.row(), parent.parent()):
-                return True
-            parent = parent.parent()
-        return False
+        result = False
+        if self.filter_parents == True:
+            while parent.isValid():
+                if self.filter_accepts_row_itself(parent.row(), parent.parent()):
+                    result = True
+                parent = parent.parent()
+        else:
+            result = False
+        return result
 
     def has_accepted_children(self, row_num, parent):
         ''' Starting from the current node as root, traverse all
@@ -297,6 +303,9 @@ class LchrTreeList(QWidget):
     def setTitle(self,title):
         self.title.setText(title)
 
+    def setFilterParents(self,state):
+        self.pm.filter_parents = state
+
     def setModel(self, stdItemModel):
         self.sm = stdItemModel
         # create an internal proxy model and connect that instead
@@ -376,6 +385,10 @@ class LchrTreeList(QWidget):
                     for header in sorted(modelDict[grp]['children'][item]):
                         if header not in headers_list and header != 'children':
                             headers_list.append(header)
+            for header in sorted(modelDict[grp]):
+                if header not in headers_list and header != 'children':
+                    headers_list.append(header)
+
 
         #print ("HEADERS LIST = {0}".format(headers_list))
         # recursively load the dict and any children items

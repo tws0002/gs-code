@@ -194,7 +194,8 @@ class Launcher(QMainWindow):
         self.ui['lyt']['scene_layout'].addWidget(self.ui['lbl']['scene_label'])
         self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
         self.ui['lyt']['launch_lyt'] = QHBoxLayout()
-        self.ui['lyt']['launch_lyt'].addWidget(QPushButton('Launch'))
+        self.ui['wdgt']['launch_btn'] = QPushButton('Launch')
+        self.ui['lyt']['launch_lyt'].addWidget(self.ui['wdgt']['launch_btn'])
         self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
 
 
@@ -295,6 +296,8 @@ class Launcher(QMainWindow):
         # connect button signals
         self.ui['wdgt']['project_list'].titlebtn1.clicked.connect(self.show_create_job)
 
+        self.ui['wdgt']['launch_btn'].clicked.connect(self.launch_scenefile)
+
         # set the project
         # self.ui['wdgt']['project_list'].selectionModel().selectionChanged.connect(self.proj_list_change)
         self.ui['wdgt']['project_list'].selectionChanged.connect(self.proj_list_selection_change)
@@ -391,6 +394,7 @@ class Launcher(QMainWindow):
                 self.ui['wdgt'][asset_type].tvw.setIndentation(15)
                 self.ui['wdgt'][asset_type].tvw.setRootIsDecorated(True)
                 self.ui['wdgt'][asset_type].selectionChanged.connect(self.item_list_change)
+                self.ui['wdgt'][asset_type].setFilterParents(True)
 
             self.ui['wdgt'][asset_type].tvw.setAlternatingRowColors(True)
             self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
@@ -413,12 +417,15 @@ class Launcher(QMainWindow):
                 item_dict[split_name[0]]['name'] = split_name[0]
                 item_dict[split_name[0]]['filepath'] = '/'.join([item_tuple[0],split_name[0]])
                 item_dict[split_name[0]]['status'] = "Active"
+                item_dict[split_name[0]]['is_group'] = False
                 item_dict[split_name[0]]['children'] = {}
             if len(split_name) > 1:
+                item_dict[split_name[0]]['is_group'] = True
                 item_dict[split_name[0]]['children'][split_name[1]] = {}
                 item_dict[split_name[0]]['children'][split_name[1]]['name'] = split_name[1]
                 item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
                 item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
+                item_dict[split_name[0]]['children'][split_name[1]]['is_group'] = False
 
         print ("Asset_Type:{0} Asset_Data{1}".format(asset_type,item_tuple))
         # loads the above dictionary into a treeview as standard items
@@ -442,19 +449,22 @@ class Launcher(QMainWindow):
 
         self.ui['wdgt']['asset_list'].loadViewModelFromDict(item_dict)   
         
-    def update_scenes_list(self, project_name, shot_name):
+    def update_scenes_list(self, asset_path):
 
-        item_list = core.core.list_scenes('jobs',project_name, shot_name)
-        #item_list = self.controller.proj_controller.get_scenes_list(project_path, asset_type)
+        item_list = self.controller.proj_controller.get_scenes_list(upl=asset_path, file_types='mb')
 
-        # load projects from core
         item_dict = {}
-        item_dict['grp_a'] = {'name':'Scenefiles','children':{}}
+        #item_dict[asset_type] = {'name':asset_type,'children':{}}
         for item in sorted(item_list):
-            item_dict['grp_a']['children'][item] = {}
-            item_dict['grp_a']['children'][item]['name'] = item
-            item_dict['grp_a']['children'][item]['filepath'] = ""
-            item_dict['grp_a']['children'][item]['status'] = "Active"
+            rel_name = item[0]
+            full_path = item[1]
+            if not rel_name in item_dict:
+                item_dict[item[1]] = {}
+                item_dict[item[1]]['name'] = item[1]
+                item_dict[item[1]]['filepath'] = item[0]
+                item_dict[item[1]]['status'] = "Active"
+                item_dict[item[1]]['is_group'] = False
+
 
         self.ui['wdgt']['scene_list'].loadViewModelFromDict(item_dict)   
 
@@ -781,24 +791,31 @@ class Launcher(QMainWindow):
             self.update_asset_tabs(p)
 
     def item_list_change(self, selected, deselected):
-        # from selection model returns QProxyFilterModel index
-        item_indx = self.sender().selectedIndexes()
+        ''' slot receiver for asset_list selection changes signal
+
+        :param selected: QItemSelection new selection
+        :param deselected: QItemSelection
+        :return:
+        '''
+        # from selectionModel returns QProxyFilterModel index
+        item_indx = selected.indexes()
+        #item_indx = self.sender().selectedIndexes() # old way of doing this
         if len(item_indx):
             # convert/remap QProxyFilterModel index to StandardItemModel index to get the actual item
-            src_index = item_indx[0].model().mapToSource(item_indx[0]) # .itemFromIndex(item_index[0])
-            item =  item_indx[0].model().sourceModel().itemFromIndex(src_index)
+            src_index = item_indx[1].model().mapToSource(item_indx[1])
+            item =  item_indx[1].model().sourceModel().itemFromIndex(src_index)
             s = str(item.text())
             print ('setting shot to {0}'.format(s))
-            self.update_scenes_list(self.p_data['project_name'],s)
+            self.update_scenes_list(s)
         else:
             print ('Selection Empty')
 
     def asset_list_change(self, selected, deselected):
         items = self.ui['wdgt']['asset_list'].getSelectedItems()
         if len(items):
-            s = str(items[0].text()) 
+            s = str(items[1].text())
             print ('setting asset to {0}'.format(s))
-            self.update_scenes_list(self.p_data['project_name'],s)
+            self.update_scenes_list(s)
         else:
             print ('Selection Empty')
 
@@ -818,6 +835,23 @@ class Launcher(QMainWindow):
 
     def toggle_launch_stat(self, widget, text):
         widget.setText(text)
+
+    def launch_scenefile(self):
+        ''' launches the selected scenefile in the scenefile list'''
+        # get the filepath from teh scenefile list
+        item = self.ui['wdgt']['scene_list'].getSelectedItems()
+        print "ITEM={0}".format(item)
+        filepath = str(item[1].text())
+        #print 'UI Launching {0} version: {1}'.format(app,version)
+        print "Launching Filepath={0}".format(filepath)
+        launcher.launch_app(app='', mode='ui', filepath=filepath)
+
+        text = str(self.sender().text())
+        self.sender().setText("Starting...")
+        test_timer = QTimer()
+        test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.sender(), text))
+
+        self.add_recent_project(project)
 
     def launch_app(self, item, app='', version='', mode='ui'):
 
@@ -844,7 +878,7 @@ class Launcher(QMainWindow):
                     version = self.w_data[workgroup]['packages'][package]['version']
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
-        launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project)
+        launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project, filepath=filepath)
 
         text = str(self.app_layouts[button_name].text())
         self.app_layouts[button_name].setText("Starting...")

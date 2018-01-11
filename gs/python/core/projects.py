@@ -3,6 +3,7 @@ import os, shutil
 import paths
 import time
 from glob import glob
+import re
 
 
 class ProjectController():
@@ -65,9 +66,6 @@ class ProjectController():
         qualifier = self.pathParser.get_template_path('asset',asset_type,'qualifier_path')
 
         if os.path.isdir(asset_lib_path):
-            #d_tuple = os.walk(p).next() #(dirpath, dirnames, filenames)
-            #if asset_grp != '':
-            #    asset_lib_path = '/'.join([asset_lib_path, asset_grp])
             for base_dir in os.listdir(asset_lib_path):
                 full_path = '/'.join([asset_lib_path, base_dir])
                 if os.path.isdir(full_path) and not base_dir.startswith('.') and not base_dir.startswith('_'):
@@ -77,7 +75,7 @@ class ProjectController():
                     else:
                         for sub_dir in sub_dirs:
                             full_sub_path = '/'.join([full_path, sub_dir])
-                            if os.path.isdir(full_sub_path):
+                            if os.path.isdir(full_sub_path) and not base_dir.startswith('.') and not base_dir.startswith('_'):
                                 sub_grp_files = os.listdir(full_sub_path)
                                 if qualifier != '' and qualifier in sub_grp_files:
                                     asset_list.append('/'.join([base_dir,sub_dir]))
@@ -98,6 +96,33 @@ class ProjectController():
         for template in self.pathParser.asset_templates:
             pair = (template,self.pathParser.get_template_path('asset',template,'display_name'))
             result.append(pair)
+        return result
+
+    def get_scenes_list(self, upl='', file_types='all'):
+        '''
+
+        :return: sorted list of 2-tuple (fullpath, rel_path) found by globbing
+        '''
+        valid_result = []
+        # iterates all subtree looking for patterns that match the glob *.mb
+        # result = [y for x in os.walk(upl) for y in glob(os.path.join(x[0], '*.mb'))]
+        result = [y for x in os.walk(upl) for y in self.multi_glob(x[0],['mb','ma','nk','aep'])]
+        for name in result:
+            if not os.path.isdir(os.path.join(upl,name)) and not name.startswith('.') and not name.startswith('_'):
+                rel_path = name[len(upl)+1:]
+                filename = os.path.basename(rel_path)
+                valid_result.append((name,rel_path))
+        return valid_result
+
+    def multi_glob(self, path, filter_list):
+        cpath = path.replace('\\','/')
+        result = []
+        filters = '.*\.{0}$'.format('$|.*\.'.join(filter_list))
+        #print 'multi_glob checking path {0}'.format(cpath)
+        for x in os.listdir(cpath):
+            if re.match(filters, x):
+                #print 'matched {0} with filter {1}'.format(x,filters)
+                result.append('/'.join([cpath,x]))
         return result
 
     def new_stage(self, name='production'):

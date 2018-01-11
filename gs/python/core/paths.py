@@ -369,6 +369,12 @@ class CoreParser:
 
         return result
 
+    def get_project(self, upl):
+        ''' returns the project belonging to the path specified '''
+        result = self.subst_template_path(upl=upl, template_type='var', template_var='project_root')
+
+        return result
+
     def get_asset_lib(self, project_path, asset_type):
         ''' returns list of items in the specified library path'''
         result = self.subst_template_path(upl=project_path, template_type='asset', template_name=asset_type, template_var='lib_path')

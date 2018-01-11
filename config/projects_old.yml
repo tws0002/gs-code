@@ -57,6 +57,7 @@ asset_templates:
     out_render_path: "<server>/projects/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>"
     out_render_file: "<shot>_<task>_<version>_<initials>.<ext>"
     qualifier_path: '00_nuke' # qualifies if path contains this subfolder
+    ignore_list: '_musterFiles*'
   #'asset_2d':
   #  display_name: 'Elements'
   #  lib_path: "<server>/projects/<job>/03_production/00_elements"
@@ -84,6 +85,7 @@ asset_templates:
     render_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/images/<shot>/%work_file%/<renderlayer>"
     render_file: "<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>"
     qualifier_path: 'animation' # qualifies if path contains this subfolder
+    ignore_path: 'mustache_renderScenes*'
   'asset_3d':
     display_name: 'Assets'
     lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
@@ -101,6 +103,7 @@ asset_templates:
     render_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/images/assets/<asset>"
     render_file: "<asset>_<version>.<ext>"
     qualifier_path: '_versions'
+    ignore_path: 'mustache_renderScenes*'
 
 # Defines file locations specific to tasks
 task_templates: 
