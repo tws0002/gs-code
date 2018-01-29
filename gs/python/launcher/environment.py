@@ -19,6 +19,15 @@ class StudioEnvironment():
             self.add('PYTHONPATH',os.environ['PYTHONPATH'])
         return
 
+    def append_current_env (self, explicit_vars=[], exclude_vars=[]):
+        ''' add the current launcher process env vars to the subprocess'''
+        for k, v in os.environ.iteritems():
+            if k not in exclude_vars:
+                if len(explicit_vars):
+                    if k in explicit_vars:
+                        self.add(k, v)
+                else:
+                    self.add(k, v)
 
     def load_app_config_file(self, filepath, app=None, version=None):
         print ("Loading file path {0}".format(filepath))
@@ -176,7 +185,7 @@ class StudioEnvironment():
     def write_to_shellscript(self, output_path):
         return
 
-    def add(self, var, val):
+    def add(self, var, val, prepend=False):
         new_val = val
         is_explicit = False
         if val[:2] == '#!':
@@ -185,7 +194,10 @@ class StudioEnvironment():
 
         #if adding to an existing var then add the val to the original value, else just add it 
         if var in self.vars and is_explicit == False:
-            self.vars[var] += (';'+new_val)
+            if not prepend:
+                self.vars[var] += (';'+new_val)
+            else:
+                self.vars[var] += (new_val+';')
         else:
             self.vars[var] = new_val
         #os.environ[var] = self.vars[var]

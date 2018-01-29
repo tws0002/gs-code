@@ -125,6 +125,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version, mode)
     process_env.load_app_config(process_env.app_data, app, version, mode)
 
+    process_env.append_current_env()
+
     if 'GSBRANCH' in os.environ:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':
             process_env.printout()
@@ -179,14 +181,20 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     STUDIO_ENV.load_app_config_file(CONFIG + '/app.yml', app='studiotools', version='1.0')
     STUDIO_ENV.setEnv()
 
-    env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
+    # this should be replaced with a routine to merge key values instead of overwriting
+    #env = dict(os.environ.items() + STUDIO_ENV.vars.items() + process_env.vars.items())
+    env = dict(process_env.vars.items())
     
     # need to clear out pyqt from path and pythonpath
     # these need to be handled on an app by app basis
-    env['PATH'] = ';'.join([env['PATH'],';'.join(sys.path)])#  os.environ['PATH']
+    #env['PATH'] = os.environ['PATH'] 
+
+
+    #env['PATH'] = ';'.join([';'.join(sys.path),os.environ['PATH'],env['PATH']])
     env['PATH'].replace('{0};'.format(PYQTPATH), '')
     env['PYTHONPATH'].replace('{0};'.format(PYQTPATH), '')
-
+    print "Printing PATH:" 
+    print env['PATH'] 
     utils.updatePipelineFavorites()
 
     si = subprocess.STARTUPINFO()
