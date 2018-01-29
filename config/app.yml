@@ -841,6 +841,7 @@ houdini:
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
     JOB: "//scholar/projects/%GSPROJECT%/03_production/01_cg/04_houdini"
     SESI_LMHOST: "laxlic01"
+    HSITE: '%GSBRANCH%\apps\houdini'
   show: true
   tasks:
   - fx
