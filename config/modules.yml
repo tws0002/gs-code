@@ -375,6 +375,15 @@ krakatoa:
         #MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
         THINKBOX_LICENSE_FILE: '@laxlic01'
       versions:
+        '2.7.1':
+          env:
+            ST_KRAKATOA: '2.7.1'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2.6.3':
           env:
             ST_KRAKATOA: '2.6.3'
@@ -565,6 +574,15 @@ redshift:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%'
         MAYA_RENDER_DESC_PATH: '%GSROOT%/bin/external/maya/modules/redshift/%ST_MAYA_REDSHIFT%/win/%ST_MAYA%/bin/rendererDesc'
       versions:
+        '2.5.52':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.52'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2.5.40':
           env:
             ST_MAYA_REDSHIFT: '2.5.40'
@@ -631,11 +649,30 @@ redshift:
     cinema4d:
       env:
         REDSHIFT_COREDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
-        REDSHIFT_LOCALDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
         REDSHIFT_PLUG_IN_PATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         C4D_PLUGINS_DIR: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         PATH: '%REDSHIFT_COREDATAPATH%/bin'
       versions:
+        '2.5.52':
+          env:
+            ST_C4D_REDSHIFT: '2.5.52'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R19'
+          - 'R18'
+        '2.5.30':
+          env:
+            ST_C4D_REDSHIFT: '2.5.30'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R19'
+          - 'R18'
         '2.5.13':
           env:
             ST_C4D_REDSHIFT: '2.5.13'
@@ -654,22 +691,6 @@ redshift:
             win32: /
           versions:
           - 'R18'
-    houdini:
-      env:
-        HOUDINI_PATH: '%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%;&'
-        HOUDINI_DSO_ERROR: '2'
-        REDSHIFT_COREDATAPATH: "%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%/core"
-        PATH: '%REDSHIFT_COREDATAPATH%/bin'
-      versions:
-        '2.5.40':
-          env:
-            ST_HOU_REDSHIFT: '2.5.40'
-          path:
-            linux: /
-            mac: /
-            win32: /
-          versions:
-          - '16.0.75'
 be_openvdb:
   name: be_openvdb
   show: true
@@ -1026,3 +1047,24 @@ opticalflares:
           env:
             GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
             BUILD: 'workstation'
+keentools:
+  name: keentools
+  show: true
+  packages:
+    nuke:
+      env:
+        KEENTOOLS_LICENSE_SERVER: 'laxlic01'
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/keentools/%ST_KEENTOOLS%/%ST_NUKE%'
+      versions:
+        '1.2.0':
+          env:
+            ST_KEENTOOLS: '1.2.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '11.1'
+          - '11.0'
+          - '10.5'
+          - '10.0'

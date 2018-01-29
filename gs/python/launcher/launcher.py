@@ -1,6 +1,6 @@
 __author__ = 'adamb'
 
-import sys, urllib2, subprocess, argparse, time
+import sys, urllib2, subprocess, argparse, time, ctypes
 
 from settings import *
 from utils import *
@@ -209,8 +209,14 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     if mode == 'render':
         print cmd
+
+        # supress error window on crash
+        SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
+        ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
+        sf = 0x8000000
+
         try:
-            p = subprocess.Popen(cmd,bufsize=1, stdout=subprocess.PIPE, env=env, startupinfo=si)
+            p = subprocess.Popen(cmd,bufsize=1, stdout=subprocess.PIPE, env=env, startupinfo=si, creationflags=sf)
         except WindowsError:
             print "\n\nError: GS Launcher Process: {0} failed to execute. \n\nDoes program exist?".format(cmd)
             sys.exit(-1)
