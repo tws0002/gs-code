@@ -270,14 +270,14 @@ QTabWidget::tab-bar {
 
 /* Style the tab using the tab sub-control. Note that
     it reads QTabBar _not_ QTabWidget */
+QTabBar {
+    font: 12pt;
+}
 QTabBar::tab {
     color: #555555;
-    width: 50px;
-    font: 12pt;
     outline:none;
-    padding: 1px 1px 5px 1px;
-    min-width: 14ex;
-    min-height: 2ex;
+    padding: 1px 5px 5px 5px;
+    min-width: 10ex;
     border-bottom-style: solid;
     border-bottom-width: 2px;
     border-bottom-color: transparent;

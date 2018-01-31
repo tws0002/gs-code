@@ -245,7 +245,7 @@ class StudioEnvironment():
 
     def printout(self):
         print '\n== ENV VARS =='
-        for key, value in self.vars.iteritems():
+        for key, value in sorted(self.vars.iteritems()):
             print (key+'='+value)
         print '== END ENV VARS ==\n'
 

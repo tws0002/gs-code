@@ -1,30 +1,27 @@
 w__author__ = 'adamb'
 
-from settings import *
-import launcher
-from utils import *
-
 import sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 
-elapsed_time = time.time() - START_TIME
-print("Launcher PyQt loaded in {0} sec".format(elapsed_time))
-#import urllib2
-#import subprocess
-#import functools
-
-from environment import *
-from gsqt.widgets import *
-from gsqt.stylesheets import *
-from widgets import *
+from settings import *
+from utils import *
+#from widgets import *
 from dialogs import *
+import launcher, core
+import functools
 
 import yaml
-import core.core
+
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+elapsed_time = time.time() - START_TIME
+print("Launcher PyQt loaded in {0} sec".format(elapsed_time))
+
+class LauncherApp(QApplication):
+    def __init__(self, parent=None):
+        super(LauncherApp, self).__init__(parent)
 
 
-class Launcher(QMainWindow):
+class LauncherWindow(QMainWindow):
 
     #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
     a_data = {}
@@ -33,10 +30,33 @@ class Launcher(QMainWindow):
     
     def __init__(self, parent=None):
 
-        super(Launcher, self).__init__(parent)
+        super(LauncherWindow, self).__init__(parent)
 
         elapsed_time = time.time() - START_TIME
         print("Launcher window init start in {0} sec".format(elapsed_time))
+
+
+        # this is the UI Model for storing the present display state of the UI
+        # any change signals should modify these values and then call the appropriate signals to update the UI
+        # any calls to change the data should also update the ui to reflect the active data state
+        self.active_data = {
+            'file_share':'',
+            'server':'//scholar',
+            'share':'projects',
+            'job':'',
+            'stage':'production',
+            'asset_types':'',
+            'asset_group':'',
+            'asset':'',
+            'task':'',
+            'version':'',
+            'filetype':'',
+            'filename':'',
+            'filepath':'',
+        }
+        # caches the active data's path for quick references
+        self.active_path = dict(self.active_data)
+
         #self.load_project_config("")
         self.update_gui = False
         self.resize(1100, 600)
@@ -52,7 +72,7 @@ class Launcher(QMainWindow):
         self.settings = QSettings('gs', 'launcher')
 
 
-        self.controller = core.core.CoreController()
+        self.controller = core.CoreController()
 
         # OLD load Style Sheet for overall UI appearance
         # sStyleSheet = StyleSheet().styleSheet(1)
@@ -76,7 +96,7 @@ class Launcher(QMainWindow):
         self.ui['mdl'] = {}
 
         # main window frame, (central widget)
-        self.load_style()
+        self.loadStyle()
         elapsed_time = time.time() - START_TIME
         print("Launcher loading style in {0} sec".format(elapsed_time))
         self.setWindowFlags(Qt.FramelessWindowHint)
@@ -128,11 +148,11 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['stack_widget'])
         self.ui['wdgt']['sp1'].setSizes([160, 500])
 
+
+        # create sidebar items that show various launcher views
         sidebar_items = ['Apps','Design','Production']
-        proj_list = self.controller.get_projects_list('job_share') #core.core.list_jobs('jobs')
         self.ui['lyt']['stack_layouts'] = {}
         i = 0
-
         # create a stack panel for each widget
         for package in sidebar_items:
             package = package.title()
@@ -150,7 +170,7 @@ class Launcher(QMainWindow):
         self.ui['wdgt']['proj_cat']['Az'] = QStandardItem('A-Z')
 
         # load projects from core
-        self.update_projects_list()
+        self.updateServerShares('job_share')
 
         self.ui['lyt']['tab1_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Apps'])
         self.ui['lyt']['tab2_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Design'])
@@ -159,45 +179,43 @@ class Launcher(QMainWindow):
         ## Production Tab View
         #splitter
         self.ui['wdgt']['sp2'] = QSplitter()
-        self.ui['wdgt']['obj_pane'] = QWidget()
-        self.ui['wdgt']['scenes_pane'] = QWidget()
-        self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['obj_pane'])
-        self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['scenes_pane'])
+        self.ui['wdgt']['asset_pane'] = QWidget()
+        self.ui['wdgt']['file_pane'] = QWidget()
+        self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['asset_pane'])
+        self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['file_pane'])
         self.ui['wdgt']['sp2'].setSizes([200,400])
         self.ui['lyt']['tab3_layout'].addWidget(self.ui['wdgt']['sp2'])
 
-        # item_pane layout
-        self.ui['lyt']['item_layout'] = QVBoxLayout(self.ui['wdgt']['obj_pane'])
-        self.ui['wdgt']['obj_tabs'] = QTabWidget()
-        self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['obj_tabs'])
+        # asset_pane layout
+        self.ui['lyt']['item_layout'] = QVBoxLayout(self.ui['wdgt']['asset_pane'])
+        self.ui['wdgt']['asset_tabs'] = QTabWidget()
+        self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_tabs'])
 
-        ##self.ui['wdgt']['shot_list'] = LchrTreeList()
-        ##self.ui['wdgt']['asset_list'] = LchrTreeList()
-        ##self.ui['wdgt']['shot_list'].tvw.setAlternatingRowColors(True)
-        ##self.ui['wdgt']['asset_list'].tvw.setAlternatingRowColors(True)
-        #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['shot_list'])
-        #self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_list'])
+        # file_pane layout (tabs showing Tasks, Scenefiles views)
+        self.ui['lyt']['file_layout'] = QVBoxLayout(self.ui['wdgt']['file_pane'])
+        self.ui['wdgt']['file_tabs'] = QTabWidget()
 
-        # get asset_template types
+        # task_pane layout sublayout of file_pane
+        self.ui['wdgt']['task_widget'] = QWidget()
+        self.ui['lyt']['task_layout'] = QVBoxLayout(self.ui['wdgt']['task_widget'])
+        self.ui['wdgt']['task_tabs'] = QTabWidget()
 
-        # for each asset template type, create a tab widget for it
-        # update each asset type
-        ##self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['shot_list'],"Shots")
-        ##self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt']['asset_list'],"Assets")
-
-        # scene_pane layout
-        self.ui['lyt']['scene_layout'] = QVBoxLayout(self.ui['wdgt']['scenes_pane'])
-        self.ui['lbl']['scene_label'] = QLabel("Scenefiles")
-
+        # scene_pane layout sublayout of file_pane
+        self.ui['wdgt']['scene_widget'] = QWidget()
+        self.ui['lyt']['scene_layout'] = QVBoxLayout(self.ui['wdgt']['scene_widget'])
         self.ui['wdgt']['scene_list'] = LchrTreeList()
         self.ui['wdgt']['scene_list'].tvw.setAlternatingRowColors(True)
-        self.ui['lyt']['scene_layout'].addWidget(self.ui['lbl']['scene_label'])
-        self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
+
         self.ui['lyt']['launch_lyt'] = QHBoxLayout()
         self.ui['wdgt']['launch_btn'] = QPushButton('Launch')
-        self.ui['lyt']['launch_lyt'].addWidget(self.ui['wdgt']['launch_btn'])
-        self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
 
+        self.ui['lyt']['file_layout'].addWidget(self.ui['wdgt']['file_tabs'])
+        self.ui['lyt']['task_layout'].addWidget(self.ui['wdgt']['task_tabs'])
+        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['task_widget'],'Tasks')
+        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['scene_widget'],'Scenefiles')
+        self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
+        self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
+        self.ui['lyt']['launch_lyt'].addWidget(self.ui['wdgt']['launch_btn'])
 
 
         ## Old UI Tab View
@@ -282,25 +300,26 @@ class Launcher(QMainWindow):
         self.ui['lyt']['tab1_layout'].setStretchFactor(self.ui['wdgt']['buttons_grp'], 1)
         # self.ui['wdgt']['jobs_list_box']  = QListWidget()
 
-        # setup context menu
+        # setup app context menu
         if isAdmin():
             self.ui['wdgt']['buttons_grid'].setContextMenuPolicy(Qt.CustomContextMenu)
-            self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'],SIGNAL("customContextMenuRequested(QPoint)" ), self.list_item_menu_clicked)
+            self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'], SIGNAL("customContextMenuRequested(QPoint)" ), self.listItemMenuClicked)
 
         # connect up signals
-        self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stack_change)
-        self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.proj_change)
-        self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.disp_grp_change)
-        self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launch_app)
+        self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stackChange)
+        self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.projectComboChange)
+        self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.displayGroupComboChange)
+        self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launchApp)
 
         # connect button signals
-        self.ui['wdgt']['project_list'].titlebtn1.clicked.connect(self.show_create_job)
+        self.ui['wdgt']['project_list'].titlebtn1.clicked.connect(self.showCreateJob)
 
-        self.ui['wdgt']['launch_btn'].clicked.connect(self.launch_scenefile)
+
+        self.ui['wdgt']['launch_btn'].clicked.connect(self.launchScenefile)
 
         # set the project
         # self.ui['wdgt']['project_list'].selectionModel().selectionChanged.connect(self.proj_list_change)
-        self.ui['wdgt']['project_list'].selectionChanged.connect(self.proj_list_selection_change)
+        self.ui['wdgt']['project_list'].selectionChanged.connect(self.projectListSelectionChange)
         # set the shot object
         ## self.ui['wdgt']['shot_list'].selectionChanged.connect(self.item_list_change)
         ##self.ui['wdgt']['asset_list'].selectionChanged.connect(self.asset_list_change)
@@ -308,23 +327,23 @@ class Launcher(QMainWindow):
         elapsed_time = time.time() - START_TIME
         print("Launcher updating UI in {0} sec".format(elapsed_time))
 
-        self.update_ui()
-        self.read_settings()
+        self.updateUI()
+        self.readSettings()
 
-    def update_ui(self):
+    def updateUI(self):
         # prevent signals from being called while updating entire ui
         self.ui['wdgt']['project_combo'].blockSignals(True)
-        self.update_projects()
+        self.updateProjectsCombo()
         #self.update_disp_groups()
         #self.update_apps()
         self.ui['wdgt']['project_combo'].blockSignals(False)
 
-    def load_style(self):
+    def loadStyle(self):
         branch = 'base'
         try:
             print ("GSBRANCH={0}".format(os.environ['GSBRANCH'].split('/')[-1]))
             branch = os.environ['GSBRANCH'].split('/')[-1]
-        except:
+        except KeyError:
             pass
 
         if branch == 'dev':
@@ -337,16 +356,38 @@ class Launcher(QMainWindow):
         qstr = QString(fh.read())
         self.setStyleSheet(qstr)
 
-    def show_create_job(self):
-        d = LauncherCreateJob(self)
+    def showCreateJob(self):
+        rslt = LauncherCreateJob.doIt(self)
+        # update the project list ui
+        if rslt != '':
+            self.updateProjectsList()
+
+
+    def showCreateAsset(self):
+        d = LauncherCreateAsset(self)
         d.exec_()
 
-    def update_projects(self):
+    def showCreateTask(self):
+        d = LauncherCreateTask(self)
+        d.exec_()
+
+    def setActiveFile(self, filename):
+        """
+        this allows the active state of the ui to be set by a filepath. this allows the launcher to quickly navigate to
+        the correct project given only a recent file path.
+        :param filename: the filepath to determine the active state
+        :return:
+        """
+        # TODO ask the path parser for the asset info for the file, then update the self.active_data
+        # TODO update the ui to reflect the active data
+        return
+
+    def updateProjectsCombo(self):
         ''' this is for the old combobox project list. should be deprecated'''
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
         # new way (temp disabled) # job_list = self.controller.get_projects_list('job_share')  #
-        job_list = core.core.list_jobs('jobs')
+        job_list = core.list_jobs('jobs')
         if job_list:
             for j in sorted(job_list,key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -359,10 +400,22 @@ class Launcher(QMainWindow):
         else:
             print("Could not Find Jobs Server. Please check the path for 'Servers:jobs' in config/studio.yml")
 
+    def updateServerShares(self,share_name):
+        share_list = self.controller.getFileShares(share_name)
+        if len(share_list):
+            self.active_data['file_share'] = share_name
+            self.active_path['file_share'] = share_list[0]
+        else:
+            print ("Could not locate shares of type {0}".format(share_name))
+        self.updateProjectsList()
 
-    def update_projects_list(self):
-        #item_list = core.core.list_shots('jobs',project_name)
-        item_list = self.controller.get_projects_list('job_share')
+    def updateProjectsList(self):
+        item_list = self.controller.getProjectsList(self.active_data['file_share'])
+        # setup app context menu
+        if isAdmin():
+            self.ui['wdgt']['project_list'].setContextMenuPolicy(Qt.CustomContextMenu)
+            self.ui['wdgt']['project_list'].connect(self.ui['wdgt']['project_list'], SIGNAL("customContextMenuRequested(QPoint)" ), self.projectListContextMenuClicked)
+
         # load projects from core
         item_dict = {}
         item_dict['grp_a'] = {'name':'Recent','children':{}}
@@ -377,37 +430,57 @@ class Launcher(QMainWindow):
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt']['project_list'].loadViewModelFromDict(item_dict)
 
-    def update_asset_tabs(self,project_path):
+    def updateAssetsTabs(self, project_path):
         '''
         :param project_path: the path to the project to query for asset libraries
         :return:
         '''
         # clear any current tabs
-        self.ui['wdgt']['obj_tabs'].clear()
+        self.ui['wdgt']['asset_tabs'].clear()
+
+        self.ui['wdgt']['asset_tabs'].currentChanged.connect(self.assetTabChanged)
         # for each asset template type, create a tab widget for it
-        asset_type_list = self.controller.proj_controller.get_asset_type_list()
+        asset_type_list = self.controller.proj_controller.getAssetTypeList()
         # update each asset type
+        START_TIME = time.time()
         for asset_type, dname in asset_type_list:
             # create the widget if it doesn't exist
             if not asset_type in self.ui['wdgt']:
                 self.ui['wdgt'][asset_type] = LchrTreeList()
                 self.ui['wdgt'][asset_type].tvw.setIndentation(15)
                 self.ui['wdgt'][asset_type].tvw.setRootIsDecorated(True)
-                self.ui['wdgt'][asset_type].selectionChanged.connect(self.item_list_change)
+                self.ui['wdgt'][asset_type].selectionChanged.connect(self.assetListChange)
                 self.ui['wdgt'][asset_type].setFilterParents(True)
+                self.ui['wdgt'][asset_type].asset_type = asset_type
+                print "setting current path to {0}".format(dname)
+                # TODO current_path should store the asest lib path by calling pathParser
+                self.ui['wdgt'][asset_type].current_path = ''
+                self.ui['wdgt'][asset_type].tvw.setAlternatingRowColors(True)
+                self.ui['wdgt'][asset_type].titlebtn1.clicked.connect(self.showCreateAsset)
 
-            self.ui['wdgt'][asset_type].tvw.setAlternatingRowColors(True)
-            self.ui['wdgt']['obj_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
+            self.ui['wdgt']['asset_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
+            self.updateAssetList(project_path, asset_type)
 
+        elapsed_time = time.time() - START_TIME
+        print("core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
 
-            self.update_items_list(project_path, asset_type)
+        self.assetTabChanged(0)
 
-    def update_items_list(self,project_path, asset_type):
+    def assetTabChanged(self, i):
+
+        vis_item = self.ui['wdgt']['asset_tabs'].currentWidget()
+        if vis_item:
+            self.active_path['asset_type'] = vis_item.current_path
+            self.active_data['asset_type'] = vis_item.asset_type
+        return
+
+    def updateAssetList(self, project_path, asset_type):
         #item_list = core.core.list_shots('jobs',project_name)
 
         # get top level assets
-        item_tuple = self.controller.proj_controller.get_assets_list(project_path, asset_type, '')
+        item_tuple = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
         # load projects from core
+
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
         for item in sorted(item_tuple[1]):
@@ -430,28 +503,84 @@ class Launcher(QMainWindow):
         print ("Asset_Type:{0} Asset_Data{1}".format(asset_type,item_tuple))
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt'][asset_type].loadViewModelFromDict(item_dict)
+        self.ui['wdgt'][asset_type].current_path = item_tuple[0]
 
-    def update_assets_list(self,project_path, asset_type):
-        #item_list = core.core.list_assets('jobs',project_name)
-        item_list = self.controller.proj_controller.get_assets_list(project_path, asset_type)
+    def updateTaskTabs(self, project_path, asset_path):
+        '''
+        :param project_path: the path to the project to query for asset libraries
+        :return:
+        '''
+        # clear any current tabs
+        self.ui['wdgt']['task_tabs'].clear()
+
+        self.ui['wdgt']['task_tabs'].currentChanged.connect(self.taskTabChanged)
+        # for each asset template type, create a tab widget for it
+        task_type_list = self.controller.proj_controller.getTaskTypeList(asset_path)
+        print ('task_type_list={0}'.format(task_type_list))
+        # update each asset type
+        for task_type in task_type_list[1]:
+            # create the widget if it doesn't exist
+            if not task_type in self.ui['wdgt']:
+                self.ui['wdgt'][task_type] = LchrTreeList()
+                self.ui['wdgt'][task_type].tvw.setIndentation(15)
+                self.ui['wdgt'][task_type].tvw.setRootIsDecorated(True)
+                self.ui['wdgt'][task_type].selectionChanged.connect(self.taskListChanged)
+                self.ui['wdgt'][task_type].setFilterParents(True)
+                self.ui['wdgt'][task_type].task_type = task_type
+                self.ui['wdgt'][task_type].current_path = ''
+
+            self.ui['wdgt'][task_type].tvw.setAlternatingRowColors(True)
+            self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt'][task_type],task_type.title())
+            self.ui['wdgt'][task_type].titlebtn1.clicked.connect(self.showCreateTask)
+            self.updateTaskList(task_path=asset_path, task_type=task_type)
+
+        self.taskTabChanged(0)
+
+    def taskTabChanged(self, i):
+
+        vis_item = self.ui['wdgt']['task_tabs'].currentWidget()
+        if vis_item:
+            self.active_path['task'] = vis_item.current_path
+            self.active_data['task'] = vis_item.task_type
+        return
+
+    def updateTaskList(self, task_path='', task_type=''):
+        #item_list = core.core.list_shots('jobs',project_name)
+
+        # get top level list of packages for the given task
+        item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, upl='', task_type=task_type)
         # load projects from core
         item_dict = {}
-        item_dict['a_all'] = {'name':'A-Z','children':{}}
-        item_dict['b_char'] = {'name':'Characters','children':{}}
-        item_dict['c_props'] = {'name':'Props','children':{}}
-        item_dict['d_sets'] = {'name':'Sets','children':{}}
-        for item in sorted(item_list):
-            key = item.split('/')[-1]
-            item_dict['a_all']['children'][key] = {}
-            item_dict['a_all']['children'][key]['name'] = key
-            item_dict['a_all']['children'][key]['filepath'] = item
-            item_dict['a_all']['children'][key]['status'] = "Active"
+        #item_dict[asset_type] = {'name':asset_type,'children':{}}
+        for item in sorted(item_tuple[1]):
+            split_name = item.split('/')
+            if not split_name[0] in item_dict:
+                item_dict[split_name[0]] = {}
+                item_dict[split_name[0]]['name'] = split_name[0]
+                item_dict[split_name[0]]['filepath'] = '/'.join([item_tuple[0],split_name[0]])
+                item_dict[split_name[0]]['status'] = "Active"
+                item_dict[split_name[0]]['is_group'] = False
+                item_dict[split_name[0]]['children'] = {}
+            if len(split_name) > 1:
+                item_dict[split_name[0]]['is_group'] = True
+                item_dict[split_name[0]]['children'][split_name[1]] = {}
+                item_dict[split_name[0]]['children'][split_name[1]]['name'] = split_name[1]
+                item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
+                item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
+                item_dict[split_name[0]]['children'][split_name[1]]['is_group'] = False
 
-        self.ui['wdgt']['asset_list'].loadViewModelFromDict(item_dict)   
-        
-    def update_scenes_list(self, asset_path):
+        print ("Task_Type:{0} Task_Data{1}".format(task_type,item_tuple))
+        # loads the above dictionary into a treeview as standard items
+        self.ui['wdgt'][task_type].loadViewModelFromDict(item_dict)
+        self.ui['wdgt'][task_type].current_path = item_tuple[0]
+        return
 
-        item_list = self.controller.proj_controller.get_scenes_list(upl=asset_path, file_types='mb')
+    def taskListChanged(self):
+        return
+
+    def updateScenesList(self, asset_path):
+
+        item_list = self.controller.proj_controller.getScenesList(filepath=asset_path, file_types='mb')
 
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
@@ -468,7 +597,7 @@ class Launcher(QMainWindow):
 
         self.ui['wdgt']['scene_list'].loadViewModelFromDict(item_dict)   
 
-    def get_project_config(self, project='',config_type='workgroup'):
+    def getProjectConfig(self, project='', config_type='workgroup'):
 
         proj_config = os.path.join(STUDIO['servers']['jobs']['root_path'],project,"03_production",".pipeline","config","{0}.yml".format(config_type))
         #print ("Testing Project Config = {0}".format(proj_config))
@@ -478,8 +607,8 @@ class Launcher(QMainWindow):
             #print ("GS Launcher: loading local project {1} config:{0}").format(found_config,config_type)
         return found_config 
 
-    def append_config_file(self, filepath, config_type):
-        dataMap = self.get_config_file(filepath)
+    def appendConfigFile(self, filepath, config_type):
+        dataMap = self.getConfigFile(filepath)
         origMap = None
         if config_type == 'app':
             origMap = self.a_data
@@ -488,23 +617,23 @@ class Launcher(QMainWindow):
         if type(origMap) == type(dict()):
             print ("Appending Config File = {0}".format(filepath))
             # need to parse the new datamap and only overwrite key,value pairs, do not overwrite entire key,dict pairs
-            self.config_merge(origMap,dataMap)
+            self.configMerge(origMap, dataMap)
 
             #origMap.update(dataMap)
 
-    def config_merge(self, orig_dict, new_dict):
+    def configMerge(self, orig_dict, new_dict):
         #print new_dict
         for key, val in new_dict.iteritems():
             if key in orig_dict:
                 if type(val) == type(dict()):
-                    self.config_merge(orig_dict[key],val)
+                    self.configMerge(orig_dict[key], val)
                 else:
                     orig_dict[key] = val
             else:
                 orig_dict[key] = val
 
 
-    def get_config_file(self,filepath):
+    def getConfigFile(self, filepath):
         f = open(filepath)
         # use safe_load instead load
         dataMap = yaml.load(f, Loader=yaml.CLoader)
@@ -512,7 +641,7 @@ class Launcher(QMainWindow):
         #print ("Loaded Config File = {0}".format(filepath))
         return dataMap
 
-    def load_project_config(self,project_name):
+    def loadProjectConfig(self, project_name):
         #print ("CHECKING FOR NEW CONFIG")
         wrkgrp_config = CONFIG+'/workgroups.yml'
         app_config = CONFIG+'/app.yml'
@@ -540,30 +669,30 @@ class Launcher(QMainWindow):
         ##self.w_data = yaml.safe_load(f)
         ##f.close()
 
-        self.w_data = self.get_config_file(wrkgrp_config)
-        proj_workgrp = self.get_project_config(project_name,'workgroups')
+        self.w_data = self.getConfigFile(wrkgrp_config)
+        proj_workgrp = self.getProjectConfig(project_name, 'workgroups')
         if (os.path.isfile(proj_workgrp)):
             #print ("Found Project Workgroup Config = {0}".format(proj_workgrp))
-            self.append_config_file(proj_workgrp,'workgroups')
+            self.appendConfigFile(proj_workgrp, 'workgroups')
         
         ###load the modules dictionary
         ##f = open(CONFIG+"/modules.yml")
         ##MODULES = yaml.safe_load(f)
         ##f.close()
-        self.m_data = self.get_config_file(mod_config)
+        self.m_data = self.getConfigFile(mod_config)
         
         ###load the workgroups dictionary
         ##f = open(app_config)
         ##self.a_data = None
         ##self.a_data = yaml.safe_load(f)
         ##f.close()
-        self.a_data = self.get_config_file(app_config)
-        proj_app = self.get_project_config(project_name,'app')
+        self.a_data = self.getConfigFile(app_config)
+        proj_app = self.getProjectConfig(project_name, 'app')
         if (os.path.isfile(proj_app)):
             #print ("Project App Config = {0}".format(proj_app))
-            self.append_config_file(proj_app,'app')
+            self.appendConfigFile(proj_app, 'app')
 
-    def set_project_combo(self, project_name):
+    def setProjectCombo(self, project_name):
         try:
             #print ('Setting to Project: '+project_name)  
             #print (self.ui['wdgt']['project_combo'].currentText())
@@ -575,7 +704,7 @@ class Launcher(QMainWindow):
     
             # if project didn't change, still fire a signal so that the ui is updated
             if (old_p == project_name):
-                self.proj_change(index)
+                self.projectComboChange(index)
     
             #self.load_project_config(project_name)
             #self.update_disp_groups()
@@ -583,7 +712,7 @@ class Launcher(QMainWindow):
         except:
             print ('Project: {0} not found'.format(project_name))
 
-    def update_disp_groups(self, workgroup='default', project='default'):
+    def updateDisplayGroups(self, workgroup='default', project='default'):
         # todo: after project is set, check for workgroups to merge
         # clear the item model and init a new one
         # get the current value for restoring value after refresh
@@ -602,7 +731,7 @@ class Launcher(QMainWindow):
         else:
             print("Could not Find Workgroups. Please check in config/workgroups.yml")
 
-    def set_disp_grp(self, display_grp):
+    def setDisplayGroup(self, display_grp):
         #print 'Setting to Workgroup: {0}'.format(display_grp)
         try:
             index = self.ui['wdgt']['dispgroup_combo'].findText(display_grp)
@@ -611,7 +740,7 @@ class Launcher(QMainWindow):
         except:
             print 'Display Group: {0} not found'.format(display_grp)
 
-    def update_apps(self, workgroup='default', display_grp='Generalist'):
+    def updateAppsList(self, workgroup='default', display_grp='Generalist'):
         self.app_layouts.clear();
 
         # resize the launcher window based on the amount of apps to show
@@ -665,9 +794,12 @@ class Launcher(QMainWindow):
                 else:
                     value = os.path.join(RES, ("gs.png"))
 
+                #print 'dev: loading image: {0}'.format(value)
+
                 key = "image:%s"% value
                 pixmap = QPixmap()
                 if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
+
                     pixmap = QPixmap(value)
                     QPixmapCache.insert(key, pixmap)
 
@@ -690,9 +822,9 @@ class Launcher(QMainWindow):
                     self.app_layouts[package_full].setToolTip(tooltip+' (Not Installed)')
                     #self.appLayouts[package].setEnabled(False)
 
-    def list_item_menu_clicked(self, QPos):
+    def listItemMenuClicked(self, QPos):
         self.item_menu= QMenu()
-        # HACK: need to replace this with actual data reference not using the UI label as a keyname
+        # TODO HACK: need to replace this with actual data reference not using the UI label as a keyname
         
         item = currentItemName=self.ui['wdgt']['buttons_grid'].currentItem()
         currentItemName=str(item.text())
@@ -708,7 +840,7 @@ class Launcher(QMainWindow):
 
         menu_item = {}
         menu_item['launch'] = self.item_menu.addAction("Launch {0}".format(currentItemName))
-        self.connect(menu_item['launch'], SIGNAL("triggered()"), lambda: self.menu_item_clicked(cmd='launch',package=package,version=''))
+        self.connect(menu_item['launch'], SIGNAL("triggered()"), lambda: self.menuItemClicked(cmd='launch', package=package, version=''))
         self.ver_menu = self.item_menu.addMenu('Versions')
         self.item_menu.addSeparator()
         #menu_item['config'] = self.item_menu.addAction("Config")
@@ -716,81 +848,91 @@ class Launcher(QMainWindow):
         # add alt versions
         for ver in sorted(self.a_data[app]['versions'],key=lambda v: v.upper()):
             menu_item[(package+"_"+ver)] = self.ver_menu.addAction(ver)
-            self.connect(menu_item[(package+"_"+ver)], SIGNAL("triggered()"), functools.partial(self.menu_item_clicked,'launch',package,ver))
+            self.connect(menu_item[(package+"_"+ver)], SIGNAL("triggered()"), functools.partial(self.menuItemClicked, 'launch', package, ver))
 
-        # add alt modes
-
+        # TODO add alt modes
         parentPosition = self.ui['wdgt']['buttons_grid'].mapToGlobal(QPoint(0, 0))        
         self.item_menu.move(parentPosition + QPos)
         self.item_menu.show()
 
-    def menu_item_clicked(self, cmd='', package='', version=''):
+    def menuItemClicked(self, cmd='', package='', version=''):
         currentItemName=str(self.ui['wdgt']['buttons_grid'].currentItem().text())
         action = self.sender()
         if cmd == 'launch':
             if version == '':
-                self.launch_app(self.ui['wdgt']['buttons_grid'].currentItem())
+                self.launchApp(self.ui['wdgt']['buttons_grid'].currentItem())
             else:
-                self.launch_app(item=self.ui['wdgt']['buttons_grid'].currentItem(), version=version)
+                self.launchApp(item=self.ui['wdgt']['buttons_grid'].currentItem(), version=version)
         
         print("item={0} cmd={1} package={2} version={3}".format(currentItemName,cmd,package,version))
 
-    def proj_change(self, i):
+    def projectComboChange(self, i):
         # check for project config file and merge config if it exists
         
         p = str(self.ui['wdgt']['project_combo'].currentText())
         self.p_data['project_name'] = p
-        self.load_project_config(p)
+        self.loadProjectConfig(p)
         d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
         # update display groups but don't execute signals
         self.ui['wdgt']['dispgroup_combo'].blockSignals(True)
-        self.update_disp_groups()
-        self.set_disp_grp(d_grp)
+        self.updateDisplayGroups()
+        self.setDisplayGroup(d_grp)
         d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
         self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
-        self.update_apps(display_grp=d_grp)
+        self.updateAppsList(display_grp=d_grp)
 
 
 ############
-    def proj_list_selection_change(self, selected, deselected):
+    def projectListSelectionChange(self, selected, deselected):
         ''' this updates the current project '''
 
         items = self.ui['wdgt']['project_list'].getSelectedItems()
         for i in items:
             print 'sel_item:{0}'.format(i.text())
         if len(items):
-            p = str(items[1].text())
-            print ('setting project to {0}'.format(p))
+            p_name = str(items[0].text())
+            p_path = str(items[1].text())
+            print ('setting project to {0}'.format(p_path))
 
             # this appears to be a little slow!
-            # self.load_project_config(p)
+            self.loadProjectConfig(p_path)
             #self.set_project_combo(p)
-            self.p_data['project_name'] = p
+            self.p_data['project_name'] = p_path
             d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
             # update display groups but don't execute signals
             self.ui['wdgt']['dispgroup_combo'].blockSignals(True)
-            self.update_disp_groups()
-            self.set_disp_grp(d_grp)
+            self.updateDisplayGroups()
+            self.setDisplayGroup(d_grp)
             d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
             self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
-            self.update_apps(display_grp=d_grp)
+            self.updateAppsList(display_grp=d_grp)
 
 
             # check if its an old project struct
-            if os.path.isdir('{0}/03_production'.format(p)):
+            if os.path.isdir('{0}/03_production'.format(p_path)):
                 config_path = '{0}/projects_old.yml'.format(CONFIG)
-                self.controller.proj_controller.set_config(config_path)
+                self.controller.proj_controller.setConfig(config_path)
             else:
                 config_path = '{0}/projects.yml'.format(CONFIG)
-                self.controller.proj_controller.set_config(config_path)
+                self.controller.proj_controller.setConfig(config_path)
+
+            #update selected dict
+            self.active_data['job'] = p_name
+            self.active_path['job'] = p_path
 
             #self.update_items_list(p,'shot_3d')
-            #self.update_assets_list(p,'asset_3d')
-            self.update_asset_tabs(p)
+            #self.update_assets_list(p,'asset_3d')`
+            self.updateAssetsTabs(p_path)
 
-    def item_list_change(self, selected, deselected):
+
+            #{
+            #    'server': '//{0}'.split(p_path)[0],
+            #    'project': str(p_name)
+            #}
+
+    def assetListChange(self, selected, deselected):
         ''' slot receiver for asset_list selection changes signal
 
         :param selected: QItemSelection new selection
@@ -805,61 +947,98 @@ class Launcher(QMainWindow):
             src_index = item_indx[1].model().mapToSource(item_indx[1])
             item =  item_indx[1].model().sourceModel().itemFromIndex(src_index)
             s = str(item.text())
-            print ('setting shot to {0}'.format(s))
-            self.update_scenes_list(s)
+            print ('Setting shot/asset to {0}'.format(s))
+            self.active_data['asset'] = s
+            # TODO set active_path  asset correctly
+            #self.active_path['asset'] =
+            self.updateScenesList(s)
+            self.updateTaskTabs(self.active_path['job'],self.active_data['asset'])
         else:
             print ('Selection Empty')
 
-    def asset_list_change(self, selected, deselected):
-        items = self.ui['wdgt']['asset_list'].getSelectedItems()
-        if len(items):
-            s = str(items[1].text())
-            print ('setting asset to {0}'.format(s))
-            self.update_scenes_list(s)
-        else:
-            print ('Selection Empty')
-
-    def disp_grp_change(self, i):
+    def displayGroupComboChange(self, i):
         # check for project config file and merge config if it exists
         display_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
         if display_grp == '':
             display_grp = 'generalist'
-        self.update_apps(display_grp=display_grp)
+        self.updateAppsList(display_grp=display_grp)
         # clear widget layout
 
 
-    def stack_change(self):
+    def stackChange(self):
         sender = self.sender()
         page = str(sender.currentItem().text())
         self.ui['wdgt']['stack_widget'].setCurrentIndex(self.ui['lyt']['stack_layouts'][page].page_index)
 
-    def toggle_launch_stat(self, widget, text):
+    def toggleLaunchStatus(self, widget, text):
         widget.setText(text)
 
-    def launch_scenefile(self):
+    def projectListContextMenuClicked(self, QPos):
+        self.proj_menu = QMenu()
+
+        # get the list item that is selected
+        # TODO HACK: need to replace this with actual data reference not using the UI label as a keyname
+
+        menu_item = {}
+        menu_item['config_job'] = self.proj_menu.addAction("Configure Job")
+        self.proj_menu.addSeparator()
+        menu_item['add_stage'] = self.stage_menu = self.proj_menu.addMenu('Add Project Stage')
+        stages = self.controller.proj_controller.getStageList()
+        for stage in stages:
+            menu_item[stage[0]] = self.stage_menu.addAction("Add {0}".format(stage[1]))
+        menu_item['rename'] = self.proj_menu.addAction("Rename Job")
+        menu_item['clone'] = self.proj_menu.addAction("Duplicate Job")
+        self.proj_menu.addSeparator()
+        menu_item['explore'] = self.proj_menu.addAction("Open in Explorer")
+
+        parentPosition = self.sender().mapToGlobal(QPoint(0, 0))
+        self.proj_menu.move(parentPosition + QPos)
+        self.proj_menu.show()
+
+    def projectListMenuItemClicked(self, cmd='', package='', version=''):
+        currentItemName = str(self.ui['wdgt']['buttons_grid'].currentItem().text())
+        action = self.sender()
+        if cmd == 'launch':
+            if version == '':
+                self.launchApp(self.ui['wdgt']['buttons_grid'].currentItem())
+            else:
+                self.launchApp(item=self.ui['wdgt']['buttons_grid'].currentItem(), version=version)
+
+        print("item={0} cmd={1} package={2} version={3}".format(currentItemName, cmd, package, version))
+
+    def launchScenefile(self):
         ''' launches the selected scenefile in the scenefile list'''
+
+        btn = self.sender()
+
+        initials = str(self.ui['wdgt']['initials_le'].text())
+        project = '' # = str(self.ui['wdgt']['project_combo'].currentText())
+        workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
+
         # get the filepath from teh scenefile list
         item = self.ui['wdgt']['scene_list'].getSelectedItems()
         print "ITEM={0}".format(item)
         filepath = str(item[1].text())
         #print 'UI Launching {0} version: {1}'.format(app,version)
         print "Launching Filepath={0}".format(filepath)
-        launcher.launch_app(app='', mode='ui', filepath=filepath)
+        launcher.launch_app(app='', workgroup=workgroup, initials=initials,  mode='ui', project=project, filepath=filepath)
 
         text = str(self.sender().text())
-        self.sender().setText("Starting...")
+        btn.setText("Starting...")
         test_timer = QTimer()
-        test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.sender(), text))
+        test_timer.singleShot(4000, lambda: self.toggleLaunchStatus(btn, text))
 
-        self.add_recent_project(project)
+        self.addRecentProject(project)
 
-    def launch_app(self, item, app='', version='', mode='ui'):
+    def launchApp(self, item, app='', version='', mode='ui'):
 
         initials = str(self.ui['wdgt']['initials_le'].text())
+        # TODO needs to be the whole path to the share in the new pipeline
         project = str(self.ui['wdgt']['project_combo'].currentText())
         workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
         button = ''
         button_name = ''
+        filepath=''
 
         #print ('item: {0} app:{1} version:{2} mode:{3}'.format(item, app, version,mode))
         for name, button in self.app_layouts.iteritems():
@@ -883,17 +1062,17 @@ class Launcher(QMainWindow):
         text = str(self.app_layouts[button_name].text())
         self.app_layouts[button_name].setText("Starting...")
         test_timer = QTimer()
-        test_timer.singleShot(4000, lambda: self.toggle_launch_stat(self.app_layouts[button_name], text))
+        test_timer.singleShot(4000, lambda: self.toggleLaunchStatus(self.app_layouts[button_name], text))
 
-        self.add_recent_project(project)
+        self.addRecentProject(project)
 
         return
 
-    def install_app(self):
+    def installApp(self):
         pass
 
 
-    def toggle_launching():
+    def toggleLaunching():
         # if is loading is true 
         if (self.isLaunching):
             # get the app and set its icon to normal
@@ -913,7 +1092,7 @@ class Launcher(QMainWindow):
 
 
 
-    def init_settings(self):
+    def initSettings(self):
         print ('Loading settings...')
         try:
             self.settings.setValue('prev_project1', '')
@@ -925,13 +1104,13 @@ class Launcher(QMainWindow):
         except:
             print "Unable to Initialize Launcher Settings"
 
-    def add_recent_project(self,project):
+    def addRecentProject(self, project):
         self.settings.setValue('prev_project4', self.settings.value('prev_project3'))
         self.settings.setValue('prev_project3', self.settings.value('prev_project2'))
         self.settings.setValue('prev_project2', self.settings.value('prev_project1'))
         self.settings.setValue('prev_project1', project)        
 
-    def save_settings(self):
+    def saveSettings(self):
 
         print ('Saving settings...')
         try:
@@ -945,18 +1124,18 @@ class Launcher(QMainWindow):
         except:
             print "Unable to save settings"
 
-    def read_settings(self):
+    def readSettings(self):
         print ("loading user settings")
         try:
             initials = str(self.settings.value('initials',type=str))
             project = str(self.settings.value('prev_project1',type=str))
             display_grp = str(self.settings.value('role',type=str))
-            self.set_project_combo(project)
+            self.setProjectCombo(project)
             self.ui['wdgt']['initials_le'].setText(initials)
-            self.set_disp_grp(display_grp)
+            self.setDisplayGroup(display_grp)
         except:
             "initializing settings"
-            self.init_settings()
+            self.initSettings()
 
         print ("checking active directory for initials")
         #try:
@@ -966,9 +1145,9 @@ class Launcher(QMainWindow):
        #    print ("could not connect to active directory")
        #    pass
 
-    def close_event(self, event):
+    def closeEvent(self, event):
         #print ('Running close event')
-        self.save_settings()
+        self.saveSettings()
 
 
 

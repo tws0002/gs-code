@@ -3,9 +3,10 @@ __author__ = 'aburke'
 # import os,sys
 from glob import glob
 
+from settings import *
 import paths
 import projects
-from settings import *
+
 
 
 # from subprocess import Popen, PIPE, STDOUT
@@ -37,7 +38,7 @@ class CoreController():
 
         # load up list of jobs found in project shares
 
-    def get_file_shares(self, share_type):
+    def getFileShares(self, share_type):
         share_paths = []
         for share in STUDIO['servers']:
             if share_type == '':
@@ -47,18 +48,15 @@ class CoreController():
                     share_paths.append(STUDIO['servers'][share]['root_path'])
         return share_paths
 
-    def get_projects_list(self, proj_type):
+    def getProjectsList(self, proj_type):
         result = []
-        file_share_list = self.get_file_shares('job_share')
+        file_share_list = self.getFileShares('job_share')
         for j in sorted(file_share_list,key=lambda v: v.upper()):
             for name in os.listdir(j):
                 fp = '/'.join([j,name])
                 if os.path.isdir(fp) and not name.startswith('.') and not name.startswith('_'):
                     result.append(fp)
         return result
-
-
-
 
 
 
@@ -69,8 +67,8 @@ def main():
 
 
     # test the load matching
-    self.core_parser.test_file_paths()
-    self.core_parser.test_dict_to_path()
+    #self.core_parser.testFilePaths()
+    #self.core_parser.testDictToPath()
 
     return
 

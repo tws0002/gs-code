@@ -20,13 +20,15 @@ departments:
 - compositing
 - edit
 tasks:
-- edit
-- model
-- camera
-- animation
-- lighting
-- composite
 - conform
+- model
+- rig
+- shade
+- camera
+- anim
+- effects
+- light
+- comp
 status:
 - 'waiting'
 - 'ready to start'
@@ -38,160 +40,171 @@ status:
 - 'on hold'
 - 'dead'
 # generic defined variables that can be substituted below by wrapping in %% characters
+
+# need a way to explicitly mark a stage as such, but also to capture that stage name
 path_vars:
   project_root: '<server>/projects/<job>'
 
 project_templates:
     'basic':
-        project_root: '<server>/projects/<job>'
-        copy_tree: '<server>/projects/templates/project_template_2018/job_basic'
+        display_name: 'GS 2018 Project'
+        pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)'
+        match_path: '<server>/projects/<job>'
+        capture_path: '<server>/<share>/<job>'
+        copy_tree: '<server>/projects/_templates/project_template_2018/job_basic'
 stage_templates:
     'pitch':
-        root_path: '<server>/projects/<job>/<stage>'
-        copy_tree: '<server>/projects/templates/project_template_2018/stage_basic'
+        display_name: 'Pitch'
+        pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)/(?P<stage>pitch)'
+        match_path: '<server>/projects/<job>/pitch'
+        capture_path: '<server>/<share>/<job>/<stage>'
+        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
     'previs':
-        root_path: '<server>/projects/<job>/<stage>'
-        copy_tree: '<server>/projects/templates/project_template_2018/stage_basic'
+        display_name: 'Previs'
+        match_path: '<server>/projects/<job>/previs'
+        capture_path: '<server>/<share>/<job>/previs'
+        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
     'production':
-        root_path: '<server>/projects/<job>/<stage>'
-        copy_tree: '<server>/projects/templates/project_template_2018/stage_basic'
+        display_name: 'Production'
+        match_path: '<server>/projects/<job>/production'
+        capture_path: '<server>/<share>/<job>/<stage>'
+        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
 
 # defines template paths that can be inherited to task_structs, this saves space with common paths
 asset_templates:
+  'asset_2d':
+    display_name: 'Elements'
+    match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
+    capture_path: '<server>/projects/<job>/<stage>/assets/<asset_grp>/<asset>'
+    lib_path: '<server>/projects/<job>/production/assets'
+    copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
+    default_tasks: 'comp'
+    qualifier_path: '.info' # qualifies if path contains this subfolder
+    ignore_path: ''
   'shot':
     display_name: 'Shots'
-    lib_path: '<server>/projects/<job>/production/shots'
-    root_path: '<server>/projects/<job>/<stage>/shots/<shot>'
-    copy_tree: '<server>/assets/templates/project_template_2018/asset_basic'
-    work_path: '%root_path%'
-    work_file: '<shot>_<cversion>_<aversion>_<lversion>_<initials>.<ext>'
-    publish_path: '%work_path%'
-    publish_file: '%work_file%'
-    private_path: '%work_path%/_scrap'
-    private_file: '%work_file%'
-    cache_path: '%work_path%/_cache'
-    cache_file: '%work_file%'
-    renderscene_path: '%root_path%/muster_renderScenes'
-    renderscene_file: '<shot>_<task>_<version>_T_<stime>.<ext>'
-    render_path: '<server>/projects/<job>/<stage>/01_cg/01_MAYA/images/<shot>/%work_file%/<renderlayer>'
-    render_file: '<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>'
+    match_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
+    capture_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
+    lib_path: '<server>/<share>/<job>/<stage>/shots'
+    copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: 'roto,track,anim,comp'
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
   'asset_3d':
     display_name: 'Assets'
-    lib_path: '<server>/projects/<job>/production/assets/3d'
-    root_path: '<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>'
-    copy_tree: '<server>/assets/templates/project_template_2018/asset_basic'
-    work_path: '%root_path%'
-    #work_file: '<asset>_<version>_<intials>.<ext>'
-    publish_path: '%root_path%'
-    publish_file: '<asset>.<ext>'
-    private_path: '%root_path%/_scrap'
-    private_file: '%work_file%'
-    cache_path: '%root_path%/_cache'
-    cache_file: <publish_file>
-    renderscene_path: '%root_path%/mustache_renderScenes'
-    renderscene_file: '<asset>_<version>_T_<stime>'
-    render_path: '<server>/projects/<job>/03_production/01_cg/01_MAYA/images/assets/<asset>'
-    render_file: '<asset>_<version>.<ext>'
+    match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
+    capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
+    lib_path: '<server>/<share>/<job>/<stage>/assets/3d'
+    copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
+    default_tasks: 'model,rig,shade'
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
-  'asset_2d':
-    display_name: 'Elements'
-    lib_path: '<server>/projects/<job>/production/assets'
-    root_path: '<server>/projects/<job>/<stage>/assets/<asset_group>/<asset>'
-    copy_tree: '<server>/assets/templates/project_template_2018/asset_basic'
-    publish_path: '%root_path%'
-    private_path: '%root_path%/<asset_group>/<asset>/work_<username>'
-    work_path: '%root_path%'
-    work_file: '<sequence>_<shot>_<task>_<version>.<ext>'
-    out_render_path: '<server>/projects/<job>/<stage>/renders/<sequence>/<shot>/<task>/<version>'
-    out_render_file: '<asset>_<version>.<ext>'
-    default_tasks: ''
-    qualifier_path: '.info' # qualifies if path contains this subfolder
-    ignore_path: ''
+    default_tasks: 'anim,light,comp'
 
-# Defines file locations specific to tasks
+# Defines file locations specific to tasks, %parent_path% is a defined by asset_templates 
+
+# to find the task of a given path we must build our master list of match_paths and capture_paths (for each asset_type append each task)
 task_templates: 
-  'design':
-    root_path: '<server>/projects/<job>/02_design'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/work.<initials>/02_styleframes'
-    work_file: '<job>_<initials>_<frame>.<ext>'
-    publish_path: '%root_path%/_publish'
-    private_path: '%root_path%/work_<username>'
-  'edit':
-    root_path: '<server>/projects/<job>/03_production/03_edit'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    publish_path: '%root_path%/_publish'
-    private_path: '%root_path%/work_<username>'
-    out_file: '<job>_<task>_<version>.<ext>'
   'conform':
-    root_path: '<server>/projects/<job>/03_production/02_composite/_conform'
+    display_name: 'Conform'
+    match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
+    capture_path: '<server>/<share>/<job>/<stage>/edit/_<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%'
-    work_file: '<job>_<task>_<version>.<ext>'
-    publish_path: '%root_path%/_publish'
-    publish_file: '%work_file%'
-    private_path: '%root_path%/work_<username>'
-    private_file: '%work_file%'
-    render_path: '<server>/projects/<job>/04_Renders/_conform/<version>'
+    package_root: '%match_path%'
+    publish_path: '%match_path%/_publish'
+    render_path: '<server>/projects/<job>/production/render/_conform/<version>'
     render_file: '<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>'
   'model':
-    inherits: 'asset_3d'
+    display_name: 'Model'
+    match_path: '%parent_path%/model'
+    capture_path: '%parent_path%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/_versions'
-    work_file: '<asset>_<version>_<intials>.<ext>'
-  'shade':
-    inherits: 'asset_3d'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/_versions'
-    work_file: '<asset>_<version>_<intials>.<ext>'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
   'rig':
-    inherits: 'asset_3d'
+    match_path: '%parent_path%/rig'
+    capture_path: '%parent_path%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/_versions'
-    work_file: '<asset>_<version>_<intials>.<ext>'
-  'camera':
-    inherits: 'shot_3d'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
+  'shade':
+    match_path: '%parent_path%/shade'
+    capture_path: '%parent_path%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/cameras'
-    work_file: '<shot>_<version>_<aversion>_<lversion>_<initials>.<ext>'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
   'anim':
-    inherits: 'shot_3d'
+    match_path: '%parent_path%/anim'
+    capture_path: '%parent_path%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    work_path: '%root_path%/animation'
-    work_file: '<shot>_<cversion>_<version>_<lversion>_<initials>.<ext>'
-  'light':
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    inherits: 'shot_3d'
-    work_path: '%root_path%/lighting'
-    work_file: '<shot>_<cversion>_<aversion>_<version>_<initials>.<ext>'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
   'effects':
+    match_path: '%parent_path%/effects'
+    capture_path: '%parent_path%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    inherits: 'shot_3d'
-    work_path: '%root_path%/lighting'
-    work_file: '<shot>_<cversion>_<aversion>_<version>_<initials>.<ext>'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
+  'light':
+    match_path: '%parent_path%/light'
+    capture_path: '%parent_path%/<task>'
+    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
   'comp':
-    inherits: 'shot_2d'
-    work_file: '<sequence>_<shot>_<task>_<version>.<ext>'
+    match_path: '%parent_path%/comp'
+    capture_path: '%parent_path%/<task>'
+    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
   'cel':
-    inherits: 'shot_2d'
-    work_file: '<sequence>_<shot>_<task>_<version>.<ext>'
+    match_path: '%parent_path%/comp'
+    capture_path: '%parent_path%/<task>'
+    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%parent_path%/_publish'
 
+# defines package paths relative to the base of a task, %parent_path% is a predefined var
 package_templates:
   'maya':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/maya'
+    work_path: '%root_path%/scenes'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'c4d':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/c4d'
+    work_path: '%package_root%/scenes'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'houdini':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/houdini'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'modo':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/modo'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'zbrush':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/zbrush'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+  'nuke':
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/assets/templates/project_template_2018/packages/nuke'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'ae':
+    capture_path: '%package_root%/<package>'
     copy_tree: '<server>/assets/templates/project_template_2018/packages/ae'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
   'premiere':
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/ae'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/assets/templates/project_template_2018/packages/premiere'
+    work_path: '%root_path%'
+    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+
+

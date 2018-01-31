@@ -45,10 +45,12 @@ def gs_restore_pwd():
     m_install = ''
     try:
         m_install = os.environ['ST_MAYA_DIR']
-        os.chdir(m_install)
+        if os.path.isdir(m_install):
+            os.chdir(m_install)
         cmds.evalDeferred("import os;os.chdir('{0}')".format(m_install), lowestPriority=False)
     except:
-        os.chdir(m_install)
+        if os.path.isdir(m_install):
+            os.chdir(m_install)
         cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')", lowestPriority=False)
 
 def gs_pluginLoad(plugin=''):
@@ -187,7 +189,8 @@ def init():
     if not cmds.about(batch=True):
         cmds.evalDeferred("gs_autoload(local_only=True)")
         gs_restore_pwd()
-        cmds.evalDeferred("initMustache()")
+        # auto init disabled in new pipeline
+        # cmds.evalDeferred("initMustache()")
         cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
     else:
         # maya doesn't properly add the requires flag to scenefiles for these plugins, so we have to force it to load in batchmode

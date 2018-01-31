@@ -15,32 +15,32 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, row_num, source_parent):
         ''' Overriding the parent function '''
         # Check if the current row matches
-        if self.filter_accepts_row_itself(row_num, source_parent):
+        if self.filterAcceptsRowItself(row_num, source_parent):
             return True
         # Traverse up all the way to root and check if any of them match
         #if self.filter_accepts_any_parent(source_parent):
         #   return True
         # Finally, check if any of the children match
-        return self.has_accepted_children(row_num, source_parent)
+        return self.hasAcceptedChildren(row_num, source_parent)
 
-    def filter_accepts_row_itself(self, row_num, parent):
+    def filterAcceptsRowItself(self, row_num, parent):
         return super(CustomSortFilterProxyModel, self).filterAcceptsRow(row_num, parent)
 
-    def filter_accepts_any_parent(self, parent):
+    def filterAcceptsAnyParent(self, parent):
         ''' Traverse to the root node and check if any of the
             ancestors match the filter
         '''
         result = False
         if self.filter_parents == True:
             while parent.isValid():
-                if self.filter_accepts_row_itself(parent.row(), parent.parent()):
+                if self.filterAcceptsRowItself(parent.row(), parent.parent()):
                     result = True
                 parent = parent.parent()
         else:
             result = False
         return result
 
-    def has_accepted_children(self, row_num, parent):
+    def hasAcceptedChildren(self, row_num, parent):
         ''' Starting from the current node as root, traverse all
             the descendants and test if any of the children match
         '''
@@ -52,6 +52,23 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
             if self.filterAcceptsRow(i, source_index):
                 return True
         return False
+
+class LIgnoreValidator(QValidator):
+    def validate(self, string, pos):
+        #super(LIgnoreValidator, self).validate(string, pos)
+        #string.replace(pos-1, string.count()-pos, '')
+        #print ("ingoring validity")
+        return QValidator.Invalid, pos
+
+# validator for Initials (uppsercase 2 letters only)
+class LRegExpValidator(QRegExpValidator):
+    def validate(self, string, pos):
+        result = super(LRegExpValidator, self).validate(string, pos)
+
+        #return QValidator.Acceptable, string.toUpper(), pos
+        # for old code still using QString, use this instead
+        string.replace(0, string.count(), string.toUpper())
+        return result[0], pos
 
 class LchrTitlebar(QFrame):
 
@@ -109,7 +126,7 @@ class LchrTitlebar(QFrame):
         super(LchrTitlebar, self).mouseReleaseEvent(event)
         self.stop = True
         if self.doClose and self.closeOn:
-            self.parent().close_event(event=None)
+            self.parent().closeEvent(event=None)
             self.parent().close()
         elif self.pinOn:
             if self.doPin:
@@ -186,6 +203,7 @@ class LchrTitlebar(QFrame):
         painter.setFont(font)
 
         #painter.drawText(QPoint(20,20),self.title)
+        # print 'dev: loading image: {0}'.format(os.path.join(RES,"title_logo.png"))
         self.logo = QImage(os.path.join(RES,"title_logo.png"))
         rect = self.rect().topLeft() + QPoint(20, 20)
         painter.drawImage(rect, self.logo)

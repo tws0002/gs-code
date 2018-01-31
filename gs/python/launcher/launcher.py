@@ -38,7 +38,7 @@ def build_render_cmd(args):
 def init():
     if args.app or args.file:
         project = ''
-        file = ''
+        filepath = ''
         # hard coded workgroup 'default'
         workgroup = 'default'
         version = ''
@@ -97,20 +97,20 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     print ("Current Working Directory {0}".format(cwd))
     print 'Launching {0} version: {1}'.format(app,version)
 
-    os.environ['GSPROJECT'] = project
-    os.environ['GSINITIALS'] = initials
-    os.environ['GSWORKGROUP'] = workgroup
-
     # if filepath is specified and project is not,
     if filepath != '':
         print "Filepath specified:{0}".format(filepath)
         if project == '' or project is None:
             # get the project for the given path by calling core.pathsParser
-            import core.core
-            controller = core.core.CoreController()
+            import core
+            controller = core.CoreController()
             filepath_unix = filepath.replace('\\','/')
-            project = controller.proj_controller.pathParser.get_project(filepath_unix)
+            project = controller.proj_controller.pathParser.getProject(filepath_unix)
             print ("Project Guess:{0}".format(project))
+
+    os.environ['GSPROJECT'] = project
+    os.environ['GSINITIALS'] = initials
+    os.environ['GSWORKGROUP'] = workgroup
 
     # load the process env from the config files
     process_env = StudioEnvironment()
@@ -131,7 +131,12 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # workgroups vars should be able to override any other vars
     process_env.load_app_config_file(filepath=app_config, app=app, version=version)
     process_env.load_workgroup_config_file(filepath=wrkgrp_config, workgroup=workgroup, app=app, version=version)
-    
+
+    w_data = dict(process_env.workgroup_data)
+
+    if version == '':
+        version = w_data[workgroup]['packages'][app]['version']
+
     # append any project local config files
     proj_wrkgrp = get_project_config(project,'workgroups')
     if os.path.isfile(proj_wrkgrp):
@@ -250,6 +255,9 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
         if shell_mode:
             executable = win_shell_safe(executable)
             cmd = 'start '+ executable + ' ' + add_args
+            if filepath != '':
+                flag = process_env.get_flag(app=app, flag='file')
+                cmd += ' {0} "{1}"'.format(flag, filepath.replace('\\', '/'))
         print cmd
         p = subprocess.Popen(cmd, env=env, startupinfo=si, shell=shell_mode)
 
@@ -284,15 +292,15 @@ if __name__ == '__main__':
     if not args.app and not args.file:
         elapsed_time = time.time() - START_TIME
         print("Launcher settings loaded in {0} sec".format(elapsed_time))
-        from ui import *
-        app = QApplication(sys.argv)
-        wind = Launcher()
+        import gui
+        app = gui.LauncherApp(sys.argv)
+        wind = gui.LauncherWindow()
         elapsed_time = time.time() - START_TIME
-        print("Launcher UI loaded in {0} sec".format(elapsed_time))
+        print("Launcher GUI loaded in {0} sec".format(elapsed_time))
         wind.setWindowTitle('Gentleman Scholar Launcher')
         wind.show()
         elapsed_time = time.time() - START_TIME
-        print("Launcher UI Shown in {0} sec".format(elapsed_time))
+        print("Launcher GUI Shown in {0} sec".format(elapsed_time))
         app.exec_()
 
     else:

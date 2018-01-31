@@ -72,7 +72,7 @@ def updatePipelineFavorites():
     if HAS_PYWIN:
         # remove any gs pipelie favs
         # add new pipeline faves
-        root = '//scholar/projects/{0}'.format(os.environ['GSPROJECT'])
+        root = '{0}'.format(os.environ['GSPROJECT'])
         createUserFavorite(root)
 
 def createUserFavorite(path):
@@ -150,3 +150,5 @@ def get_initials():
     initials = os.environ['USERNAME'][:2]
 
     return initials
+
+

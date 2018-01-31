@@ -170,7 +170,7 @@ maya:
         GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;retargeterNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;fbxmaya;invertShape;poseInterpolator;Substance'
         MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
         ST_MAYA: '2017'
-        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.3
+        ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.5
       modes:
         ui:
           linux: /
@@ -187,7 +187,7 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2017.0.3/bin
+        win32: C:/Program Files/Autodesk/Maya/2017.0.5/bin
   tasks:
   - model
   - shade
@@ -253,6 +253,7 @@ nuke:
     NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
+    FN_DISABLE_LICENSE_DIALOG: '1'
   show: true
   tasks:
   - comp
@@ -260,7 +261,7 @@ nuke:
   - grade
   - track
   - roto
-  file_types: 'nk;nk~;nk.autosave'
+  file_types: 'nk,nk~,nk.autosave'
   versions:
     '11.0v1':
       name: Nuke
