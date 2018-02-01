@@ -7,28 +7,6 @@ frame_delimiter: '.'
 version_prefix: 'v'
 version_incr: 1
 version_padding: 3
-stages:
-  - pitch
-  - previs
-  - production
-departments:
-- admin
-- design
-- producer
-- 3d_production
-- 2d_production
-- compositing
-- edit
-tasks:
-- conform
-- model
-- rig
-- shade
-- camera
-- anim
-- effects
-- light
-- comp
 status:
 - 'waiting'
 - 'ready to start'
@@ -74,32 +52,34 @@ stage_templates:
 asset_templates:
   'asset_2d':
     display_name: 'Elements'
+    display_order: 3
     match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
     capture_path: '<server>/projects/<job>/<stage>/assets/<asset_grp>/<asset>'
     lib_path: '<server>/projects/<job>/production/assets'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
-    default_tasks: 'comp'
+    default_tasks: ''
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
   'shot':
     display_name: 'Shots'
+    display_order: 2
     match_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     lib_path: '<server>/<share>/<job>/<stage>/shots'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
-    default_tasks: 'roto,track,anim,comp'
+    default_tasks: 'anim,light,comp'
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
   'asset_3d':
     display_name: 'Assets'
+    display_order: 1
     match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     lib_path: '<server>/<share>/<job>/<stage>/assets/3d'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
-    default_tasks: 'model,rig,shade'
+    default_tasks: 'model,rig,lookdev'
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
-    default_tasks: 'anim,light,comp'
 
 # Defines file locations specific to tasks, %parent_path% is a defined by asset_templates 
 
@@ -107,6 +87,7 @@ asset_templates:
 task_templates: 
   'conform':
     display_name: 'Conform'
+    display_order: 1
     match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
     capture_path: '<server>/<share>/<job>/<stage>/edit/_<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
@@ -114,55 +95,88 @@ task_templates:
     publish_path: '%match_path%/_publish'
     render_path: '<server>/projects/<job>/production/render/_conform/<version>'
     render_file: '<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>'
+    default_package: 'maya'
   'model':
     display_name: 'Model'
-    match_path: '%parent_path%/model'
-    capture_path: '%parent_path%/<task>'
+    display_order: 1
+    match_path: '%task_root%/model'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
   'rig':
-    match_path: '%parent_path%/rig'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Rig'
+    display_order: 2
+    match_path: '%task_root%/rig'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
-  'shade':
-    match_path: '%parent_path%/shade'
-    capture_path: '%parent_path%/<task>'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'lookdev':
+    display_name: 'LookDev'
+    display_order: 3
+    match_path: '%task_root%/lookdev'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
   'anim':
-    match_path: '%parent_path%/anim'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Anim'
+    display_order: 1
+    match_path: '%task_root%/anim'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
   'effects':
-    match_path: '%parent_path%/effects'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Effects'
+    display_order: 2
+    match_path: '%task_root%/effects'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
   'light':
-    match_path: '%parent_path%/light'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Light'
+    display_order: 3
+    match_path: '%task_root%/light'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
   'comp':
-    match_path: '%parent_path%/comp'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Comp'
+    display_order: 4
+    match_path: '%task_root%/comp'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'nuke'
   'cel':
-    match_path: '%parent_path%/comp'
-    capture_path: '%parent_path%/<task>'
+    display_name: 'Cel'
+    display_order: 0
+    match_path: '%task_root%/comp'
+    capture_path: '%task_root%/<task>'
     copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
     package_root: '%match_path%'
-    publish_path: '%parent_path%/_publish'
+    publish_path: '%task_root%/_publish'
+    default_package: 'animate'
+  'edit':
+    display_name: 'Edit'
+    display_order: 6
+    match_path: '%task_root%/comp'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'premiere'
 
 # defines package paths relative to the base of a task, %parent_path% is a predefined var
 package_templates:

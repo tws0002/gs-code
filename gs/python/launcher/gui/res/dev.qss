@@ -74,7 +74,7 @@ QComboBox {
     border-radius: 6px;
     padding: 0px 0px 0px 10px;
 }
-QComboBox::drop-down {
+QComboBox::drop-down#AppCombo {
     subcontrol-origin: padding;
     subcontrol-position: top right;
     color: #97a0a5;
@@ -92,7 +92,7 @@ QComboBox QAbstractItemView#AppCombo {
     background-attachment: scroll;
     outline:none;
 }
-QComboBox::drop-down {
+QComboBox::drop-down#AppCombo {
     subcontrol-origin: padding;
     subcontrol-position: top right;
     color: #97a0a5;

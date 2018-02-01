@@ -96,7 +96,7 @@ class ProjectController():
 
         return
 
-    def newAsset(self, upl_dict, upl=''):
+    def newAsset(self, upl_dict=None, upl='', add_tasks=[]):
         """
         create a new project structure based on the job. given a url path to the job to create it will generate
         the necessary dict and copy the template dir tree
@@ -113,25 +113,86 @@ class ProjectController():
             else:
                 raise ValueError('no upl_path or upl_dict was specified in call to core.project.new_asset()')
 
+        if 'asset' in upl_dict:
+            src = self.pathParser.substTemplatePath(upl_dict, template_type='asset', template_name=upl_dict['asset_type'], template_var='copy_tree', exists=False)
+            asset = self.pathParser.substTemplatePath(upl_dict, template_type='asset', template_name=upl_dict['asset_type'], template_var='match_path', exists=False)
 
-        #src = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='shot', template_var='copy_tree', exists=False)
-        #dest = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='shot', template_var='lib_path', exists=False)
-        #print 'Creating Shots:{0}'.format(dest)
-        #self.copy_templ_tree(src, dest)
-        #
-        #
-        #src = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='asset_2d', template_var='copy_tree', exists=False)
-        #dest = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='asset_2d', template_var='lib_path', exists=False)
-        #print 'Creating 2D Assets:{0}'.format(dest)
-        #self.copy_templ_tree(src, dest)
-        #
-        #src = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='asset_3d', template_var='copy_tree', exists=False)
-        #dest = self.pathParser.subst_template_path(upl_dict, template_type='asset', template_name='asset_3d', template_var='lib_path', exists=False)
-        #print 'Creating 3D Assets:{0}'.format(dest)
-        #self.copy_templ_tree(src, dest)
+            if asset != '':
+                if os.path.isdir(asset):
+                    print 'core.projects.newAsset(): Aborting Asset Creation, Asset Already Exists:{0}'.format(asset)
+                    return False, "Job Exists", ""
+                print 'core.projects.newAsset(): Creating Asset:{0}'.format(asset)
+                self.copyTemplTree(src, asset)
 
-    def newTask(self, name='', template_type='anim'):
-        ''' creates a new task for a specified path '''
+                print upl_dict
+                for task in add_tasks:
+                    src = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='copy_tree', exists=False)
+                    dest = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='match_path', exists=False)
+                    if dest != "":
+                        print 'core.projects.newAsset(): Creating Task:{0} {1} from {2}'.format(task,dest,src)
+                        self.copyTemplTree(src, dest)
+                    else:
+                        return False, "Task:{0} Not Defined".format(task), ""
+
+                # update the model which is then responsible for sending signals to attached UI elements to update
+                # for now its a manual refresh
+                return True, "Success", asset
+            else:
+                print ('core.projects.newAsset(): Could not Create Asset, could not parse path from upl_dict:{0}'.format(upl_dict))
+                return False, "Parser Could Not Determine Path", ""
+        else:
+            print ('core.projects.newAsset(): Could not Create Asset, No Valid asset was specified in upl_dict:{0}'.format(upl_dict))
+            return False, "No Asset Specified", ""
+
+
+    def newTask(self, upl_dict=None, upl=''):
+        """
+        create a new project structure based on the job. given a url path to the job to create it will generate
+        the necessary dict and copy the template dir tree
+        this function uses upl dict to ensure that project creation is abstracted and turned into valid paths via the parser
+        upl_dict{'server':'//scholar/projects','job':'test_job', 'stage':'production'}
+        :param upl_dict:
+        :param upl:
+        :return:
+        """
+        # if no upl dict is provided, parse it from the upl string
+        if not isinstance(upl_dict,dict):
+            if upl != '':
+                upl_dict = self.pathParser.parsePath(upl, exists=False)
+            else:
+                raise ValueError('no upl_path or upl_dict was specified in call to core.project.new_asset()')
+
+        if 'task' in upl_dict:
+            src = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=upl_dict['task'], template_var='copy_tree', exists=False)
+            task = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=upl_dict['task'], template_var='match_path', exists=False)
+
+            if task != '':
+                if os.path.isdir(task):
+                    print 'core.projects.newTask(): Aborting Task Creation, Task Already Exists:{0}'.format(task)
+                    return False, "Job Exists", ""
+                print 'core.projects.newTask(): Creating Task:{0}'.format(task)
+                self.copyTemplTree(src, task)
+
+                print upl_dict
+                # update the model which is then responsible for sending signals to attached UI elements to update
+                # for now its a manual refresh
+                return True, "Success", task
+            else:
+                print ('core.projects.newTask(): Could not Create Task, could not parse path from upl_dict:{0}'.format(upl_dict))
+                return False, "Parser Could Not Determine Path", ""
+        else:
+            print ('core.projects.newTask(): Could not Create Task, No Valid task was specified in upl_dict:{0}'.format(upl_dict))
+            return False, "No Task Specified", ""
+
+    def newScene(self, upl_dict=None, upl=''):
+        """
+        creates a new scene, a new scene is defined by a package, a scene name, and a version number
+        :param upl_dict:
+        :param upl:
+        :param add_tasks:
+        :return:
+        """
+        return
 
     def getAssetsList(self, upl_dict=None, upl='', asset_type='', groups_only=False):
         ''' given a project path (upl), returns a list of assets found in the assets lib_path defined in projects.yml
@@ -235,6 +296,13 @@ class ProjectController():
         #elapsed_time = time.time() - START_TIME
         #print("core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
         return result
+
+    def getDefaultTasks(self, asset_type):
+        """
+
+        :return: a list of default tasks string comma separated)
+        """
+        return self.pathParser.getDefaultTasks(asset_type).split(',')
 
     def getStageList(self):
         '''

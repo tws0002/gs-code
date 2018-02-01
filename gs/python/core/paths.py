@@ -471,6 +471,11 @@ class PathParser:
             result.append(package_typ)
         return result
 
+    def getDefaultTasks(self,asset_type):
+        """
+        :return: a list of default templates in defined asset
+        """
+        return self.asset_templates[asset_type]['default_tasks']
     #def getLibAsset(self, lib_name, full_path=True):
     #    ''' deprecated
     #    returns tuples of objects within library, essentially a list of sub directories of the specified path'''

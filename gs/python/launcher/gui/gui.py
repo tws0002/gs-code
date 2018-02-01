@@ -45,8 +45,8 @@ class LauncherWindow(QMainWindow):
             'share':'projects',
             'job':'',
             'stage':'production',
-            'asset_types':'',
-            'asset_group':'',
+            'asset_type':'',
+            'asset_grp':'',
             'asset':'',
             'task':'',
             'version':'',
@@ -364,8 +364,10 @@ class LauncherWindow(QMainWindow):
 
 
     def showCreateAsset(self):
-        d = LauncherCreateAsset(self)
-        d.exec_()
+        rslt = LauncherCreateAsset.doIt(self)
+        # update the project list ui
+        if rslt != '':
+            self.updateAssetList(self.active_path['job'],self.active_data['asset_type'])
 
     def showCreateTask(self):
         d = LauncherCreateTask(self)
@@ -491,6 +493,7 @@ class LauncherWindow(QMainWindow):
                 item_dict[split_name[0]]['filepath'] = '/'.join([item_tuple[0],split_name[0]])
                 item_dict[split_name[0]]['status'] = "Active"
                 item_dict[split_name[0]]['is_group'] = False
+                item_dict[split_name[0]]['group'] = ''
                 item_dict[split_name[0]]['children'] = {}
             if len(split_name) > 1:
                 item_dict[split_name[0]]['is_group'] = True
@@ -499,6 +502,7 @@ class LauncherWindow(QMainWindow):
                 item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
                 item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
                 item_dict[split_name[0]]['children'][split_name[1]]['is_group'] = False
+                item_dict[split_name[0]]['children'][split_name[1]]['group'] = split_name[0]
 
         print ("Asset_Type:{0} Asset_Data{1}".format(asset_type,item_tuple))
         # loads the above dictionary into a treeview as standard items
@@ -947,14 +951,22 @@ class LauncherWindow(QMainWindow):
             src_index = item_indx[1].model().mapToSource(item_indx[1])
             item =  item_indx[1].model().sourceModel().itemFromIndex(src_index)
             s = str(item.text())
-            print ('Setting shot/asset to {0}'.format(s))
+            src_index = item_indx[2].model().mapToSource(item_indx[2])
+            item =  item_indx[2].model().sourceModel().itemFromIndex(src_index)
+            g = str(item.text())
+            print ('Setting shot/asset to {0}, group to {1}'.format(s,g))
             self.active_data['asset'] = s
+            self.active_data['asset_grp'] = g
             # TODO set active_path  asset correctly
             #self.active_path['asset'] =
+
             self.updateScenesList(s)
             self.updateTaskTabs(self.active_path['job'],self.active_data['asset'])
         else:
             print ('Selection Empty')
+            self.active_data['asset'] = ''
+            self.active_data['asset_grp'] = ''
+
 
     def displayGroupComboChange(self, i):
         # check for project config file and merge config if it exists

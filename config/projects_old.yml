@@ -3,26 +3,6 @@ frame_delimiter: '.'
 version_prefix: 'v'
 version_incr: 1
 version_padding: 3
-stages:
-  - pitch
-  - previs
-  - production
-departments:
-- admin
-- design
-- producer
-- 3d_production
-- 2d_production
-- compositing
-- edit
-tasks:
-- edit
-- model
-- camera
-- animation
-- lighting
-- comp
-- conform
 status:
 - 'ready'
 - 'not started'
