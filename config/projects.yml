@@ -51,10 +51,11 @@ stage_templates:
 # defines template paths that can be inherited to task_structs, this saves space with common paths
 asset_templates:
   'asset_2d':
-    display_name: 'Elements'
+    display_name: 'Assets'
     display_order: 3
     match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
     capture_path: '<server>/projects/<job>/<stage>/assets/<asset_grp>/<asset>'
+    task_root: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
     lib_path: '<server>/projects/<job>/production/assets'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: ''
@@ -65,16 +66,18 @@ asset_templates:
     display_order: 2
     match_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
+    task_root: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     lib_path: '<server>/<share>/<job>/<stage>/shots'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: 'anim,light,comp'
     qualifier_path: '.info' # qualifies if path contains this subfolder
     ignore_path: ''
   'asset_3d':
-    display_name: 'Assets'
+    display_name: 'CG Assets'
     display_order: 1
     match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
+    task_root: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     lib_path: '<server>/<share>/<job>/<stage>/assets/3d'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: 'model,rig,lookdev'
@@ -90,135 +93,182 @@ task_templates:
     display_order: 1
     match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
     capture_path: '<server>/<share>/<job>/<stage>/edit/_<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
     package_root: '%match_path%'
     publish_path: '%match_path%/_publish'
     render_path: '<server>/projects/<job>/production/render/_conform/<version>'
     render_file: '<shot>_<cversion>_<aversion>_<lversion>_<initials>_<renderlayer>.<frame>.<ext>'
     default_package: 'maya'
-  'model':
-    display_name: 'Model'
-    display_order: 1
-    match_path: '%task_root%/model'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'rig':
-    display_name: 'Rig'
-    display_order: 2
-    match_path: '%task_root%/rig'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'lookdev':
-    display_name: 'LookDev'
-    display_order: 3
-    match_path: '%task_root%/lookdev'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'anim':
-    display_name: 'Anim'
-    display_order: 1
-    match_path: '%task_root%/anim'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'effects':
-    display_name: 'Effects'
-    display_order: 2
-    match_path: '%task_root%/effects'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'light':
-    display_name: 'Light'
-    display_order: 3
-    match_path: '%task_root%/light'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'maya'
-  'comp':
-    display_name: 'Comp'
-    display_order: 4
-    match_path: '%task_root%/comp'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'nuke'
-  'cel':
-    display_name: 'Cel'
-    display_order: 0
-    match_path: '%task_root%/comp'
-    capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
-    default_package: 'animate'
   'edit':
+    inherits: 'shot'
     display_name: 'Edit'
     display_order: 6
     match_path: '%task_root%/comp'
     capture_path: '%task_root%/<task>'
-    copy_tree: '<server>/assets/templates/project_template_2018/task_basic'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
     package_root: '%match_path%'
     publish_path: '%task_root%/_publish'
     default_package: 'premiere'
+  'model':
+    inherits: 'asset_3d'
+    display_name: 'Model'
+    display_order: 1
+    match_path: '%task_root%/model'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'rig':
+    inherits: 'asset_3d'
+    display_name: 'Rig'
+    display_order: 2
+    match_path: '%task_root%/rig'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'lookdev':
+    inherits: 'asset_3d'
+    display_name: 'LookDev'
+    display_order: 3
+    match_path: '%task_root%/lookdev'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'anim':
+    inherits: 'shot'
+    display_name: 'Anim'
+    display_order: 1
+    match_path: '%task_root%/anim'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'effects':
+    inherits: 'shot'
+    display_name: 'Effects'
+    display_order: 2
+    match_path: '%task_root%/effects'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'light':
+    inherits: 'shot'
+    display_name: 'Light'
+    display_order: 3
+    match_path: '%task_root%/light'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'maya'
+  'comp':
+    inherits: 'shot'
+    display_name: 'Comp'
+    display_order: 4
+    match_path: '%task_root%/comp'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'nuke'
+  'track':
+    inherits: 'shot'
+    display_name: 'Track'
+    display_order: 0
+    match_path: '%task_root%/track'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'nuke'
+  'roto':
+    inherits: 'shot'
+    display_name: 'Roto'
+    display_order: 0
+    match_path: '%task_root%/roto'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'nuke'
+  'cel':
+    inherits: 'shot'
+    display_name: 'Cel'
+    display_order: 0
+    match_path: '%task_root%/comp'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'animate'
+  'layout':
+    inherits: 'shot'
+    display_name: 'Layout'
+    display_order: 0
+    match_path: '%task_root%/roto'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    default_package: 'photoshop'
 
 # defines package paths relative to the base of a task, %parent_path% is a predefined var
 package_templates:
   'maya':
+    match_path: '%package_root%/maya'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/maya'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/maya'
     work_path: '%root_path%/scenes'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'c4d':
+    match_path: '%package_root%/c4d'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/c4d'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/c4d'
     work_path: '%package_root%/scenes'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'houdini':
+    match_path: '%package_root%/houdini'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/houdini'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/houdini'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'modo':
+    match_path: '%package_root%/modo'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/modo'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/modo'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'zbrush':
+    match_path: '%package_root%/zbrush'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/zbrush'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/zbrush'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'nuke':
+    match_path: '%package_root%/nuke'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/nuke'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/nuke'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'ae':
+    match_path: '%package_root%/ae'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/ae'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/ae'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
   'premiere':
+    match_path: '%package_root%/premiere'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/assets/templates/project_template_2018/packages/premiere'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/premiere'
     work_path: '%root_path%'
-    work_file: '<asset_grp>_<asset>_<task>_<version>.<ext>'
+    work_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
 
 

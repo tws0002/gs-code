@@ -4,7 +4,6 @@ __author__ = 'aburke'
 from glob import glob
 
 from settings import *
-import paths
 import projects
 
 
@@ -72,6 +71,8 @@ def main():
 
     return
 
+
+# OLD METHODS FOR QUERYING SHOT INFO. DEPRICATED. REPLACED BY the core.projects module
 
 def list_servers():
     for share in STUDIO['servers']:

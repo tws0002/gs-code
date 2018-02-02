@@ -28,7 +28,7 @@ class ProjectController():
         # TODO ideally this should eventually substitute any other varibales found within the copy tree
         print "dev: projects.copyTempTree('{0}','{1}')".format(src, dst)
         try:
-            shutil.copytree(src, dst)
+            shutil.copytree(os.path.normpath(src), os.path.normpath(dst))
         except WindowsError:
             print 'core.projects.copyTempTree() failed {0} to {1}'.format(src,dst)
             raise StandardError
@@ -342,7 +342,10 @@ class ProjectController():
                 valid_result.append((name,rel_path))
         return valid_result
 
-    def getTaskTypeList(self, asset_path):
+    def getTaskTypesList(self):
+        return self.pathParser.getTaskTypes()
+
+    def getTaskList(self, asset_path=''):
         ''' given a project path (upl), returns a list of existing tasks found in the assets, the
          list is checked against valid tasks defined in projects.yml
         :param upl: universal project locator (project file system)
@@ -351,27 +354,33 @@ class ProjectController():
         '''
         START_TIME = time.time()
 
-        task_types = self.pathParser.getTaskTypes()
+        task_types = self.getTaskTypesList()
         task_list = []
         #asset_path = self.pathParser.getAssetLib(upl,)
         #qualifier = self.pathParser.getTemplatePath('task', task_type, 'qualifier_path')
         print 'dev: core.projects.getTaskTypeList asset_path ={0} task_types={1}'.format(asset_path, task_types)
-        if os.path.isdir(asset_path):
-            for base_dir in os.listdir(asset_path):
-                full_path = '/'.join([asset_path, base_dir])
-                #and not base_dir.startswith('_')
-                if base_dir in task_types:
-                    if os.path.isdir(full_path) and not base_dir.startswith('.') :
-                        sub_dirs = os.listdir(full_path)
-                        #if qualifier != '' and qualifier in sub_dirs:
-                        task_list.append(base_dir)
+        if asset_path != '':
+            if os.path.isdir(asset_path):
+                for base_dir in os.listdir(asset_path):
+                    full_path = '/'.join([asset_path, base_dir])
+                    #and not base_dir.startswith('_')
+                    if base_dir in task_types:
+                        if os.path.isdir(full_path) and not base_dir.startswith('.') :
+                            sub_dirs = os.listdir(full_path)
+                            #if qualifier != '' and qualifier in sub_dirs:
+                            task_list.append(base_dir)
+            else:
+                print ('asset_path={0} not found'.format(asset_path))
         else:
-            print ('asset_path={0} not found'.format(asset_path))
+            task_list = task_types
 
         result = (asset_path, task_list)
         elapsed_time = time.time() - START_TIME
         print("ProjectController.getTaskTypeList() ran in {0} sec".format(elapsed_time))
         return result
+
+    def getPackageTypesList(self):
+        return self.pathParser.getPackageTypes()
 
     def getTaskScenesList(self, upl_dict=None, upl='', task_type=''):
         """

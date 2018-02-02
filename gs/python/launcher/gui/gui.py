@@ -369,8 +369,8 @@ class LauncherWindow(QMainWindow):
         if rslt != '':
             self.updateAssetList(self.active_path['job'],self.active_data['asset_type'])
 
-    def showCreateTask(self):
-        d = LauncherCreateTask(self)
+    def showCreateScene(self):
+        d = LauncherCreateScene(self)
         d.exec_()
 
     def setActiveFile(self, filename):
@@ -519,7 +519,7 @@ class LauncherWindow(QMainWindow):
 
         self.ui['wdgt']['task_tabs'].currentChanged.connect(self.taskTabChanged)
         # for each asset template type, create a tab widget for it
-        task_type_list = self.controller.proj_controller.getTaskTypeList(asset_path)
+        task_type_list = self.controller.proj_controller.getTaskList(asset_path)
         print ('task_type_list={0}'.format(task_type_list))
         # update each asset type
         for task_type in task_type_list[1]:
@@ -532,10 +532,11 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt'][task_type].setFilterParents(True)
                 self.ui['wdgt'][task_type].task_type = task_type
                 self.ui['wdgt'][task_type].current_path = ''
+                self.ui['wdgt'][task_type].titlebtn1.clicked.connect(self.showCreateScene)
 
             self.ui['wdgt'][task_type].tvw.setAlternatingRowColors(True)
             self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt'][task_type],task_type.title())
-            self.ui['wdgt'][task_type].titlebtn1.clicked.connect(self.showCreateTask)
+
             self.updateTaskList(task_path=asset_path, task_type=task_type)
 
         self.taskTabChanged(0)

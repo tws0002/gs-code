@@ -232,7 +232,7 @@ class LauncherCreateAsset(LauncherDialog):
         self.grp_grp = QHBoxLayout()
 
         self.type_grp = QHBoxLayout()
-        self.type_grp.addWidget(QLabel("Type:"))
+        self.type_grp.addWidget(QLabel("Location:"))
         self.type_grp.addWidget(self.asset_type_cb)
 
         self.grp_grp.addWidget(QLabel("Group:"))
@@ -349,28 +349,23 @@ class LauncherCreateAsset(LauncherDialog):
         status = dialog.getStatus()
         return status
 
-class LauncherCreateTask(LauncherDialog):
+
+class LauncherCreateScene(LauncherDialog):
 
     def __init__(self, parent=None):
-        super(LauncherCreateTask, self).__init__(parent)
+        super(LauncherCreateScene, self).__init__(parent)
 
+        self.setWindowTitle("Create New Task/Scene")
 
-        self.setWindowTitle("Create New Task")
-
-        self.asset_name = QLineEdit()
+        self.scene_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z0-9](?:_?[A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
-        self.asset_name.setValidator(validator)
-        self.asset_name.setPlaceholderText('001_00')
+        self.scene_name.setValidator(validator)
+        self.scene_name.setPlaceholderText('main')
 
-        self.asset_grp = QComboBox()
+        self.task_type_dl = QComboBox()
+        self.package_type_dl = QComboBox()
 
-        self.asset_type_cb = QComboBox()
-        self.updateTypes()
-        self.updateGroups()
-
-        self.prod_cb = QCheckBox('Create Default Tasks')
-        self.prod_cb.setChecked(1)
         self.footer = QHBoxLayout()
         self.okbtn = QPushButton('Create')
         self.cancelbtn = QPushButton('Cancel')
@@ -378,72 +373,121 @@ class LauncherCreateTask(LauncherDialog):
         # ui control layout
         self.layout = QVBoxLayout(self)
 
-        self.type_grp = QHBoxLayout()
-        self.type_grp.addWidget(QLabel("Type:"))
-        self.type_grp.addWidget(self.asset_type_cb)
 
-        self.grp_grp = QHBoxLayout()
-        self.grp_grp.addWidget(QLabel("Group:"))
-        self.grp_grp.addWidget(self.asset_grp)
-        self.grp_grp.addWidget(QPushButton("New"))
+        self.task_type_grp = QHBoxLayout()
+        self.task_type_grp.addWidget(QLabel("Task:"))
+        self.task_type_grp.addWidget(self.task_type_dl)
 
         self.name_grp = QHBoxLayout()
         self.name_grp.addWidget(QLabel("Name:"))
-        self.name_grp.addWidget(self.asset_name)
+        self.name_grp.addWidget(self.scene_name)
 
-        self.layout.addLayout(self.type_grp)
-        self.layout.addLayout(self.grp_grp)
+        self.package_grp = QHBoxLayout()
+        self.package_grp.addWidget(QLabel("Package:"))
+        self.package_grp.addWidget(self.package_type_dl)
+
+        self.layout.addLayout(self.task_type_grp)
         self.layout.addLayout(self.name_grp)
-        self.layout.addWidget(self.prod_cb)
+        self.layout.addLayout(self.package_grp)
         self.layout.addLayout(self.footer)
 
         self.footer.addWidget(self.cancelbtn)
         self.footer.addWidget(self.okbtn)
 
-
         self.cancelbtn.clicked.connect(self.doCancel)
         self.okbtn.clicked.connect(self.doCreate)
 
-    def updateTypes(self):
-        # clear the item model and init a new one
-        self.asset_type_cb.model().clear()
-        asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
-        for path, name in sorted(asset_type_list):
-            item = QStandardItem('{0} ({1})'.format(name,path))
-            self.asset_type_cb.model().appendRow(item)
+        self.updateUI()
 
-    def updateGroups(self):
+    def updateUI(self):
+        self.updateTaskTypes()
+        at = self.parent.active_data['asset_type']
+        g = self.parent.active_data['asset_grp']
+        t = self.parent.active_data['task']
+
+        # set the task to the active task in the ui
+        #print ("Looking for type:{0} group:{1}".format(at, g))
+        #asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
+        #for asset_type, dname in asset_type_list:
+        #    print ("asset_type={0}".format(asset_type))
+        #    if at == asset_type:
+        #        i = self.asset_type_cb.findText(dname, Qt.MatchFixedString)
+        #        if i >= 0:
+        #            self.asset_type_cb.setCurrentIndex(i)
+
+        self.updatePackagesTypes()
+
+        #if g == '':
+        #    g = "<None>"
+        #i = self.asset_grp.findText(g, Qt.MatchFixedString)
+        #if i >= 0:
+        #    self.asset_grp.setCurrentIndex(i)
+
+
+    def updateTaskTypes(self):
         # clear the item model and init a new one
-        upl = self.parent.active_paths['job']
-        self.asset_grp.model().clear()
-        a_type = self.parent.active_asset_type
-        asset_grp_list = self.parent.controller.proj_controller.getAssetGroupsList(upl, a_type)
-        for path, name in sorted(asset_grp_list):
-            if name != '':
-                item = QStandardItem(name)
-                self.asset_grp.model().appendRow(item)
+        self.task_type_dl.model().clear()
+        task_type_list = self.parent.controller.proj_controller.getTaskTypesList()
+        for name in sorted(task_type_list):
+            item = QStandardItem(name)
+            self.task_type_dl.model().appendRow(item)
+
+    def updatePackagesTypes(self):
+        # clear the item model and init a new one
+        self.package_type_dl.model().clear()
+        package_type_list = self.parent.controller.proj_controller.getPackageTypesList()
+        print ('package type list {0}'.format(package_type_list))
+        for name in sorted(package_type_list):
+            item = QStandardItem(name)
+            self.package_type_dl.model().appendRow(item)
 
     def doCreateAssetGroup(self):
         pass
 
     def doCreate(self):
-        #upl = '/'.join([str(self.proj_share.currentText()),str(self.proj_name.text())])
-        # define a project dictionary to pass to the project controller (it will interpret the dict using project.yml)
-        d = {'server': '//' + str(self.proj_share.currentText().split('/', 1)[0]),
-             'job': str(self.proj_name.text()),
-             'stage': 'production',
-             'asset_grp': str(self.groupName.text()),
-             'asset': str(self.asset_name.text())
-             }
 
-        # if type is asset
+        # translate UI values to proper asset_type and group names
+        at = self.asset_type_cb.currentText()
+        asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
+        for asset_type, dname in asset_type_list:
+            print ("asset_type={0}".format(asset_type))
+            if at == dname:
+                at = asset_type
+        g =self.asset_grp.currentText()
+        if g == "<None>":
+            g = ''
 
-        self.parent.controller.proj_controller.newAsset(d)
+        d = dict(self.parent.active_data)
+        d['asset_type'] = at
+        d['asset_grp'] = g
+        d['asset'] = str(self.asset_name.text())
+
+
+        add_tasks = self.parent.controller.proj_controller.getDefaultTasks(at) if self.deftasks_cb.isChecked() else []
+
+        self.result = self.parent.controller.proj_controller.newAsset(d, add_tasks=add_tasks)
+        (success, response, result) = self.result
+        if success:
+            m = LauncherMessage(self, "Asset Created", "Successfully created asset: {0}".format(result))
+            m.exec_()
+            self.close()
+        else:
+            m = LauncherMessage(self, "Asset Creation Failed", 'Asset Creation Failed: {0}'.format(response))
+            m.exec_()
 
     def doCancel(self):
         self.close()
 
+    def getStatus(self):
+        return self.result
 
+    # static method to create the dialog and return result
+    @staticmethod
+    def doIt(parent=None):
+        dialog = LauncherCreateAsset(parent)
+        result = dialog.exec_()
+        status = dialog.getStatus()
+        return status
 
 class LauncherConfig(QDialog):
     ''' dialog for configuring a job or task '''

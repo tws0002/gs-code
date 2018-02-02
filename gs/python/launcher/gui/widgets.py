@@ -276,7 +276,15 @@ class LchrTreeList(QWidget):
         self.le = QLineEdit()
         self.tvw = QTreeView()
         model = QStandardItemModel(self.tvw)
-        self.titlebtn1 = QPushButton('New')
+        key = "image:{0}".format(os.path.join(RES, "tool_add.png"))
+        pixmap = QPixmap()
+        if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
+            pixmap = QPixmap(os.path.join(RES, "tool_add.png"))
+            QPixmapCache.insert(key, pixmap)
+        icon = QIcon(pixmap)
+        self.titlebtn1 = QPushButton()
+        self.titlebtn1.setIcon(icon)
+        self.titlebtn1.setIconSize(QSize(16, 16))
         #self.titlebtn2 = QPushButton('Config')
 
         self.qtblyt.addWidget(self.title)

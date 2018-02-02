@@ -96,7 +96,7 @@ class PathParser:
             if key == 'project_templates':
                 for proj, data in dataMap[key].iteritems():
                     self.project_templates[proj] = dict(dataMap['project_templates'][proj])
-            if key == 'package_tempaltes':
+            if key == 'package_templates':
                 for package, data in dataMap[key].iteritems():
                     self.package_templates[package] = dict(dataMap['package_templates'][package])
 
