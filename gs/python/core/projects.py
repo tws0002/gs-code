@@ -1,8 +1,7 @@
 __author__ = 'adamb'
-import os, shutil, errno
+import os, shutil
 import paths
 import time
-from glob import glob
 import re
 import subprocess
 
@@ -184,7 +183,7 @@ class ProjectController():
             print ('core.projects.newTask(): Could not Create Task, No Valid task was specified in upl_dict:{0}'.format(upl_dict))
             return False, "No Task Specified", ""
 
-    def newScene(self, upl_dict=None, upl=''):
+    def newScenefile(self, upl_dict=None, upl=''):
         """
         creates a new scene, a new scene is defined by a package, a scene name, and a version number
         :param upl_dict:
@@ -192,6 +191,35 @@ class ProjectController():
         :param add_tasks:
         :return:
         """
+        # if no upl dict is provided, parse it from the upl string
+        if not isinstance(upl_dict,dict):
+            if upl != '':
+                upl_dict = self.pathParser.parsePath(upl, exists=False)
+            else:
+                raise ValueError('no upl_path or upl_dict was specified in call to core.project.newScenefile()')
+        if 'scenename' in upl_dict:
+            # copy package template
+            src = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='copy_tree', exists=False)
+            pkg = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='match_path', exists=False)
+
+            if pkg != '':
+                if os.path.isdir(pkg):
+                    print 'core.projects.newSceneFile(): Aborting Scenefile Creation, Scenefile Already Exists:{0}'.format(pkg)
+                    return False, "Job Exists", ""
+                print 'core.projects.newTask(): Creating Task:{0}'.format(pkg)
+                self.copyTemplTree(src, pkg)
+
+                print upl_dict
+
+                # update the model which is then responsible for sending signals to attached UI elements to update
+                # for now its a manual refresh
+                return True, "Success", pkg
+            else:
+                print ('core.projects.newSceneFile(): Could not Create Scenefile, could not parse path from upl_dict:{0}'.format(upl_dict))
+                return False, "Parser Could Not Determine Path", ""
+        else:
+            print ('core.projects.newSceneFile(): Could not Create Scenefile, No Valid scenename was specified in upl_dict:{0}'.format(upl_dict))
+            return False, "No Task Specified", ""
         return
 
     def getAssetsList(self, upl_dict=None, upl='', asset_type='', groups_only=False):
@@ -310,7 +338,7 @@ class ProjectController():
         :return: 2-tuple of defined stage-type along with display-name
         '''
         result = []
-        for template in self.pathParser.stage_templates:
+        for template in self.pathParser.templates['stage_templates']:
             pair = (template,self.pathParser.getTemplatePath('stage', template, 'display_name'))
             result.append(pair)
         return result
@@ -321,7 +349,7 @@ class ProjectController():
         :return: 2-tuple of defined asset-type along with display-name
         '''
         result = []
-        for template in self.pathParser.asset_templates:
+        for template in self.pathParser.templates['asset_templates']:
             pair = (template,self.pathParser.getTemplatePath('asset', template, 'display_name'))
             result.append(pair)
         return result
@@ -343,7 +371,7 @@ class ProjectController():
         return valid_result
 
     def getTaskTypesList(self):
-        return self.pathParser.getTaskTypes()
+        return self.pathParser.getTemplateTypesList('task')
 
     def getTaskList(self, asset_path=''):
         ''' given a project path (upl), returns a list of existing tasks found in the assets, the
@@ -380,7 +408,7 @@ class ProjectController():
         return result
 
     def getPackageTypesList(self):
-        return self.pathParser.getPackageTypes()
+        return self.pathParser.getTemplateTypesList('package')
 
     def getTaskScenesList(self, upl_dict=None, upl='', task_type=''):
         """

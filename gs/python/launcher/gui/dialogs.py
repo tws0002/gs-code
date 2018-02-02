@@ -447,25 +447,21 @@ class LauncherCreateScene(LauncherDialog):
     def doCreate(self):
 
         # translate UI values to proper asset_type and group names
-        at = self.asset_type_cb.currentText()
-        asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
-        for asset_type, dname in asset_type_list:
-            print ("asset_type={0}".format(asset_type))
-            if at == dname:
-                at = asset_type
-        g =self.asset_grp.currentText()
-        if g == "<None>":
-            g = ''
+        tt = self.task_type_dl.currentText()
+        #task_type_list = self.parent.controller.proj_controller.getTaskTypesList()
+        #for task_type in task_type_list:
+        #    print ("task_type={0}".format(task_type))
+        #    if tt == dname:
+        #        tt = task_type
+        pkg =self.package_type_dl.currentText()
 
         d = dict(self.parent.active_data)
-        d['asset_type'] = at
-        d['asset_grp'] = g
-        d['asset'] = str(self.asset_name.text())
+        d['task'] = tt
+        d['package'] = pkg
+        d['scenename'] = str(self.scene_name.text())
+        d['version'] = 0
 
-
-        add_tasks = self.parent.controller.proj_controller.getDefaultTasks(at) if self.deftasks_cb.isChecked() else []
-
-        self.result = self.parent.controller.proj_controller.newAsset(d, add_tasks=add_tasks)
+        self.result = self.parent.controller.proj_controller.newScenefile(d)
         (success, response, result) = self.result
         if success:
             m = LauncherMessage(self, "Asset Created", "Successfully created asset: {0}".format(result))
