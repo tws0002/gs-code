@@ -34,6 +34,18 @@ class ProjectController():
 
         #substitute path names with variables
 
+    def copyTemplFile(self, src, dst):
+        """copies the template dir structure and substitutes any variable in filenames"""
+        # TODO ideally this should eventually substitute any other varibales found within the copy tree
+        print "dev: projects.copyTempTree('{0}','{1}')".format(src, dst)
+        try:
+            shutil.copy(os.path.normpath(src), os.path.normpath(dst))
+        except WindowsError:
+            print 'core.projects.copyTempFile() failed {0} to {1}'.format(src,dst)
+            raise StandardError
+
+        #substitute path names with variables
+
 
     def newProject(self, upl_dict, upl='', add_stages=[], add_asset_types=[]):
         """
@@ -154,6 +166,7 @@ class ProjectController():
         :param upl:
         :return:
         """
+
         # if no upl dict is provided, parse it from the upl string
         if not isinstance(upl_dict,dict):
             if upl != '':
@@ -201,6 +214,10 @@ class ProjectController():
             # copy package template
             src = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='copy_tree', exists=False)
             pkg = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='match_path', exists=False)
+            upl_dict['scenetype'] = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=upl_dict['task'], template_var='scenefile_type', exists=False)
+            ssrc = self.pathParser.substTemplatePath(upl_dict, template_type='scenefile', template_name=upl_dict['scenetype'], template_var='copy_path', exists=False)
+            spath = self.pathParser.substTemplatePath(upl_dict, template_type='scenefile', template_name=upl_dict['scenetype'], template_var='workscene_path', exists=False)
+            sfile = self.pathParser.substTemplatePath(upl_dict, template_type='scenefile', template_name=upl_dict['scenetype'], template_var='workscene_file', exists=False)
 
             if pkg != '':
                 if os.path.isdir(pkg):
@@ -208,6 +225,9 @@ class ProjectController():
                     return False, "Job Exists", ""
                 print 'core.projects.newTask(): Creating Task:{0}'.format(pkg)
                 self.copyTemplTree(src, pkg)
+
+                # search and replace any files matching the scenfile to load
+                self.copyTemplFile(ssrc, '/'.join([spath,sfile]))
 
                 print upl_dict
 
@@ -361,7 +381,7 @@ class ProjectController():
         '''
         valid_result = []
         # iterates all subtree looking for patterns that match the glob *.mb
-        result = [y for x in os.walk(filepath) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep'])]
+        result = [y for x in os.walk(filepath) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip'])]
         #result = self.v(filepath, ['mb', 'ma', 'nk', 'aep'])
         for name in result:
             if not os.path.isdir(os.path.join(filepath, name)) and not name.startswith('.') and not name.startswith('_'):
@@ -425,21 +445,26 @@ class ProjectController():
             else:
                 raise ValueError('no upl_path or upl_dict was specified in call to core.project.getTaskScenesList()')
 
-        task_path = upl
-        if task_path == '':
-            task_path = self.pathParser.getPath(upl_dict, hint_type='task')
+
+        #task_path = upl
+        #if task_path == '':
+        #task_path = self.pathParser.getPath(upl_dict, hint_type='task')
+        task_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='task', template_name=task_type, template_var='match_path')
+        #print "core.projects.getTaskScenesList() upl={0} task_path={1}".format(upl_dict, task_path)
+
         # iterates all subtree looking for patterns that match the glob *.mb
         # result = [y for x in os.walk(upl) for y in glob(os.path.join(x[0], '*.mb'))]
 
-        result_files = [y for x in os.walk(upl) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep'])]
+        result_files = [y for x in os.walk(task_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip'])]
         #result_files = self.multiFastGlob(upl, ['mb', 'ma', 'nk', 'aep'])
         for name in result_files:
-            if not os.path.isdir(os.path.join(upl,name)) and not name.startswith('.') and not name.startswith('_'):
-                rel_path = name[len(upl)+1:]
+            if not os.path.isdir(os.path.join(task_path,name)) and not name.startswith('.') and not name.startswith('_'):
+                rel_path = name[len(task_path)+1:]
                 filename = os.path.basename(rel_path)
-                valid_result.append((name,rel_path))
+                valid_result.append(rel_path)
 
-        result = (task_path, result_files)
+        #return valid_result
+        result = (task_path, valid_result)
         return result
 
     def multiGlob(self, path, filter_list):

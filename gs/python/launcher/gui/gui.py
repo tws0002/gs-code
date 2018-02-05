@@ -41,8 +41,8 @@ class LauncherWindow(QMainWindow):
         # any calls to change the data should also update the ui to reflect the active data state
         self.active_data = {
             'file_share':'',
-            'server':'//scholar',
-            'share':'projects',
+            'server':'',
+            'share':'',
             'job':'',
             'stage':'production',
             'asset_type':'',
@@ -128,7 +128,7 @@ class LauncherWindow(QMainWindow):
 
         self.ui['wdgt']['sidebar_list'] = QListWidget()
         self.ui['wdgt']['sidebar_list'].setObjectName('Sidebar')
-        self.ui['wdgt']['sidebar_list'].setMaximumHeight(25)
+        self.ui['wdgt']['sidebar_list'].setMaximumHeight(30)
         self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
         self.ui['lyt']['sidebar_layout'] = QVBoxLayout(self.ui['wdgt']['sidebar'])
 
@@ -537,7 +537,8 @@ class LauncherWindow(QMainWindow):
             self.ui['wdgt'][task_type].tvw.setAlternatingRowColors(True)
             self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt'][task_type],task_type.title())
 
-            self.updateTaskList(task_path=asset_path, task_type=task_type)
+            self.active_path['task'] = task_type
+            self.updateTaskList(task_type)
 
         self.taskTabChanged(0)
 
@@ -549,11 +550,11 @@ class LauncherWindow(QMainWindow):
             self.active_data['task'] = vis_item.task_type
         return
 
-    def updateTaskList(self, task_path='', task_type=''):
+    def updateTaskList(self, task_type):
         #item_list = core.core.list_shots('jobs',project_name)
 
         # get top level list of packages for the given task
-        item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, upl='', task_type=task_type)
+        item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, task_type=task_type)
         # load projects from core
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
@@ -567,17 +568,19 @@ class LauncherWindow(QMainWindow):
                 item_dict[split_name[0]]['is_group'] = False
                 item_dict[split_name[0]]['children'] = {}
             if len(split_name) > 1:
+                the_rest = '/'.join(split_name[1:])
                 item_dict[split_name[0]]['is_group'] = True
-                item_dict[split_name[0]]['children'][split_name[1]] = {}
-                item_dict[split_name[0]]['children'][split_name[1]]['name'] = split_name[1]
-                item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
-                item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
-                item_dict[split_name[0]]['children'][split_name[1]]['is_group'] = False
+                item_dict[split_name[0]]['children'][the_rest] = {}
+                item_dict[split_name[0]]['children'][the_rest]['name'] = the_rest
+                item_dict[split_name[0]]['children'][the_rest]['filepath'] = '/'.join([item_tuple[0],split_name[0],the_rest])
+                item_dict[split_name[0]]['children'][the_rest]['status'] = "Active"
+                item_dict[split_name[0]]['children'][the_rest]['is_group'] = False
 
-        print ("Task_Type:{0} Task_Data{1}".format(task_type,item_tuple))
+        print ("Task_Data:{0}".format(item_tuple))
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt'][task_type].loadViewModelFromDict(item_dict)
         self.ui['wdgt'][task_type].current_path = item_tuple[0]
+        print ("setting task  tab:{0}".format(task_type))
         return
 
     def taskListChanged(self):
@@ -914,7 +917,7 @@ class LauncherWindow(QMainWindow):
             self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
             self.updateAppsList(display_grp=d_grp)
 
-
+            # TODO switch from a hardcoded test for which project.yml to load to something more elegant
             # check if its an old project struct
             if os.path.isdir('{0}/03_production'.format(p_path)):
                 config_path = '{0}/projects_old.yml'.format(CONFIG)
@@ -927,6 +930,12 @@ class LauncherWindow(QMainWindow):
             self.active_data['job'] = p_name
             self.active_path['job'] = p_path
 
+            # update the active data by parsing the project
+            p_data = self.controller.proj_controller.pathParser.parsePath(p_path)
+            for key, val in p_data.iteritems():
+                self.active_data[key] = val
+
+            print (p_data)
             #self.update_items_list(p,'shot_3d')
             #self.update_assets_list(p,'asset_3d')`
             self.updateAssetsTabs(p_path)
@@ -949,22 +958,27 @@ class LauncherWindow(QMainWindow):
         #item_indx = self.sender().selectedIndexes() # old way of doing this
         if len(item_indx):
             # convert/remap QProxyFilterModel index to StandardItemModel index to get the actual item
+            src_index = item_indx[0].model().mapToSource(item_indx[0])
+            item =  item_indx[0].model().sourceModel().itemFromIndex(src_index)
+            s = str(item.text())
             src_index = item_indx[1].model().mapToSource(item_indx[1])
             item =  item_indx[1].model().sourceModel().itemFromIndex(src_index)
-            s = str(item.text())
+            a = str(item.text())
             src_index = item_indx[2].model().mapToSource(item_indx[2])
             item =  item_indx[2].model().sourceModel().itemFromIndex(src_index)
             g = str(item.text())
             print ('Setting shot/asset to {0}, group to {1}'.format(s,g))
             self.active_data['asset'] = s
+            self.active_path['asset'] = a
             self.active_data['asset_grp'] = g
             # TODO set active_path  asset correctly
             #self.active_path['asset'] =
 
-            self.updateScenesList(s)
-            self.updateTaskTabs(self.active_path['job'],self.active_data['asset'])
+            self.updateScenesList(a)
+            self.updateTaskTabs(self.active_path['job'],self.active_path['asset'])
         else:
             print ('Selection Empty')
+            self.active_path['asset'] = ''
             self.active_data['asset'] = ''
             self.active_data['asset_grp'] = ''
 

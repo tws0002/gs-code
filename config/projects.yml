@@ -1,7 +1,8 @@
-# project structure template
+# project structure template definition
 # version 0.5
 #
-# determines how to read the file system
+# tells core how to read the project file system. these definitions can be defined
+# studio wide or on a project by project basis
 
 # < > bracketed words define path variables and are captured using regex named capture groups
 # % % bracketed words are interpreted as string substitution variables you can only use within
@@ -36,7 +37,7 @@ hierarchy_struct: 'project > stage > asset > task > package > scenefile'
 
 # defines global variables used throughout templates. these can be used as %var_name% anywhere in template
 path_vars:
-  project_root: '<server>/projects/<job>'
+  project_root: '<server>/<share>/<job>'
 
 # defines project template as well as any additional variables useful to know about for pattern matching
 project_templates:
@@ -49,7 +50,7 @@ project_templates:
 
 # Production Stage Definition
 # A job may include several phases of production for example: Pitch, Design, Previs, Production
-# these are separate define sperate folder structures and should contain all the assets & scenefiles
+# these are separate define folder structures and should contain all the assets & scenefiles
 stage_templates:
     'pitch':
         parent: 'project'
@@ -76,7 +77,7 @@ stage_templates:
 # parent: specifies which template is the heierarchical parent -this depends on how you have organized
 #         your folder structure. some structures are shot centric, other package centric and this allows
 #         for both
-# People familiar with shotgun would call asset_templates "Entities"
+# People familiar with shotgun would call assets "Entities"
 asset_templates:
   'asset_2d':
     parent: 'stage'
@@ -88,7 +89,7 @@ asset_templates:
     task_root: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: ''
-    qualifier_path: '.info' # qualifies if path contains this subfolder
+    qualifier_path: '.info' # qualified assets must contain this subfolder/file
     ignore_path: ''
   'shot':
     parent: 'stage'
@@ -99,9 +100,10 @@ asset_templates:
     task_root: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     lib_path: '<server>/<share>/<job>/<stage>/shots'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
-    default_tasks: '3d:anim,light,comp;cel:block,anim,cleanup,color;'
+    default_tasks: 'anim,light,comp'
+    #default_tasks: '3d:anim,light,comp;cel:blocking,cleanup,color;hybrid:'
     qualifier_path: '.info' # qualifies if path contains this subfolder
-    ignore_path: ''
+    ignore_path: '' 
   'asset_3d':
     parent: 'stage'
     display_name: 'CG Assets'
@@ -126,6 +128,15 @@ task_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
     package_root: '%match_path%'
     publish_path: '%task_root%/_publish'
+    scenefile_type: 'scene_basic'
+  'design':
+    inherits: 'proto_task_basic'
+    display_name: 'Design'
+    display_order: 1
+    match_path: '<server>/<share>/<job>/design'
+    capture_path: '<server>/<share>/<job>/<stage>'
+    default_package: 'photoshop'
+    scenefile_type: 'styleframe'
   'conform':
     inherits: 'proto_task_basic'
     parent: 'asset'
@@ -134,12 +145,14 @@ task_templates:
     match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
     capture_path: '<server>/<share>/<job>/<stage>/edit/_<task>'
     default_package: 'premiere'
+    scenefile_type: 'conform'
   'edit':
     inherits: 'proto_task_basic'
     display_name: 'Edit'
     display_order: 6
     match_path: '%task_root%/comp'
     default_package: 'premiere'
+    scenefile_type: 'conform'
   'model':
     inherits: 'proto_task_basic'
     parent: 'asset'
@@ -218,7 +231,8 @@ task_templates:
     match_path: '%task_root%/roto'
     default_package: 'photoshop'
 
-# defines package paths relative to the base of a task, %parent_path% is a predefined var
+# Defines available software packages. When creating a new scene, these template folder struct will get
+# copied to the specified path
 package_templates:
   'maya':
     parent: 'task'
@@ -226,78 +240,81 @@ package_templates:
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/maya'
     scenefile_root: '%match_path%/scenes'
+    extension: 'mb'
   'c4d':
     parent: 'task'
     match_path: '%package_root%/c4d'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/c4d'
     scenefile_root: '%package_root%/scenes'
+    extension: 'c4d'
   'houdini':
     parent: 'task'
     match_path: '%package_root%/houdini'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/houdini'
     scenefile_root: '%match_path%'
+    extension: 'hip'
   'modo':
     parent: 'task'
     match_path: '%package_root%/modo'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/modo'
     scenefile_root: '%match_path%'
+    extension: 'lwo'
   'zbrush':
     parent: 'task'
     match_path: '%package_root%/zbrush'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/zbrush'
     scenefile_root: '%match_path%'
+    exensions: 'ztl'
   'nuke':
     parent: 'task'
     match_path: '%package_root%/nuke'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/nuke'
     scenefile_root: '%match_path%'
+    extension: 'nk'
   'ae':
     parent: 'task'
     match_path: '%package_root%/ae'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/ae'
     scenefile_root: '%match_path%'
+    extension: 'aep'
   'premiere':
     parent: 'task'
     match_path: '%package_root%/premiere'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/premiere'
     scenefile_root: '%match_path%'
+    extension: "prproj"
 
-# defines the location of a specific scene file
-scenefile_template:
-    'basic_asset':
+# defines the naming convention of a specific scenefile. Each software package template has
+scenefile_templates:
+    'scene_basic':
         parent: 'package'
+        copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
-        worksecne_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/render/<version>/<renderlayer>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<renderlayer>_<pass>.%04d.<ext>'
+        workscene_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
+        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
         publish_path: '%task_root%/_publish/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'conform':
         parent: 'package'
         workscene_path: '%scenefile_root%'
-        worksecne_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
-
-# to bulid a complete template path from these components you must define parents
-# a request is made to create lighting scenefile which results in the following procedure
-# load the task lighting
-# check for parent: var load that template, store the parents capture_path in the special var parent_path
-# resolve parent_path
-# get the package used by the task specified by default_package, or an override if specified
-# load the package template and resolve the parent as well
-
-# load a template and assemble into a list into all possible variations?
-
-# need to make the parent attribute work.
-# a path is requested via getTemplatePath
-# we cant load for each task, for each asset, that is way to much to do on file load
-
-# instead it should be done at call time
-# get the template path,
-# if it has a parent attribute, lets trace the permutations?
+        workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
+        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+        publish_path: '%task_root%/_publish/<version>'
+        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
+    'styleframe':
+        parent: 'package'
+        workscene_path: '%scenefile_root%'
+        workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
+        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+        publish_path: '%task_root%/_publish/<version>'
+        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'

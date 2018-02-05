@@ -173,7 +173,11 @@ class PathParser:
             p_val = d['parent']
             p_tmplt = '{0}_templates'.format(p_val)
             if p_tmplt in self.templates and p_val in upl_dict:
+                # TODO 'asset' conflicts with 'asset_type', need a proper solution
+                p_val = 'asset_type' if p_val == 'asset' else p_val
+                p_val = 'scenefile_type' if p_val == 'scenefile' else p_val
                 p_dict = self.templates[p_tmplt][upl_dict[p_val]]
+                print p_dict
                 # recurse
                 r = self.inheritParent(upl_dict, p_dict)
 
@@ -203,10 +207,13 @@ class PathParser:
         #templ_path = self.getTemplatePath(template_type, template_name, template_var)
 
 
-        # NEW METHOD to get the path by resolving the poarent
-        d = self.templates['{0}_templates'.format(template_type)][template_name]
-        inherited_template = self.inheritParent(upl_dict,d)
-        templ_path = inherited_template[template_var]
+        # NEW METHOD to get the path by recursively solving the parent of each template type
+        if template_type != 'var':
+            d = self.templates['{0}_templates'.format(template_type)][template_name]
+            inherited_template = self.inheritParent(upl_dict,d)
+            templ_path = inherited_template[template_var]
+        else:
+            templ_path = self.getTemplatePath(template_type, template_name, template_var)
         # END NEW METHOD
 
         if template_file != '':
@@ -262,19 +269,19 @@ class PathParser:
         if hint_type == 'asset' or hint_type == '':
             # for each asset do a substition pass, then check for leftover templates keys
             for asset, data in self.templates['asset_templates'].iteritems():
-                if 'work_path' in data:
+                if 'match_path' in data:
                     tfile = 'work_file' if 'ext' in upl_dict else ''
-                    subst_path = self.substTemplatePath(upl_dict=upl_dict, template_type='asset', template_name=asset, template_var='work_path', template_file=tfile)
+                    subst_path = self.substTemplatePath(upl_dict=upl_dict, template_type='asset', template_name=asset, template_var='match_path', template_file=tfile)
                     if subst_path != '':
                         m.append(subst_path)
 
         # for each task do a substition pass, then check for leftover templates keys
         if hint_type == 'task' or hint_type == '':
             for task, data in self.templates['task_templates'].iteritems():
-                if 'work_path' in data:
+                if 'match_path' in data:
                     tfile = 'work_file' if 'ext' in upl_dict else ''
                     # print ("subst_template_path({0},{1},{2},{3})".format('obj_dict', 'task', 'work_path', 'work_file'))
-                    subst_path = self.substTemplatePath(upl_dict=upl_dict, template_type='task', template_name=task, template_var='work_path', template_file=tfile)
+                    subst_path = self.substTemplatePath(upl_dict=upl_dict, template_type='task', template_name=task, template_var='match_path', template_file=tfile)
                     if subst_path != '':
                         m.append(subst_path)
 
@@ -463,6 +470,9 @@ class PathParser:
             if type.startswith('proto_') == False:
                 result.append(type)
         return result
+
+    def getPackageExtension(self, package):
+        return self.templates['package_templates'][package]['extension']
 
     def getDefaultTasks(self,asset_type):
         """
