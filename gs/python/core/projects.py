@@ -219,21 +219,24 @@ class ProjectController():
             spath = self.pathParser.substTemplatePath(upl_dict, template_type='scenefile', template_name=upl_dict['scenetype'], template_var='workscene_path', exists=False)
             sfile = self.pathParser.substTemplatePath(upl_dict, template_type='scenefile', template_name=upl_dict['scenetype'], template_var='workscene_file', exists=False)
 
-            if pkg != '':
-                if os.path.isdir(pkg):
-                    print 'core.projects.newSceneFile(): Aborting Scenefile Creation, Scenefile Already Exists:{0}'.format(pkg)
+            if sfile != '':
+                if os.path.isdir(sfile):
+                    print 'core.projects.newSceneFile(): Aborting Scenefile Creation, Scenefile Already Exists:{0}'.format(sfile)
                     return False, "Job Exists", ""
-                print 'core.projects.newTask(): Creating Task:{0}'.format(pkg)
-                self.copyTemplTree(src, pkg)
+                print 'core.projects.newTask(): Creating Package:{0}'.format(pkg)
+                # create the package folder if it doesnt exist
+                if not os.path.isdir(pkg):
+                    self.copyTemplTree(src, pkg)
 
                 # search and replace any files matching the scenfile to load
+                print 'core.projects.newTask(): Creating Scenefile:{0}'.format(sfile)
                 self.copyTemplFile(ssrc, '/'.join([spath,sfile]))
 
                 print upl_dict
 
                 # update the model which is then responsible for sending signals to attached UI elements to update
                 # for now its a manual refresh
-                return True, "Success", pkg
+                return True, "Success", '/'.join([spath,sfile])
             else:
                 print ('core.projects.newSceneFile(): Could not Create Scenefile, could not parse path from upl_dict:{0}'.format(upl_dict))
                 return False, "Parser Could Not Determine Path", ""
@@ -393,7 +396,7 @@ class ProjectController():
     def getTaskTypesList(self):
         return self.pathParser.getTemplateTypesList('task')
 
-    def getTaskList(self, asset_path=''):
+    def getTaskList(self, upl_dict=None, upl='', asset_name=''):
         ''' given a project path (upl), returns a list of existing tasks found in the assets, the
          list is checked against valid tasks defined in projects.yml
         :param upl: universal project locator (project file system)
@@ -402,15 +405,23 @@ class ProjectController():
         '''
         START_TIME = time.time()
 
+        # if no upl dict is provided, parse it from the upl string
+        if not isinstance(upl_dict, dict):
+            if upl != '':
+                upl_dict = self.pathParser.parsePath(upl, exists=False)
+            else:
+                raise ValueError(
+                    'core.projects.getTaskList() no upl_path or upl_dict was specified')
+
         task_types = self.getTaskTypesList()
         task_list = []
         #asset_path = self.pathParser.getAssetLib(upl,)
         #qualifier = self.pathParser.getTemplatePath('task', task_type, 'qualifier_path')
-        print 'dev: core.projects.getTaskTypeList asset_path ={0} task_types={1}'.format(asset_path, task_types)
-        if asset_path != '':
-            if os.path.isdir(asset_path):
-                for base_dir in os.listdir(asset_path):
-                    full_path = '/'.join([asset_path, base_dir])
+        print 'dev: core.projects.getTaskTypeList asset_path ={0} task_types={1}'.format(upl, task_types)
+        if upl != '':
+            if os.path.isdir(upl):
+                for base_dir in os.listdir(upl):
+                    full_path = '/'.join([upl, base_dir])
                     #and not base_dir.startswith('_')
                     if base_dir in task_types:
                         if os.path.isdir(full_path) and not base_dir.startswith('.') :
@@ -418,11 +429,11 @@ class ProjectController():
                             #if qualifier != '' and qualifier in sub_dirs:
                             task_list.append(base_dir)
             else:
-                print ('asset_path={0} not found'.format(asset_path))
+                print ('asset_path={0} not found'.format(upl))
         else:
             task_list = task_types
 
-        result = (asset_path, task_list)
+        result = (upl, task_list)
         elapsed_time = time.time() - START_TIME
         print("ProjectController.getTaskTypeList() ran in {0} sec".format(elapsed_time))
         return result

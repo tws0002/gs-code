@@ -251,6 +251,8 @@ class LauncherCreateAsset(LauncherDialog):
         self.footer.addWidget(self.cancelbtn)
         self.footer.addWidget(self.okbtn)
 
+        #self.asset_grp.changed.connect(self.assetGrpChanged)
+
         self.cancelbtn.clicked.connect(self.doCancel)
         self.okbtn.clicked.connect(self.doCreate)
 

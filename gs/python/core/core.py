@@ -20,6 +20,27 @@ import projects
 # reads a project config and uses it for identifying information about the project
 # loads a given project into the datamodel based on the project config mapping
 
+# import core
+
+# initialize the project controller. specify a project.yml file to load as the template file
+# proj_ctrlr = core.projects.ProjectController(self.config_path)
+
+# get a python dictionary that parses the shot properties from the file
+# p_dict = proj_ctrlr.parsePath(pathToProjectFile)
+# result:
+
+# get a list of shots
+# item_tuple = proj_ctrlr.getAssetsList(upl_dict=p_dict, asset_type='shot')
+# p_dict = proj_ctrlr.parsePath(pathToProjectFile)
+# return: 2-tuple (string asset_lib_path, list assets) assets are prefixed with asset group eg. "asset_grp/asset_name"
+
+# get a list of shots
+# item_tuple = proj_ctrlr.getAssetsList(upl_dict=p_dict, asset_type='shot')
+# p_dict = proj_ctrlr.parsePath(pathToProjectFile)
+# return: 2-tuple (string asset_lib_path, list assets) assets are prefixed with asset group eg. "asset_grp/asset_name"
+
+
+
 
 class CoreController():
     '''  The main funciton of core is to act as an interface between the data model (our file system, //scholar/projects) and views of that model (Launcher & other in-app tools)
@@ -32,6 +53,8 @@ class CoreController():
         self.config_path = (CONFIG+"/projects.yml")
         # load the Project Controller that interacts with project data
         self.proj_controller = projects.ProjectController(self.config_path)
+
+
 
         # load up project shares on server
 

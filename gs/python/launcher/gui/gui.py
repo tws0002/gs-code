@@ -477,7 +477,6 @@ class LauncherWindow(QMainWindow):
         return
 
     def updateAssetList(self, project_path, asset_type):
-        #item_list = core.core.list_shots('jobs',project_name)
 
         # get top level assets
         item_tuple = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
@@ -519,7 +518,7 @@ class LauncherWindow(QMainWindow):
 
         self.ui['wdgt']['task_tabs'].currentChanged.connect(self.taskTabChanged)
         # for each asset template type, create a tab widget for it
-        task_type_list = self.controller.proj_controller.getTaskList(asset_path)
+        task_type_list = self.controller.proj_controller.getTaskList(upl=asset_path)
         print ('task_type_list={0}'.format(task_type_list))
         # update each asset type
         for task_type in task_type_list[1]:

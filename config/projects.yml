@@ -126,8 +126,8 @@ task_templates:
     parent: 'asset'
     capture_path: '%task_root%/<task>'
     copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
+    package_root: '%match_path%/work'
+    publish_path: '%task_root%/publish'
     scenefile_type: 'scene_basic'
   'design':
     inherits: 'proto_task_basic'
@@ -160,6 +160,13 @@ task_templates:
     display_order: 1
     match_path: '%task_root%/model'
     default_package: 'maya'
+  'tex':
+    inherits: 'proto_task_basic'
+    parent: 'asset'
+    display_name: 'Texture'
+    display_order: 0
+    match_path: '%task_root%/tex'
+    default_package: 'photoshop'
   'rig':
     inherits: 'proto_task_basic'
     parent: 'asset'
@@ -260,15 +267,15 @@ package_templates:
     match_path: '%package_root%/modo'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/modo'
-    scenefile_root: '%match_path%'
-    extension: 'lwo'
+    scenefile_root: '%match_path%/scenes'
+    extension: 'lxo'
   'zbrush':
     parent: 'task'
     match_path: '%package_root%/zbrush'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/zbrush'
     scenefile_root: '%match_path%'
-    exensions: 'ztl'
+    extension: 'zbr'
   'nuke':
     parent: 'task'
     match_path: '%package_root%/nuke'
@@ -290,6 +297,27 @@ package_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/premiere'
     scenefile_root: '%match_path%'
     extension: "prproj"
+  'photoshop':
+    parent: 'task'
+    match_path: '%package_root%/psd'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/photoshop'
+    scenefile_root: '%match_path%'
+    extension: "psd"
+  'mari':
+    parent: 'task'
+    match_path: '%package_root%/mari'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/mari'
+    scenefile_root: '%match_path%'
+    extension: "mri"
+  'substance':
+    parent: 'task'
+    match_path: '%package_root%/substance'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/substance'
+    scenefile_root: '%match_path%'
+    extension: "mri"
 
 # defines the naming convention of a specific scenefile. Each software package template has
 scenefile_templates:
@@ -304,6 +332,7 @@ scenefile_templates:
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'conform':
         parent: 'package'
+        copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
         render_path: '%task_root%/render/<scenename>/<layer>/<version>'
@@ -312,6 +341,7 @@ scenefile_templates:
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'styleframe':
         parent: 'package'
+        copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
         render_path: '%task_root%/render/<scenename>/<layer>/<version>'
