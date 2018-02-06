@@ -3,7 +3,7 @@ studiotools:
   show: false
   env:
     MODE: pub
-    GSCODEBASE: '//scholar/pipeline'
+    GSCODEBASE: 'c:/pipeline'
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSCODEBASE%/lib/python'
   versions:
     '1.0':

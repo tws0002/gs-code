@@ -228,10 +228,13 @@ class PathParser:
         # and no other <key> template strings are left, then print match found
         if '<' not in resultn[0]:
             result = resultn[0]
+        else:
+            print "core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning empty result".format(resultn)
 
         # if result == '':
         #        print ("Warning: subst_template_path(): No Exact Match Found, Closest match is {0}".format(resultn[0]))
 
+        print result
         return result
 
     def getPath(self, upl_dict=None, hint_type='', hint_name='', hint_var=''):
@@ -328,7 +331,7 @@ class PathParser:
 
         if hint == 'var' or hint == '':
             for var, val in self.vars.iteritems():
-                rgx_path = self.templateToRegex(filepath=val, limiters=['/'], exclude=['<server>'])
+                rgx_path = self.templateToRegex(filepath=val, limiters=['/'], exclude=['<share>'])
                 rp = re.compile(rgx_path)
                 # print ('checking path_vars: {0}'.format(var))
                 if rp.match(split_path[0]):
@@ -336,27 +339,40 @@ class PathParser:
                         # print ('Matched path with path_vars: {0}'.format(var))
                         # print m.groupdict()
                         result_obj = dict(m.groupdict())
-
-        # look for path match in asset structs
-        if hint == 'asset' or hint == '':
-            for asset, data in self.templates['asset_templates'].iteritems():
-                if 'work_path' in data:
-                    rgx_path = self.templateToRegex(filepath=data['work_path'], limiters=['/'], exclude=['<server>'])
+        if hint == 'stage' or hint == '':
+            for stage, data in self.templates['stage_templates'].iteritems():
+                if 'match_path' in data:
+                    rgx_path = self.templateToRegex(filepath=data['match_path'], limiters=['/'], exclude=['<share>'])
                     rp = re.compile(rgx_path)
                     # print ('checking path_vars: {0}'.format(var))
                     if rp.match(split_path[0]):
                         for m in rp.finditer(split_path[0]):
                             result_obj = dict(m.groupdict())
+                            result_obj['stage']=stage
+
+        # look for path match in asset structs
+        # TODO conisder depricating since work_path isn't in use
+        if hint == 'asset' or hint == '':
+            for asset_type, data in self.templates['asset_templates'].iteritems():
+                if 'match_path' in data:
+                    rgx_path = self.templateToRegex(filepath=data['match_path'], limiters=['/'], exclude=['<share>'])
+                    rp = re.compile(rgx_path)
+                    # print ('checking path_vars: {0}'.format(var))
+                    if rp.match(split_path[0]):
+                        for m in rp.finditer(split_path[0]):
+                            result_obj = dict(m.groupdict())
+                            result_obj['asset_type'] = asset_type
 
         # look for path match in task structs
         # (?P<file_share>.*)/(?P<job>.*)/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/(?P<shot>[^/]*)/(?P<task>[^/]*)/(?P<shot2>[^/]*)_(?P<cversion>.*)_(?P<aversion>.*)_(?P<lversion>.*)_(?P<initials>.*)\.(?P<ext>.*)
+        # TODO conisder depricating since work_path isn't in use
         if hint == 'task' or hint == '':
-            for task, data in self.templates['task_templates'].iteritems():
+            for task, data in self.templates['scenefile_templates'].iteritems():
 
-                if 'work_path' in data:
+                if 'workscene_path' in data:
                     # should cache converted regexs
-                    rgx_path = self.templateToRegex(filepath=data['work_path'], limiters=['/'], exclude=['<server>'])
-                    rgx_file = self.templateToRegex(filepath=data['work_file'], limiters=['_', '.'], exclude=['<shot>', '<asset>'])
+                    rgx_path = self.templateToRegex(filepath=data['workscene_path'], limiters=['/'], exclude=['<share>'])
+                    rgx_file = self.templateToRegex(filepath=data['workscene_file'], limiters=['_', '.'], exclude=['<shot>', '<asset>'])
 
                     # print ("task:{1} rgx_file={0}".format(rgx_file,task))
                     rp = re.compile(rgx_path)

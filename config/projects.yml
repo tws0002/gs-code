@@ -56,21 +56,28 @@ stage_templates:
         parent: 'project'
         display_name: 'Pitch'
         pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)/(?P<stage>pitch)'
-        match_path: '<server>/projects/<job>/pitch'
+        match_path: '<server>/<share>/<job>/pitch'
         capture_path: '<server>/<share>/<job>/<stage>'
-        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
+        copy_tree: '<server>/<share>/_templates/project_template_2018/stage_basic'
+    'design':
+        parent: 'project'
+        display_name: 'Design'
+        pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)/(?P<stage>design)'
+        match_path: '<server>/<share>/<job>/design'
+        capture_path: '<server>/<share>/<job>/<stage>'
+        copy_tree: '<server>/<share>/_templates/project_template_2018/stage_design'
     'previs':
         parent: 'project'
         display_name: 'Previs'
-        match_path: '<server>/projects/<job>/previs'
+        match_path: '<server>/<share>/<job>/previs'
         capture_path: '<server>/<share>/<job>/previs'
-        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
+        copy_tree: '<server>/<share>/_templates/project_template_2018/stage_basic'
     'production':
         parent: 'project'
         display_name: 'Production'
-        match_path: '<server>/projects/<job>/production'
+        match_path: '<server>/<share>/<job>/production'
         capture_path: '<server>/<share>/<job>/<stage>'
-        copy_tree: '<server>/projects/_templates/project_template_2018/stage_basic'
+        copy_tree: '<server>/<share>/_templates/project_template_2018/stage_basic'
 
 # Asset Definitions: Assets are libraries of objects specific to a project/stage of 
 # Notes:
@@ -126,8 +133,8 @@ task_templates:
     parent: 'asset'
     capture_path: '%task_root%/<task>'
     copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
-    package_root: '%match_path%/work'
-    publish_path: '%task_root%/publish'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
     scenefile_type: 'scene_basic'
   'design':
     inherits: 'proto_task_basic'
@@ -160,13 +167,6 @@ task_templates:
     display_order: 1
     match_path: '%task_root%/model'
     default_package: 'maya'
-  'tex':
-    inherits: 'proto_task_basic'
-    parent: 'asset'
-    display_name: 'Texture'
-    display_order: 0
-    match_path: '%task_root%/tex'
-    default_package: 'photoshop'
   'rig':
     inherits: 'proto_task_basic'
     parent: 'asset'
@@ -267,15 +267,15 @@ package_templates:
     match_path: '%package_root%/modo'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/modo'
-    scenefile_root: '%match_path%/scenes'
-    extension: 'lxo'
+    scenefile_root: '%match_path%'
+    extension: 'lwo'
   'zbrush':
     parent: 'task'
     match_path: '%package_root%/zbrush'
     capture_path: '%package_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/zbrush'
     scenefile_root: '%match_path%'
-    extension: 'zbr'
+    exensions: 'ztl'
   'nuke':
     parent: 'task'
     match_path: '%package_root%/nuke'
@@ -297,27 +297,6 @@ package_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/premiere'
     scenefile_root: '%match_path%'
     extension: "prproj"
-  'photoshop':
-    parent: 'task'
-    match_path: '%package_root%/psd'
-    capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/packages/photoshop'
-    scenefile_root: '%match_path%'
-    extension: "psd"
-  'mari':
-    parent: 'task'
-    match_path: '%package_root%/mari'
-    capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/packages/mari'
-    scenefile_root: '%match_path%'
-    extension: "mri"
-  'substance':
-    parent: 'task'
-    match_path: '%package_root%/substance'
-    capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/packages/substance'
-    scenefile_root: '%match_path%'
-    extension: "mri"
 
 # defines the naming convention of a specific scenefile. Each software package template has
 scenefile_templates:
@@ -328,23 +307,21 @@ scenefile_templates:
         workscene_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
         render_path: '%task_root%/render/<scenename>/<layer>/<version>'
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/_publish/<version>'
+        publish_path: '%task_root%/publish/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'conform':
         parent: 'package'
-        copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
         render_path: '%task_root%/render/<scenename>/<layer>/<version>'
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/_publish/<version>'
+        publish_path: '%task_root%/publish/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'styleframe':
         parent: 'package'
-        copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
         render_path: '%task_root%/render/<scenename>/<layer>/<version>'
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/_publish/<version>'
+        publish_path: '%task_root%/publish/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
