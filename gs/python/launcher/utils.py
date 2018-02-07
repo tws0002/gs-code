@@ -151,4 +151,7 @@ def get_initials():
 
     return initials
 
+def get_username():
+    return str(os.environ['USERNAME'])
+
 

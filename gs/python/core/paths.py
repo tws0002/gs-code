@@ -150,12 +150,14 @@ class PathParser:
             result = result.replace('{0}[^{1}]*'.format(e, lstr), '{0}.*'.format(e))
         return str(result)
 
-    def inheritParent(self, upl_dict, d ):
+    def inheritParent(self, upl_dict, d, parent_override=''):
         """ recursive template loading and substitution. this allows for template types to inherit their parents key/values
         which can then help resolve substitution vars"""
         r = {}
         if 'parent' in d:
             p_val = d['parent']
+            if parent_override != '':
+                p_val=parent_override
             p_tmplt = '{0}_templates'.format(p_val)
             if p_tmplt in self.templates:
                 # if the upl_dict tells us which parent template to load we can recursively resolve parent
@@ -202,7 +204,7 @@ class PathParser:
 
 
 
-    def substTemplatePath(self, upl_dict=None, upl='', template_type='', template_name='', template_var='', template_file='', exists=True):
+    def substTemplatePath(self, upl_dict=None, upl='', template_type='', template_name='', template_var='', template_file='', exists=True, parent_override=''):
         ''' given a dict it will return a substituted template path that matches the search qualifications'''
 
         result = ''
@@ -221,9 +223,10 @@ class PathParser:
 
 
         # NEW METHOD to get the path by recursively solving the parent of each template type
+
         if template_type != 'var':
             d = self.templates['{0}_templates'.format(template_type)][template_name]
-            inherited_template = self.inheritParent(upl_dict,d)
+            inherited_template = self.inheritParent(upl_dict,d,parent_override=parent_override)
             templ_path = inherited_template[template_var]
         else:
             templ_path = self.getTemplatePath(template_type, template_name, template_var)

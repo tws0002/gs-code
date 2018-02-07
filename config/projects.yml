@@ -78,6 +78,8 @@ stage_templates:
         match_path: '<server>/<share>/<job>/production'
         capture_path: '<server>/<share>/<job>/<stage>'
         copy_tree: '<server>/<share>/_templates/project_template_2018/stage_basic'
+        user_scratch: '<server>/<share>/<job>/production/work/<username>'
+        package_root: '<server>/<share>/<job>/production/work/<username>' 
 
 # Asset Definitions: Assets are libraries of objects specific to a project/stage of 
 # Notes:

@@ -53,6 +53,7 @@ class LauncherWindow(QMainWindow):
             'filetype':'',
             'filename':'',
             'filepath':'',
+            'username':get_username()
         }
         # caches the active data's path for quick references
         self.active_path = dict(self.active_data)
@@ -84,7 +85,7 @@ class LauncherWindow(QMainWindow):
         # parent.setMargin(50)
 
         # init ui elements
-        self.icon_size = QSize(48, 48)
+        self.icon_size = QSize(92, 92)
         self.title = "GS Launcher"
         #QPixmapCache.setCacheLimit(20480)
 
@@ -239,6 +240,9 @@ class LauncherWindow(QMainWindow):
         self.ui['lyt']['project_lyt'].addWidget(self.ui['lbl']['project'])
         self.ui['lyt']['project_lyt'].addWidget(self.ui['wdgt']['project_combo'])
         self.ui['lyt']['project_lyt'].setStretchFactor(self.ui['wdgt']['project_combo'], 1)
+
+        # TODO: remove combo box rpoject list permanantly
+        self.ui['wdgt']['project_grp'].setVisible(False)
 
 
         ## SETUP ARTISTS GROUP ##
@@ -915,6 +919,7 @@ class LauncherWindow(QMainWindow):
             d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
             self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
             self.updateAppsList(display_grp=d_grp)
+            print ("DISPLAY GROUPS UPDATED")
 
             # TODO switch from a hardcoded test for which project.yml to load to something more elegant
             # check if its an old project struct
@@ -1064,10 +1069,16 @@ class LauncherWindow(QMainWindow):
                 self.addRecentProject(project)
 
     def launchApp(self, item, app='', version='', mode='ui'):
+        """ called when user launches a generic app at the project level. This will launch within a work folder"""
 
         initials = str(self.ui['wdgt']['initials_le'].text())
+
         # TODO needs to be the whole path to the share in the new pipeline
-        project = str(self.ui['wdgt']['project_combo'].currentText())
+        # depricated old way
+        #project = str(self.ui['wdgt']['project_combo'].currentText())
+
+
+
         workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
         button = ''
         button_name = ''
@@ -1088,6 +1099,11 @@ class LauncherWindow(QMainWindow):
                     mode = pkg_and_mode[1]
                 if version == '':
                     version = self.w_data[workgroup]['packages'][package]['version']
+
+        # create a project for the app in the current job/stage
+        d = dict(self.active_data)
+        d['package'] = app
+        status, response, project = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project, filepath=filepath)
@@ -1138,6 +1154,7 @@ class LauncherWindow(QMainWindow):
             'filetype':'',
             'filename':'',
             'filepath':'',
+            'username':get_username(),
         }
         # caches the active data's path for quick references
         self.active_path = dict(self.active_data)

@@ -126,6 +126,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             project = controller.proj_controller.pathParser.getProject(filepath_unix,app)
             print ("Project Guess:{0}".format(project))
 
+    print ("GSPROJECT={0}".format(project))
     os.environ['GSPROJECT'] = project
 
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
@@ -218,9 +219,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
-    if filepath != '':
+    if project != '':
         flag = process_env.get_flag(app=app, flag='project')
         cmd += ' {0} "{1}"'.format(flag,os.environ['GSPROJECT'].replace('\\','/'))
+    if filepath != '':
         flag = process_env.get_flag(app=app, flag='file')
         cmd += ' {0} "{1}"'.format(flag,filepath.replace('\\','/'))
 

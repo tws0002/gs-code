@@ -155,6 +155,44 @@ class ProjectController():
             print ('core.projects.newAsset(): Could not Create Asset, No Valid asset was specified in upl_dict:{0}'.format(upl_dict))
             return False, "No Asset Specified", ""
 
+    def newScratch(self, upl_dict=None, upl='', allowExists=False):
+        """
+        creates a username folder and workspace to launch apps into
+        :param upl_dict:
+        :param upl:
+        :return:
+        """
+        # if no upl dict is provided, parse it from the upl string
+        if not isinstance(upl_dict,dict):
+            if upl != '':
+                upl_dict = self.pathParser.parsePath(upl, exists=False)
+            else:
+                raise ValueError('no upl_path or upl_dict was specified in call to core.project.newScratch()')
+        if 'stage' in upl_dict:
+            # copy package template
+            src = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='copy_tree', exists=False, parent_override='stage')
+            pkg = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='match_path', exists=False, parent_override='stage')
+            if pkg != '':
+                #print upl_dict
+                if allowExists and os.path.isdir(pkg):
+                    print 'core.projects.newScratch(): Package Exists:{0}'.format(pkg)
+                    # create the package folder if it doesnt exist
+                    return True, "core.projects.newScratch(): Package Exists", pkg
+                else:
+                    print 'core.projects.newScratch(): Creating Package:{0}'.format(pkg)
+                    # create the package folder if it doesnt exist
+                    if not os.path.isdir(pkg):
+                        self.copyTemplTree(src, pkg)
+                        return True, "core.projects.newScratch(): Package Created, Aborted", pkg
+                    return False, "core.projects.newScratch(): Package Already Exists, Aborted", ''
+
+            else:
+                print ('core.projects.newScratch(): Could not Create Package, could not parse path from upl_dict:{0}'.format(upl_dict))
+                return False, "Parser Could Not Determine Path", ""
+        else:
+            print ('core.projects.newScratch(): Could not Create Package, No Valid Project Stage was specified in upl_dict:{0}'.format(upl_dict))
+            return False, "No Stage Specified", ""
+        return
 
     def newTask(self, upl_dict=None, upl=''):
         """
