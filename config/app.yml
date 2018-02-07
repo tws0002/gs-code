@@ -3,7 +3,7 @@ studiotools:
   show: false
   env:
     MODE: pub
-    GSCODEBASE: 'c:/pipeline'
+    GSCODEBASE: '//scholar/pipeline'
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSCODEBASE%/lib/python'
   versions:
     '1.0':
@@ -121,7 +121,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /
@@ -149,7 +149,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /
@@ -175,7 +175,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /

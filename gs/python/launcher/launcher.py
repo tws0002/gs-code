@@ -97,18 +97,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     print ("Current Working Directory {0}".format(cwd))
     print 'Launching {0} version: {1}'.format(app,version)
 
-    # if filepath is specified and project is not,
-    if filepath != '':
-        print "Filepath specified:{0}".format(filepath)
-        if project == '' or project is None:
-            # get the project for the given path by calling core.pathsParser
-            import core
-            controller = core.CoreController()
-            filepath_unix = filepath.replace('\\','/')
-            project = controller.proj_controller.pathParser.getProject(filepath_unix)
-            print ("Project Guess:{0}".format(project))
 
-    os.environ['GSPROJECT'] = project
     os.environ['GSINITIALS'] = initials
     os.environ['GSWORKGROUP'] = workgroup
 
@@ -125,6 +114,19 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             extension = filepath.split('.')[-1]
             app = process_env.get_app_from_ext(extension)
             print ("App Guess: {0}".format(app))
+
+    # if filepath is specified and project is not,
+    if filepath != '':
+        print "Filepath specified:{0}".format(filepath)
+        if project == '' or project is None:
+            # get the project for the given path by calling core.pathsParser
+            import core
+            controller = core.CoreController()
+            filepath_unix = filepath.replace('\\','/')
+            project = controller.proj_controller.pathParser.getProject(filepath_unix,app)
+            print ("Project Guess:{0}".format(project))
+
+    os.environ['GSPROJECT'] = project
 
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
@@ -217,6 +219,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
     if filepath != '':
+        flag = process_env.get_flag(app=app, flag='project')
+        cmd += ' {0} "{1}"'.format(flag,os.environ['GSPROJECT'].replace('\\','/'))
         flag = process_env.get_flag(app=app, flag='file')
         cmd += ' {0} "{1}"'.format(flag,filepath.replace('\\','/'))
 

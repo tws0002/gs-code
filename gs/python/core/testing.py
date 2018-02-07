@@ -4,6 +4,7 @@ import unittest
 import os
 import settings
 import paths
+import core
 
 # determines vars based on this files location
 LAUNCHER = os.path.dirname(os.path.realpath(__file__))
@@ -162,6 +163,33 @@ class TestPathParser(unittest.TestCase):
         # test that it fails on wrong type
         with self.assertRaises(TypeError):
             self.pathParser.getPath(s1)
+
+    def testAPICalls(self):
+        pass
+        ## # initialize the project controller. specify a project.yml file to load as the template file
+        ## proj = core.projects.ProjectController('//scholar/pipeline/dev/config/projects.yml'     ##
+        ## # get a python dictionary that parses the shot properties from the file
+        ## p_dict = proj.pathParser.parsePath('//scholar/projects/ab_testjob/production'       ##
+        ## # get a list of shots for a stage of production
+        ## asset_lib, asset_names = proj.getAssetsList(upl_dict=p_dict, asset_type='shot')
+        ## # returns: 2-tuple (string asset_lib_path, assets[]) assets are prefixed with asset group eg. "asset_grp/asset_name"
+        ## # result: ('//scholar/projects/ab_testjob', ['s01/001_00', 's01/002_00', 's01/003_00', 's01/004_00', 's01/005_00']      ##
+        ## # get a list of tasks within a shot
+        ## task_root, task_names = proj.getTaskList(upl='/'.join([asset_lib, asset_names[0]))
+        ## # returns: 2-tuple (string task_root_path, tasks[])
+        ## # result: ('//scholar/projects/ab_testjob/s01/001_00', ['anim', 'light', 'comp']        ##
+        ## # get a list of scenefiles within a given task
+        ## task_path, rel_scenepath = proj.getTaskScenesList(upl='/'.join([task_root, task_names[0]))
+        ## print (task_path+rel_scenepath)
+        ## # returns: 2-tuple (string task_root_path, scenefile_paths[])
+        ## # result: ('//scholar/projects/ab_testjob/s01/001_00/comp', ['work/nuke/s01_001_00_comp_main_v000.nk', 'work/nuke/s01_001_00_comp_main_v001.nk', 'work/nuke/s01_001_00_comp_main_v002.nk']      ##
+        ## # get scene name and version info from a filepath
+        ## f_data = proj.pathParser.parsePath('//scholar/projects/ab_testjob/s01/001_00/comp/work/nuke/s01_001_00_comp_main_v000.nk')
+        ## print f_data
+        ## # returns: python dict of any variables that it found in the path
+        ## # result: {'server':'//scholar', 'share':'projects', 'job': 'ab_testjob', 'asset_type':'shot, 'asset_grp':'s01', 'asset':'001_00', 'task':'comp', 'package':'nuke', 'scenename':'main', 'version', 'v001', 'ext':'nk'       ##
+        ## # get render sequence of a task/layer/pas       ##
+        ## # get the latest version of a render sequence for a task/layer
 
 class TestProject(unittest.TestCase):
 

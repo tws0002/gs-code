@@ -445,6 +445,7 @@ class ProjectController():
         """
         :param upl_dict: optional project locator dictionary, if not provided upl path is used instead
         :param upl: a file path to interpret a upl_dict from, only used if upl_dict isn't provided
+        :param task_type: specific type of task you're looking for
         :return: a list of scenes found. includes subdirectories to file based on package
         """
         valid_result = []

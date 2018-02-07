@@ -133,8 +133,8 @@ task_templates:
     parent: 'asset'
     capture_path: '%task_root%/<task>'
     copy_tree: '<server>/projects/_templates/project_template_2018/task_basic'
-    package_root: '%match_path%'
-    publish_path: '%task_root%/_publish'
+    package_root: '%task_root%/<task>/work'
+    publish_path: '%task_root%/<task>/publish'
     scenefile_type: 'scene_basic'
   'design':
     inherits: 'proto_task_basic'
@@ -158,6 +158,7 @@ task_templates:
     display_name: 'Edit'
     display_order: 6
     match_path: '%task_root%/comp'
+    package_root: '%task_root%/<task>/work'
     default_package: 'premiere'
     scenefile_type: 'conform'
   'model':
@@ -201,6 +202,7 @@ task_templates:
     display_name: 'Light'
     display_order: 3
     match_path: '%task_root%/light'
+    package_root: '%task_root%/<task>/work'
     default_package: 'maya'
   'comp':
     inherits: 'proto_task_basic'

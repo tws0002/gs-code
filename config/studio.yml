@@ -1,20 +1,20 @@
 company: 'Gentleman Scholar'
 servers:
   'jobs':
-    root_path: 'c:/projects'
+    root_path: '//scholar/projects'
     share_type: 'job_share'
   'assets':
-    root_path: 'c:/assets'
+    root_path: '//scholar/assets'
     share_type: 'lib_share'
   'personal':
-    root_path: 'c:/homes'
+    root_path: '//scholar/homes'
     share_type: 'user_share'
   'footage':
-    root_path: 'c:/footage'
+    root_path: '//scholar/footage'
     share_type: 'media_share'
   'apps':
-    root_path: 'c:/apps'
+    root_path: '//scholar/apps'
     share_type: 'package_share'
   'pipeline':
-    root_path: 'c:/pipeline'
+    root_path: '//scholar/pipeline'
     share_type: 'tools_share'

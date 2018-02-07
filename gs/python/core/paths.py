@@ -48,6 +48,8 @@ class PathParser:
                 if match in self.vars:
                     val = val.replace(('%' + match + '%'), self.vars[match])
                 if match in localvars:
+                    if type(val) is dict:
+                        print ("val is a dict!! {0}  and d={1}".format(val,d))
                     val = val.replace(('%' + match + '%'), localvars[match])
                 if match in os.environ:
                     val = val.replace(('%' + match + '%'), os.environ[match])
@@ -148,23 +150,6 @@ class PathParser:
             result = result.replace('{0}[^{1}]*'.format(e, lstr), '{0}.*'.format(e))
         return str(result)
 
-    def getTemplatePath(self, template_type, template_name, template_var):
-        ''' returns the value of the template struct '''
-        result = ''
-        d = self.vars
-        if template_type == 'var':
-            if template_var in d:
-                result = d[template_var]
-        else:
-            d = self.templates['{0}_templates'.format(template_type)]
-            if template_name in d:
-                if template_var in d[template_name]:
-                    result = d[template_name][template_var]
-            else:
-                print "Warning: core.paths.get_template_path(): {0} not found in self.{1}_templates for var {2}".format(template_name, template_type, template_var)
-                raise StandardError
-        return result
-
     def inheritParent(self, upl_dict, d ):
         """ recursive template loading and substitution. this allows for template types to inherit their parents key/values
         which can then help resolve substitution vars"""
@@ -172,14 +157,17 @@ class PathParser:
         if 'parent' in d:
             p_val = d['parent']
             p_tmplt = '{0}_templates'.format(p_val)
-            if p_tmplt in self.templates and p_val in upl_dict:
-                # TODO 'asset' conflicts with 'asset_type', need a proper solution
-                p_val = 'asset_type' if p_val == 'asset' else p_val
-                p_val = 'scenefile_type' if p_val == 'scenefile' else p_val
-                p_dict = self.templates[p_tmplt][upl_dict[p_val]]
-                print p_dict
-                # recurse
-                r = self.inheritParent(upl_dict, p_dict)
+            if p_tmplt in self.templates:
+                # if the upl_dict tells us which parent template to load we can recursively resolve parent
+                if p_val in upl_dict:
+                    # TODO 'asset' conflicts with 'asset_type', need a proper solution
+                    p_val = 'asset_type' if p_val == 'asset' else p_val
+                    p_val = 'scenefile_type' if p_val == 'scenefile' else p_val
+                    p_dict = self.templates[p_tmplt][upl_dict[p_val]]
+                    # recurse
+                    r = self.inheritParent(upl_dict, p_dict)
+                #else:
+                #    r = self.templates[p_tmplt]
 
         # override the parent dict with the original dict keys
         for key in d:
@@ -188,6 +176,31 @@ class PathParser:
         # then expand all vars with local and project config variables
         self.parseSubst(r)
         return r
+
+    def getTemplatePath(self, template_type, template_name, template_var, upl_dict={}):
+        ''' returns the value of the template struct '''
+        result = ''
+        d = self.vars
+        if template_type == 'var':
+            if template_var in d:
+                result = d[template_var]
+        else:
+            #d = self.templates['{0}_templates'.format(template_type)]
+
+            # recurslivly solve vars that to parent templates
+            d = self.templates['{0}_templates'.format(template_type)][template_name]
+            inherited_template = self.inheritParent(upl_dict,d)
+            result = inherited_template[template_var]
+
+            #if template_name in d:
+            #    if template_var in d[template_name]:
+            #        result = d[template_name][template_var]
+            #else:
+            #    print "Warning: core.paths.get_template_path(): {0} not found in self.{1}_templates for var {2}".format(template_name, template_type, template_var)
+            #    raise StandardError
+        return result
+
+
 
     def substTemplatePath(self, upl_dict=None, upl='', template_type='', template_name='', template_var='', template_file='', exists=True):
         ''' given a dict it will return a substituted template path that matches the search qualifications'''
@@ -328,10 +341,11 @@ class PathParser:
         partial_match = False
         task_path_match = False
         task_file_match = False
+        upl_guess = {}
 
         if hint == 'var' or hint == '':
             for var, val in self.vars.iteritems():
-                rgx_path = self.templateToRegex(filepath=val, limiters=['/'], exclude=['<share>'])
+                rgx_path = self.templateToRegex(filepath=val, limiters=['/'], exclude=['<server>'])
                 rp = re.compile(rgx_path)
                 # print ('checking path_vars: {0}'.format(var))
                 if rp.match(split_path[0]):
@@ -339,40 +353,77 @@ class PathParser:
                         # print ('Matched path with path_vars: {0}'.format(var))
                         # print m.groupdict()
                         result_obj = dict(m.groupdict())
+                    for key, val in result_obj.iteritems():
+                        upl_guess[key] = val
         if hint == 'stage' or hint == '':
             for stage, data in self.templates['stage_templates'].iteritems():
                 if 'match_path' in data:
-                    rgx_path = self.templateToRegex(filepath=data['match_path'], limiters=['/'], exclude=['<share>'])
+                    rgx_path = self.templateToRegex(filepath=self.getTemplatePath('stage', stage, 'match_path', upl_dict=upl_guess ), limiters=['/'], exclude=['<server>'])
                     rp = re.compile(rgx_path)
                     # print ('checking path_vars: {0}'.format(var))
+                    # THIS SHOULD RETURN TRUE BUT IT DOESN't
                     if rp.match(split_path[0]):
                         for m in rp.finditer(split_path[0]):
                             result_obj = dict(m.groupdict())
                             result_obj['stage']=stage
+                            # store a best guess for project location to help
+                        for key, val in result_obj.iteritems():
+                            upl_guess[key] = val
 
         # look for path match in asset structs
         # TODO conisder depricating since work_path isn't in use
         if hint == 'asset' or hint == '':
             for asset_type, data in self.templates['asset_templates'].iteritems():
                 if 'match_path' in data:
-                    rgx_path = self.templateToRegex(filepath=data['match_path'], limiters=['/'], exclude=['<share>'])
+                    rgx_path = self.templateToRegex(filepath=self.getTemplatePath( 'asset', asset_type, 'match_path', upl_dict=upl_guess), limiters=['/'], exclude=['<server>'])
                     rp = re.compile(rgx_path)
                     # print ('checking path_vars: {0}'.format(var))
                     if rp.match(split_path[0]):
                         for m in rp.finditer(split_path[0]):
                             result_obj = dict(m.groupdict())
                             result_obj['asset_type'] = asset_type
+                        for key, val in result_obj.iteritems():
+                            upl_guess[key] = val
+
+        if hint == 'task' or hint == '':
+            for task, data in self.templates['task_templates'].iteritems():
+                if 'match_path' in data:
+                    rgx_path = self.templateToRegex(filepath=self.getTemplatePath( 'task', task, 'match_path', upl_dict=upl_guess), limiters=['/'], exclude=['<server>'])
+                    rp = re.compile(rgx_path)
+                    # print ('checking path_vars: {0}'.format(var))
+                    if rp.match(split_path[0]):
+                        for m in rp.finditer(split_path[0]):
+                            result_obj = dict(m.groupdict())
+                            result_obj['task'] = task
+                        for key, val in result_obj.iteritems():
+                            upl_guess[key] = val
+
+        if hint == 'package' or hint == '':
+            for pkg, data in self.templates['package_templates'].iteritems():
+                if 'match_path' in data:
+                    fp = self.getTemplatePath('package', pkg, 'match_path', upl_dict=upl_guess )
+                    rgx_path = self.templateToRegex(filepath=fp, limiters=['/'], exclude=['<server>'])
+                    rp = re.compile(rgx_path)
+                    # print ('checking path_vars: {0}'.format(var))
+                    # THIS SHOULD RETURN TRUE BUT IT DOESN't
+                    if rp.match(split_path[0]):
+                        for m in rp.finditer(split_path[0]):
+                            result_obj = dict(m.groupdict())
+                            result_obj['package']=pkg
+                            # store a best guess for project location to help
+                        for key, val in result_obj.iteritems():
+                            upl_guess[key] = val
 
         # look for path match in task structs
         # (?P<file_share>.*)/(?P<job>.*)/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/(?P<shot>[^/]*)/(?P<task>[^/]*)/(?P<shot2>[^/]*)_(?P<cversion>.*)_(?P<aversion>.*)_(?P<lversion>.*)_(?P<initials>.*)\.(?P<ext>.*)
         # TODO conisder depricating since work_path isn't in use
         if hint == 'task' or hint == '':
-            for task, data in self.templates['scenefile_templates'].iteritems():
+            for scn, data in self.templates['scenefile_templates'].iteritems():
 
                 if 'workscene_path' in data:
                     # should cache converted regexs
-                    rgx_path = self.templateToRegex(filepath=data['workscene_path'], limiters=['/'], exclude=['<share>'])
-                    rgx_file = self.templateToRegex(filepath=data['workscene_file'], limiters=['_', '.'], exclude=['<shot>', '<asset>'])
+                    rgx_path = self.templateToRegex(filepath=self.getTemplatePath('scenefile', scn, 'workscene_path', upl_dict=upl_guess), limiters=['/'], exclude=['<server>'])
+                    rgx_file = self.templateToRegex(filepath=self.getTemplatePath( 'scenefile', scn, 'workscene_file', upl_dict=upl_guess), limiters=['_', '.'], exclude=['<shot>', '<asset>'])
 
                     # print ("task:{1} rgx_file={0}".format(rgx_file,task))
                     rp = re.compile(rgx_path)
@@ -398,7 +449,7 @@ class PathParser:
                                 # print ('{0} matched filename with task_struct: {1}'.format(split_path[1],task))
                                 # print n.groupdict()
                                 task_file_match = True
-                                result_obj['task'] = task
+                                result_obj['scene_type'] = scn
                                 # manually update the file name object data, if a key doesn't match though, we have to return false
                                 for key, val in n.groupdict().iteritems():
                                     if key in result_obj:
@@ -407,10 +458,12 @@ class PathParser:
                                             task_file_match = False
                                 if task_file_match:
                                     result_obj.update(n.groupdict())
+                                for key, val in result_obj.iteritems():
+                                    upl_guess[key] = val
 
         # validate the data, (does the file exist?, is the file itself resolved or just the path, does the project have valid structure?)
         # print result_obj
-        return result_obj
+        return upl_guess
 
     # NOT USED ?
     def getProjectList(self, server_path, full_path=True):
@@ -435,13 +488,13 @@ class PathParser:
 
         return result
 
-    def getProject(self, upl):
+    def getProject(self, upl, app):
         """
         useful for setting projects variable when launching into a file
         :param upl: any filepath within the project
         :return: the path to the root of othe project
         """
-        result = self.substTemplatePath(upl=upl, template_type='var', template_var='project_root')
+        result = self.substTemplatePath(upl=upl, template_type='package', template_name=app, template_var='match_path')
 
         return result
 
