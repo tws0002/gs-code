@@ -925,6 +925,8 @@ class LauncherWindow(QMainWindow):
                 config_path = '{0}/projects.yml'.format(CONFIG)
                 self.controller.proj_controller.setConfig(config_path)
 
+            self.resetActiveData()
+
             #update selected dict
             self.active_data['job'] = p_name
             self.active_path['job'] = p_path
@@ -937,6 +939,8 @@ class LauncherWindow(QMainWindow):
             print (p_data)
             #self.update_items_list(p,'shot_3d')
             #self.update_assets_list(p,'asset_3d')`
+            self.ui['wdgt']['scene_list'].clearAllItems()
+            self.ui['wdgt']['task_tabs'].clear()
             self.updateAssetsTabs(p_path)
 
 
@@ -1043,18 +1047,21 @@ class LauncherWindow(QMainWindow):
 
         # get the filepath from teh scenefile list
         item = self.ui['wdgt']['scene_list'].getSelectedItems()
-        print "ITEM={0}".format(item)
-        filepath = str(item[1].text())
-        #print 'UI Launching {0} version: {1}'.format(app,version)
-        print "Launching Filepath={0}".format(filepath)
-        launcher.launch_app(app='', workgroup=workgroup, initials=initials,  mode='ui', project=project, filepath=filepath)
+        if len(item):
+            print "ITEM={0}".format(item)
+            filepath = str(item[1].text())
+            if os.path.exists(filepath):
 
-        text = str(self.sender().text())
-        btn.setText("Starting...")
-        test_timer = QTimer()
-        test_timer.singleShot(4000, lambda: self.toggleLaunchStatus(btn, text))
+                #print 'UI Launching {0} version: {1}'.format(app,version)
+                print "Launching Filepath={0}".format(filepath)
+                launcher.launch_app(app='', workgroup=workgroup, initials=initials,  mode='ui', project=project, filepath=filepath)
 
-        self.addRecentProject(project)
+                text = str(self.sender().text())
+                btn.setText("Starting...")
+                test_timer = QTimer()
+                test_timer.singleShot(4000, lambda: self.toggleLaunchStatus(btn, text))
+
+                self.addRecentProject(project)
 
     def launchApp(self, item, app='', version='', mode='ui'):
 
@@ -1116,7 +1123,24 @@ class LauncherWindow(QMainWindow):
             self.a.setRotationAt(1, 360)
             self.timeline.start()
 
-
+    def resetActiveData(self):
+        self.active_data = {
+            'file_share':'',
+            'server':'',
+            'share':'',
+            'job':'',
+            'stage':'production',
+            'asset_type':'',
+            'asset_grp':'',
+            'asset':'',
+            'task':'',
+            'version':'',
+            'filetype':'',
+            'filename':'',
+            'filepath':'',
+        }
+        # caches the active data's path for quick references
+        self.active_path = dict(self.active_data)
 
     def initSettings(self):
         print ('Loading settings...')

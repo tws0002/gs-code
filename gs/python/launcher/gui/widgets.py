@@ -10,7 +10,7 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent, title=""):
         super(CustomSortFilterProxyModel, self).__init__(parent)
 
-        self.filter_parents = False
+        self.filter_parents = True
 
     def filterAcceptsRow(self, row_num, source_parent):
         ''' Overriding the parent function '''
@@ -18,8 +18,8 @@ class CustomSortFilterProxyModel(QSortFilterProxyModel):
         if self.filterAcceptsRowItself(row_num, source_parent):
             return True
         # Traverse up all the way to root and check if any of them match
-        #if self.filter_accepts_any_parent(source_parent):
-        #   return True
+        if self.filterAcceptsAnyParent(source_parent):
+           return True
         # Finally, check if any of the children match
         return self.hasAcceptedChildren(row_num, source_parent)
 
@@ -394,7 +394,8 @@ class LchrTreeList(QWidget):
             if 'children' in modelDict[key]:
                 self.procLoadDictToQItem(subitem_list[0],headers_list,modelDict[key]['children'])
 
-
+    def clearAllItems(self):
+        self.sm.clear()
 
     def loadViewModelFromDict(self, modelDict):
         ''' given a dictionary, parse through each key and fill the item model with the data

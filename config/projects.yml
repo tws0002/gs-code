@@ -89,7 +89,7 @@ asset_templates:
   'asset_2d':
     parent: 'stage'
     display_name: 'Assets'
-    display_order: 3
+    display_order: 1
     lib_path: '<server>/projects/<job>/production/assets'
     match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
     capture_path: '<server>/projects/<job>/<stage>/assets/<asset_grp>/<asset>'
@@ -101,7 +101,7 @@ asset_templates:
   'shot':
     parent: 'stage'
     display_name: 'Shots'
-    display_order: 2
+    display_order: 0
     match_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
     task_root: '<server>/<share>/<job>/<stage>/shots/<asset_grp>/<asset>'
@@ -113,8 +113,8 @@ asset_templates:
     ignore_path: '' 
   'asset_3d':
     parent: 'stage'
-    display_name: 'CG Assets'
-    display_order: 1
+    display_name: '3DAssets'
+    display_order: 2
     match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     task_root: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'

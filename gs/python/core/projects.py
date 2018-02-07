@@ -371,10 +371,20 @@ class ProjectController():
 
         :return: 2-tuple of defined asset-type along with display-name
         '''
-        result = []
+        unsorted, result = [], []
+        order = 0,
         for template in self.pathParser.templates['asset_templates']:
-            pair = (template,self.pathParser.getTemplatePath('asset', template, 'display_name'))
-            result.append(pair)
+            if 'display_order' in self.pathParser.templates['asset_templates'][template]:
+                order = self.pathParser.templates['asset_templates'][template]['display_order']
+            else:
+                order += 1
+            pair = (order, template,self.pathParser.getTemplatePath('asset', template, 'display_name'))
+            unsorted.append(pair)
+
+        # sort by order and unpack the order number
+        for order, templ, path in sorted(unsorted, key=lambda x: x[0]):
+            result.append((templ,path))
+
         return result
 
     def getScenesList(self, filepath='', file_types='all'):
@@ -420,20 +430,30 @@ class ProjectController():
         print 'dev: core.projects.getTaskTypeList asset_path ={0} task_types={1}'.format(upl, task_types)
         if upl != '':
             if os.path.isdir(upl):
+                order = 0
                 for base_dir in os.listdir(upl):
                     full_path = '/'.join([upl, base_dir])
                     #and not base_dir.startswith('_')
                     if base_dir in task_types:
+                        if 'display_order' in self.pathParser.templates['task_templates'][base_dir]:
+                            order = self.pathParser.templates['task_templates'][base_dir]['display_order']
+                        else:
+                            order += 1
                         if os.path.isdir(full_path) and not base_dir.startswith('.') :
                             sub_dirs = os.listdir(full_path)
                             #if qualifier != '' and qualifier in sub_dirs:
-                            task_list.append(base_dir)
+                            task_list.append((order,base_dir))
             else:
                 print ('asset_path={0} not found'.format(upl))
         else:
             task_list = task_types
 
-        result = (upl, task_list)
+        # sort by order and unpack the order number
+        sorted_task_list = []
+        for order, task in sorted(task_list, key=lambda x: x[0]):
+            sorted_task_list.append(task)
+
+        result = (upl, sorted_task_list)
         elapsed_time = time.time() - START_TIME
         print("ProjectController.getTaskTypeList() ran in {0} sec".format(elapsed_time))
         return result
