@@ -161,8 +161,6 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     process_env.append_current_env()
 
-    process_env.append_current_env()
-
     # validate data from config
     # TODO work this into the studio environment funcs validate_config(key, value)
     w_data = process_env.workgroup_data
