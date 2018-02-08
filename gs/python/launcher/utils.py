@@ -4,6 +4,7 @@ HAS_PYWIN = False
 HAS_PYAD = False
 
 import os, sys, shutil, errno
+import win32api, pywintypes
 from settings import *
 
 # Load Pywin, if its available load pyad package
@@ -37,7 +38,7 @@ def driveToUNC(p, switchToFwdSlash=False):
             return p
     return p
 
-def win_shell_safe (filepath):
+def win_shell_safe(filepath):
     # make the filepath safe for sending to start shell command
     # this means any dir names with spaces need to be quotemarked
     # and all slashes are backslashes
@@ -59,7 +60,29 @@ def win_shell_safe (filepath):
             resultpath +=  '\\' + split[i]
     return resultpath
 
+def getScratchDrive():
+    scratch = 'C:\\'
+    drives = win32api.GetLogicalDriveStrings()
+    drives = drives.split('\000')[:-1]
+    for d in drives:
+        try:
+            label = win32api.GetVolumeInformation(d)
+            if label[0] == 'SCRATCH':
+                scratch = d.replace('\\','')
+        except pywintypes.error as e:
+            #print 'Error reading {}: {}'.format(d, e[2])
+            continue
+    return scratch
 
+def createTempDir():
+    scratch_drive = getScratchDrive()
+    temp_dir = os.path.join(scratch_drive, 'Temp')
+    if temp_dir:
+        try:
+            os.makedirs(temp_dir)
+        except OSError:
+            if not os.path.isdir(temp_dir):
+                raise
 
 def copyDirTree(src,dest):
     try:
@@ -68,6 +91,7 @@ def copyDirTree(src,dest):
         if exc.errno == errno.ENOTDIR:
             shutil.copy(src, dest)
         #else: raise
+        
 def updatePipelineFavorites():
     if HAS_PYWIN:
         # remove any gs pipelie favs

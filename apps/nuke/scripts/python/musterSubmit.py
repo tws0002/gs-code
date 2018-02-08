@@ -152,9 +152,12 @@ def get_read_nodes():
     all_read_nodes = [node for node in nuke.allNodes() if node.Class() == 'Read']
     all_read_nodes_files = []
     for n in all_read_nodes:
-        knob = n.knob('file')
-        file = knob.value()
-        if file: all_read_nodes_files.append(file)
+        if n.dependent() or n.dependencies():
+            knob = n.knob('file')
+            file = knob.value()
+            if file: all_read_nodes_files.append(file)
+        else:
+            continue
     return all_read_nodes_files
 
 def check_saved():

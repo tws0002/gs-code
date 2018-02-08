@@ -130,24 +130,26 @@ vray:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
       versions:
-        '2.40.01':
+        '3.60.01':
           env:
-            ST_MAYA_VRAY: '2.40.01'
+            ST_MAYA_VRAY: '3.60.01'
           path:
             linux: /
             mac: /
             win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
           versions:
-        '3.30.02':
-          env:
-            ST_MAYA_VRAY: '3.30.02'
-          path:
-            linux: /
-            mac: /
-            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
-          versions:
-          - '2015'
           - '2016.5'
+          - '2017'
+        '3.52.03':
+          env:
+            ST_MAYA_VRAY: '3.52.03'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2016.5'
+          - '2017'
         '3.40.06':
           env:
             ST_MAYA_VRAY: '3.40.06'
@@ -158,6 +160,24 @@ vray:
           versions:
           - '2016.5'
           - '2017'
+        '3.30.02':
+          env:
+            ST_MAYA_VRAY: '3.30.02'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
+          - '2015'
+          - '2016.5'
+        '2.40.01':
+          env:
+            ST_MAYA_VRAY: '2.40.01'
+          path:
+            linux: /
+            mac: /
+            win32: '%GSROOT%/bin/external/maya/modules/vrayformaya/%ST_MAYA_VRAY%/win/%ST_MAYA%'
+          versions:
 realflow:
   name: realflow
   show: false
@@ -314,6 +334,15 @@ fracturefx:
         MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/fracturefx/%ST_FRACFX%/win/%ST_MAYA%/shelves'
         FX_LCN_FILE: '%GSROOT%/bin/external/maya/modules/fracturefx/%ST_FRACFX%/win/%ST_MAYA%/config/fxlcn'
       versions:
+        '2.0.2':
+          env:
+            ST_FRACFX: '2.0.2'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '1.9.6':
           env:
             ST_FRACFX: '1.9.6'
@@ -346,6 +375,15 @@ krakatoa:
         #MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/krakatoa/%ST_KRAKATOA%/win/%ST_MAYA%/shelves'
         THINKBOX_LICENSE_FILE: '@laxlic01'
       versions:
+        '2.7.1':
+          env:
+            ST_KRAKATOA: '2.7.1'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2.6.3':
           env:
             ST_KRAKATOA: '2.6.3'
@@ -545,6 +583,36 @@ redshift:
             win32: /
           versions:
           - '2017'
+        '2.5.40':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.40'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
+        '2.5.32':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.32'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
+        '2.5.30':
+          env:
+            ST_MAYA_REDSHIFT: '2.5.30'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2016.5'
+          - '2017'
         '2.5.13':
           env:
             ST_MAYA_REDSHIFT: '2.5.13'
@@ -581,11 +649,30 @@ redshift:
     cinema4d:
       env:
         REDSHIFT_COREDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
-        REDSHIFT_LOCALDATAPATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%/core'
         REDSHIFT_PLUG_IN_PATH: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         C4D_PLUGINS_DIR: '%GSROOT%/bin/external/cinema4d/plugins/redshift/%ST_C4D_REDSHIFT%/%ST_C4D%'
         PATH: '%REDSHIFT_COREDATAPATH%/bin'
       versions:
+        '2.5.52':
+          env:
+            ST_C4D_REDSHIFT: '2.5.52'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R19'
+          - 'R18'
+        '2.5.30':
+          env:
+            ST_C4D_REDSHIFT: '2.5.30'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - 'R19'
+          - 'R18'
         '2.5.13':
           env:
             ST_C4D_REDSHIFT: '2.5.13'
@@ -604,6 +691,22 @@ redshift:
             win32: /
           versions:
           - 'R18'
+    houdini:
+      env:
+        HOUDINI_PATH: '%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%;&'
+        HOUDINI_DSO_ERROR: '2'
+        REDSHIFT_COREDATAPATH: "%GSROOT%bin/external/houdini/plugins/redshift/%ST_HOU_REDSHIFT%/win/%ST_HOU%/core"
+        PATH: '%REDSHIFT_COREDATAPATH%/bin'
+      versions:
+        '2.5.40':
+          env:
+            ST_HOU_REDSHIFT: '2.5.40'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '16.0.75'
 be_openvdb:
   name: be_openvdb
   show: true
@@ -630,6 +733,15 @@ slib:
   packages:
     maya:
       versions:
+        '2.23':
+          env:
+            MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/slib/2.23/win/%ST_MAYA%'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2.02':
           env:
             MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/slib/2.02/win/%ST_MAYA%'
@@ -658,6 +770,7 @@ animschoolpicker:
           versions:
           - '2015'
           - '2016.5'
+          - '2017'
 studiolibrary:
   name: studiolibrary
   show: true
@@ -774,13 +887,32 @@ qcmds:
             win32: /
           versions:
           - 'R17'
+lenscare:
+  name: lenscare
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/lenscare/%ST_LENSCARE%/%ST_NUKE%'
+      versions:
+        '1.44':
+          env:
+            ST_LENSCARE: '1.44'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
 neatvideo:
   name: neatvideo
   show: true
   packages:
     nuke:
       env:
-        ST_NUKE_PLUGINS: '%GSROOT%/bin/external/nuke/plugins/neatvideo/%ST_NEATVID%/%ST_NUKE%'
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/neatvideo/%ST_NEATVID%/%ST_NUKE%'
       versions:
         '4.0.9':
           env:
@@ -793,3 +925,162 @@ neatvideo:
           - '10.0'
           - '9.0'
           - '8.0'
+deflicker:
+  name: deflicker
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/deflicker/%ST_DEFLICKER%/%ST_NUKE%'
+      versions:
+        '1.0':
+          env:
+            ST_DEFLICKER: '1.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+twixtor:
+  name: twixtor
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/twixtor/%ST_TWIXTOR%/%ST_NUKE%'
+      versions:
+        '6.2.2':
+          env:
+            ST_TWIXTOR: '6.2.2'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+rsmb:
+  name: rsmb
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/rsmb/%ST_RSMB%/%ST_NUKE%'
+      versions:
+        '4.2.0':
+          env:
+            ST_RSMB: '4.2.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+caravr:
+  name: caravr
+  show: true
+  packages:
+    nuke:
+      env:
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/caravr/%ST_CARAVR%/%ST_NUKE%'
+      versions:
+        '1.0b3':
+          env:
+            ST_CARAVR: '1.0b3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+          - '9.0'
+          - '8.0'
+j_ops:
+  name: j_ops
+  show: true
+  packages:
+    nuke:
+      env:
+        ST_NUKE_JOPS: '%GSROOT%/bin/external/nuke/plugins/j_ops/%ST_JOPS%/%ST_NUKE%'
+        NUKE_PATH: '%ST_NUKE_JOPS%;%ST_NUKE_JOPS%/py;%ST_NUKE_JOPS%/ndk/%ST_NUKE_JOPS%/icons'
+      versions:
+        '2.3':
+          env:
+            ST_JOPS: '2.3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '9.0'
+opticalflares:
+  name: opticalflares
+  show: true
+  packages:
+    nuke:
+      env:
+        OPTICAL_FLARES_LICENSE_PATH: '%GSROOT%/bin/external/nuke/plugins/opticalflares/%ST_NUKE_OPTICALFLARES%/%ST_NUKE%/%BUILD%/%GS_OF_LIC_PATH%'
+        OPTICAL_FLARES_PATH: '%GSROOT%/bin/external/nuke/plugins/opticalflares/%ST_NUKE_OPTICALFLARES%/%ST_NUKE%/%BUILD%'
+        NUKE_PATH: '%OPTICAL_FLARES_PATH%'
+      versions:
+        '1.0.85':
+          env:
+            ST_NUKE_OPTICALFLARES: '1.0.85'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '10.0'
+      modes:
+        ui:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        cli:
+          env:
+            GS_OF_LIC_PATH: ''
+            BUILD: 'farm'
+        render:
+          env:
+            GS_OF_LIC_PATH: ''
+            BUILD: 'farm'
+        x:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        studio:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+        assist:
+          env:
+            GS_OF_LIC_PATH: 'licenses/%COMPUTERNAME%'
+            BUILD: 'workstation'
+keentools:
+  name: keentools
+  show: true
+  packages:
+    nuke:
+      env:
+        KEENTOOLS_LICENSE_SERVER: 'laxlic01'
+        NUKE_PATH: '%GSROOT%/bin/external/nuke/plugins/keentools/%ST_KEENTOOLS%/%ST_NUKE%'
+      versions:
+        '1.2.0':
+          env:
+            ST_KEENTOOLS: '1.2.0'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '11.1'
+          - '11.0'
+          - '10.5'
+          - '10.0'

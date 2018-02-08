@@ -111,11 +111,14 @@ maya:
     file: '-file'
     project: '-proj'
   versions:
-    '2015':
+    '2017':
       name: Autodesk Maya
       env:
-        #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya'
-        ST_MAYA: '2015'
+        #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
+        # full maya 2017 factory default plugins (takes about 26 sec to load on local pipeline 8sec to shutdown, about 30.4sec on network, 9.22sec to shutdown)
+        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;retargeterNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;fbxmaya;invertShape;poseInterpolator;Substance'
+        MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
+        ST_MAYA: '2017'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.5
       modes:
         ui:
@@ -133,7 +136,7 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2015.0.5/bin
+        win32: C:/Program Files/Autodesk/Maya/2017.0.5/bin
     '2016.5':
       name: Autodesk Maya
       env:
@@ -162,14 +165,11 @@ maya:
         linux: /
         mac: /
         win32: C:/Program Files/Autodesk/Maya/2016.5.1/bin
-    '2017':
+    '2015':
       name: Autodesk Maya
       env:
-        #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya;stereoCamera;Type'
-        # full maya 2017 factory default plugins (takes about 26 sec to load on local pipeline 8sec to shutdown, about 30.4sec on network, 9.22sec to shutdown)
-        GS_MAYA_AUTOLOAD: 'AbcExport;AbcImport;ArubaTessellator;autoLoader;CloudImportExport;curveWarp;gameFbxExporter;GamePipeline;gpuCache;hairPhysicalShader;ik2Bsolver;ikSpringSolver;lookdevKit;matrixNodes;mayaCharacterization;MayaMuscle;meshReorder;objExport;OneClick;OpenEXRLoader;quatNodes;retargeterNodes;rotateHelper;sceneAssembly;shaderFXPlugin;tiffFloatReader;Unfold3D;VectorRender;ATFPlugin;bifrostshellnode;bifrostvisplugin;MASH;fbxmaya;invertShape;poseInterpolator;Substance'
-        MAYA_STTOOLS_VERSIONED: '%GSROOT%/maya/%ST_MAYA%x64'
-        ST_MAYA: '2017'
+        #GS_MAYA_AUTOLOAD: 'AbcImport;AbcExport;objExport;OneClick;tiffFloatReader;Unfold3D;fbxmaya'
+        ST_MAYA: '2015'
         ST_MAYA_DIR: C:/Program Files/Autodesk/Maya/%ST_MAYA%.0.5
       modes:
         ui:
@@ -187,7 +187,7 @@ maya:
       path:
         linux: /
         mac: /
-        win32: C:/Program Files/Autodesk/Maya/2017.0.5/bin
+        win32: C:/Program Files/Autodesk/Maya/2015.0.5/bin
   tasks:
   - model
   - shade
@@ -249,11 +249,11 @@ nuke:
   shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
-    NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
-    NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
-    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
-    FN_DISABLE_LICENSE_DIALOG: '1'
+    NUKE_PATH: '%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup;%GSBRANCH%/apps/nuke/icons'
+    NUKE_DISK_CACHE: '%SCRATCHDISK%/Temp/Nuke_Cache'
+    NUKE_TEMP_DIR: '%SCRATCHDISK%/Temp/Nuke_Cache'
+    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos;%GSPROJECT%/03_production/.pipeline/apps/nuke/gizmos'
+    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python;%GSPROJECT%/03_production/.pipeline/apps/nuke/scripts/python'
   show: true
   tasks:
   - comp

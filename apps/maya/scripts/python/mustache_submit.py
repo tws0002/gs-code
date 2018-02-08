@@ -50,8 +50,9 @@ class Submitter:
         if os.environ['GSBRANCH'].split('/')[-1] != 'base':
             base_mp_cache = os.path.join(os.environ['GSROOT'],'base','gs','python','gsstartup','muster.json')
             local_mp_cache = os.path.join(os.environ['GSBRANCH'],'gs','python','gsstartup','muster.json')
-            if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
-                shutil.copy2(base_mp_cache,local_mp_cache)
+            if os.path.isfile(base_mp_cache):
+                if os.path.getmtime(base_mp_cache) > time.time() - 60*5:  
+                    shutil.copy2(base_mp_cache,local_mp_cache)
 
         # if the mod date is more recent than 5 min ago load it, otherwise query muster
         #try:
@@ -89,8 +90,8 @@ class Submitter:
         imagePrefix = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
-        else:
-            imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imagePrefix = cmds.getAttr('redshiftOptions.imageFilePrefix')
         if not imagePrefix:
             return False
         imagePrefix = '/'.join(imagePrefix.split('/')[:-1])
@@ -196,13 +197,13 @@ class Submitter:
 
         post_chunk_actions = ['C:\Windows\System32\cmd.exe /C C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/gs/python/sensu/post_chunk_action.py"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'])]
         if deep2matte:
-            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_action.py %%ATTR(start_frame) %%ATTR(end_frame) %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/')))
+            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_actionRS.py %%ATTR(start_frame) %%ATTR(end_frame) %s %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/'), os.path.dirname(cmds.file(q=1,sn=1)).replace('mustache_renderScenes','lighting')+'/_pipeline/sceneData.json'))
         
         musterflags = {}
         if majorver and minorver:
-            musterflags['-add']             = '--package maya --major %s --minor %s --render -x %s -y %s' %(majorver, minorver, x, y)
+            musterflags['-add']             = '--job %s --package maya --major %s --minor %s --render -x %s -y %s' %(self.M.projectName, majorver, minorver, x, y)
         else:
-            musterflags['-add']             = '--render maya -x %s -y %s' %(x, y)
+            musterflags['-add']             = '--job %s --package maya --render -x %s -y %s' %(self.M.projectName, x, y)
 
         musterflags['-e']               = str(mtid)
         musterflags['-n']               = nameNoStamp
@@ -250,6 +251,7 @@ class Submitter:
                 i+=1
 
             if ascpupsubmit:
+                render_muster_ids = []
                 musterflags['-wait'] = ascpupsubmit
                 if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
                     if rsGpus == 1:
@@ -260,9 +262,13 @@ class Submitter:
                             rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                             rsmusterflags['-sf'] = str(int(start)+i)
                             rsmusterflags['-bf'] = str(len(rsGpuString))
-                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            rendersubmit = muster2.submit(rsmusterflags)
+                            if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                                break
+                            else:
+                                rendersubmit = muster2.submit(rsmusterflags)
+                                render_muster_ids.append(rendersubmit)
                             i+=1
                     if rsGpus == 2:
                         rsGpuString = ['{0,1}', '{2,3}']
@@ -272,22 +278,28 @@ class Submitter:
                             rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                             rsmusterflags['-sf'] = str(int(start)+i)
                             rsmusterflags['-bf'] = str(len(rsGpuString))
-                            rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                            rsmusterflags['-gpupool'] = pool+'-'+str(i)
                             rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                            rendersubmit = muster2.submit(rsmusterflags)
+                            if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                                break
+                            else:
+                                rendersubmit = muster2.submit(rsmusterflags)
+                                render_muster_ids.append(rendersubmit)
                             i+=1
                     if rsGpus == 4:
                         rendersubmit = muster2.submit(musterflags)
+                        render_muster_ids.append(rendersubmit)
                 else:
                     rendersubmit = muster2.submit(musterflags)
-                if rendersubmit:
+                    render_muster_ids.append(rendersubmit)
+                if render_muster_ids:
                     ascpdownflags = {}
                     ascpdownflags['-e']         = '43'
                     ascpdownflags['-n']         = '%s Render Download' %(nameNoStamp)
                     ascpdownflags['-parent']    = '33409'
                     ascpdownflags['-group']      = self.M.projectName
                     ascpdownflags['-pool']      = 'ASPERA'
-                    ascpdownflags['-wait']      = rendersubmit
+                    ascpdownflags['-wait']      = ','.join(render_muster_ids)
                     
                     ascpdowncmd = ''
                     f = self.getDownloadFiles().replace(" ", "\ ").replace("//","/")
@@ -315,9 +327,12 @@ class Submitter:
                         rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                         rsmusterflags['-sf'] = str(int(start)+i)
                         rsmusterflags['-bf'] = str(len(rsGpuString))
-                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        rendersubmit = muster2.submit(rsmusterflags)
+                        if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                            break
+                        else:
+                            rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 2:
                     rsGpuString = ['{0,1}', '{2,3}']
@@ -327,9 +342,12 @@ class Submitter:
                         rsmusterflags['-n'] = '%s - GPU%s' %(nameNoStamp, g)
                         rsmusterflags['-sf'] = str(int(start)+i)
                         rsmusterflags['-bf'] = str(len(rsGpuString))
-                        rsmusterflags['-gpupool'] = 'GPU-'+str(i)
+                        rsmusterflags['-gpupool'] = pool+'-'+str(i)
                         rsmusterflags['-add'] = musterflags['-add'] + ' -r redshift -gpu %s' %g
-                        rendersubmit = muster2.submit(rsmusterflags)
+                        if int(rsmusterflags['-sf']) > int(rsmusterflags['-ef']):
+                            break
+                        else:
+                            rendersubmit = muster2.submit(rsmusterflags)
                         i+=1
                 if rsGpus == 4:
                     rendersubmit = muster2.submit(musterflags)
@@ -483,6 +501,16 @@ class Submitter:
             else:
                 newPrefix = newPrefix + frameSuffix
             cmds.setAttr('vraySettings.fileNamePrefix', newPrefix, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imagePrefix = cmds.getAttr('redshiftOptions.imageFilePrefix')
+            newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
+            if newPrefix[-1] == '.':
+                newPrefix = newPrefix[:-1] + frameSuffix + '.'
+            else:
+                newPrefix = newPrefix + frameSuffix
+            cmds.setAttr('redshiftOptions.imageFilePrefix', newPrefix, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
+
         else:
             imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
@@ -506,6 +534,9 @@ class Submitter:
         # restore image prefix without <scene> substitution
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', imagePrefix, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
         else:
             cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
 
@@ -539,6 +570,9 @@ class Submitter:
             #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
                 #imagePrefix = imagePrefix + '.'
             cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', result, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
         else:
             try:
                 cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
@@ -555,6 +589,8 @@ class Submitter:
         else:
             if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
                 result = cmds.getAttr('vraySettings.fileNamePrefix')
+            elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+                result = cmds.getAttr('redshiftOptions.imageFilePrefix')
             else:
                 result = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         return result
@@ -660,6 +696,8 @@ class Submitter:
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             prf = str(cmds.getAttr('vraySettings.fileNamePrefix'))
             imgString = prf.strip('.')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imgString = cmds.getAttr('redshiftOptions.imageFilePrefix')
         else:
             imgString = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
         if not imgString:
@@ -829,6 +867,7 @@ class Submitter:
         imagePlanesCtrl = cmds.checkBox(l='Render image planes', v=0, parent=mayaGlobalSettings, ann="Turn this option on if you want to render image planes, which you don't.")
         exr2tiffCtrl = cmds.checkBox(l='Post-convert EXR to TIFF', v=0, parent=mayaGlobalSettings, ann='Convert multichannel EXRs to TIFFs after rendering is completed.')
         deep2matteCtrl = cmds.checkBox(l='Post-convert Deep EXR to Matte', v=0, parent=mayaGlobalSettings, ann='Convert deep EXRs to matte EXR after rendering is completed.')
+        exportSceneDataBtn = cmds.button(l='export data for automatte',parent=mayaGlobalSettings, ann='export data for automatte conversion.',c=lambda *x: self.exportSceneData())
         vrayFormats = ['png',
          'jpg',
          'vrimg',
@@ -879,7 +918,9 @@ class Submitter:
          (exr2tiffCtrl, 'top', tm5 + lineHeight * 3),
          (exr2tiffCtrl, 'left', lm3),
          (deep2matteCtrl, 'top', tm5 + lineHeight * 4),
-         (deep2matteCtrl, 'left', lm3)])
+         (deep2matteCtrl, 'left', lm3),
+         (exportSceneDataBtn, 'top',tm5 + lineHeight * 5),
+         (exportSceneDataBtn, 'left',lm3)])
         #####################################
         vraySettingsLayout = cmds.formLayout(parent=wrapperForm)
         cmds.formLayout(wrapperForm, e=1, attachForm=[(vraySettingsLayout, 'top', 450)])
@@ -967,9 +1008,23 @@ class Submitter:
 #        for f in musterFolders:
 #            cmds.menuItem(l=f[0])
         poolCtrl = cmds.optionMenu(l='Muster pool:     ', parent=musterSettingsLayout, bgc=[1.0, 0.6, 0.7], cc=lambda *x: self.setImportantCtrl(poolCtrl, cameraCtrl, poolCtrl, prepassCtrl, prepassLayerCtrl, submitBtn), ann="The pool of computers dedicated to rendering your job. If you don't know which one to use, ask a supervisor.")
+        cpupools = []
+        gpupools = []
         pools = list(MUSTER_POOLS)
         for p in pools:
-            cmds.menuItem(l=p)
+            m = re.search('^GPU.*[^\-][^0123]$', p)
+            n = re.search('^GPU$', p)
+            o = re.search('^(?!GPU)', p)
+            if m or n:
+                gpupools.append(p)
+            elif o:
+                cpupools.append(p)
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            for g in gpupools:
+                cmds.menuItem(l=g)
+        else:
+            for c in cpupools:
+                cmds.menuItem(l=c)
         #####################################
         submitBtn = cmds.button(l='Submit render', w=150, h=60, bgc=[1.0, 0.6, 0.7], en=0, parent=musterSettingsLayout,
             c=lambda *x: self.userSubmit( pool = cmds.optionMenu(poolCtrl, q=1, v=1),
@@ -1065,6 +1120,27 @@ class Submitter:
         else:
             cmds.optionMenu(prepassLayerCtrl, e=1, en=0, bgc=[0.4, 0.4, 0.4])
             cmds.optionMenu(prepassLayerCtrl, e=1, sl=1)
+
+    def exportSceneData(self,*args):
+        import json
+        sceneDataPath=os.path.dirname(cmds.file(q=1,sn=1))+'/_pipeline/sceneData.json'
+        #sceneDataPath=cmds.fileDialog2(dialogStyle=2,fm=0)[0]     
+        sceneData={'asset':{},'material':{},'object':{}}
+        for sh in cmds.ls(g=1):
+            shadingGrps= cmds.listConnections(sh,type='shadingEngine')
+            if shadingGrps:
+                shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
+                asset=sh.split(':')[0]
+                id= abs(hash(sh)) % (10 ** 7)
+                if not asset in sceneData['asset'].keys():
+                    sceneData['asset'][asset]=[]
+                sceneData['asset'][asset].append(id)
+                if not shader in sceneData['material'].keys():
+                    sceneData['material'][shader]=[]
+                sceneData['material'][shader].append(id)
+                sceneData['object'][id]=sh
+        with open(sceneDataPath, 'w') as fp:
+            json.dump(sceneData, fp)
 
     def getEnabledRenderLayers(self, renderLayerControls, *args):
         enabledLayers = []

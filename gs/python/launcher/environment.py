@@ -29,6 +29,7 @@ class StudioEnvironment():
                         self.add(k, v)
                 else:
                     self.add(k, v)
+
     def load_app_config_file(self, filepath, app=None, version=None):
         print ("Loading file path {0}".format(filepath))
         dataMap = self.get_config_file(filepath)
@@ -86,7 +87,7 @@ class StudioEnvironment():
             else:
                 orig_dict[key] = val
 
-    def load_app_config(self, dataMap, app='studiotools', version='1.0'):
+    def load_app_config(self, dataMap, app='studiotools', version='1.0', mode=''):
 
         if app in dataMap:
             for key, value in dataMap.iteritems():
@@ -99,6 +100,11 @@ class StudioEnvironment():
                             if 'env' in dataMap[key]['versions'][version]:
                                 for var, val in dataMap[key]['versions'][version]['env'].iteritems():
                                     self.add(var, val)
+                            if 'modes' in dataMap[key]['versions'][version]:
+                                if mode in dataMap[key]['versions'][version]['modes']:
+                                    if 'env' in dataMap[key]['versions'][version]['modes'][mode]:
+                                        for var, val in dataMap[key]['versions'][version]['modes'][mode]['env'].iteritems():
+                                            self.add(var, val)
 
         #if dataMap[]
         self.parse_subst()
@@ -112,7 +118,7 @@ class StudioEnvironment():
                     self.registered_file_types[e] = {"app":app}
         return
 
-    def load_module_config(self, dataMap, module=None, package=None, version=None):
+    def load_module_config(self, dataMap, module=None, package=None, version=None, mode=''):
         print ("loading module: "+module+","+version)
         if module in dataMap:
             #print ("found:"+module)
@@ -136,6 +142,11 @@ class StudioEnvironment():
                                             for var, val in dataMap[key]['packages'][app]['versions'][version]['env'].iteritems():
                                                 #print ("Loading module env: {0}={1}".format(var,val))
                                                 self.add(var, val)
+                                if 'modes' in dataMap[key]['packages'][app]:
+                                    if mode in dataMap[key]['packages'][app]['modes']:
+                                        if 'env' in dataMap[key]['packages'][app]['modes'][mode]:
+                                            for var, val in dataMap[key]['packages'][app]['modes'][mode]['env'].iteritems():
+                                                self.add(var, val)
 
         #if dataMap[]
         self.parse_subst()
@@ -143,7 +154,7 @@ class StudioEnvironment():
 
         return
 
-    def load_workgroup_config(self, dataMap, workgroup=None, app=None, version=''):
+    def load_workgroup_config(self, dataMap, workgroup=None, app=None, version='', mode=''):
         if workgroup in dataMap:
             for key, value in dataMap.iteritems():
                 if key == workgroup:
@@ -166,7 +177,7 @@ class StudioEnvironment():
 
                                 if 'modules' in dataMap[key]['packages'][package]:
                                     for m, mv in dataMap[key]['packages'][package]['modules'].iteritems():
-                                        self.load_module_config(dataMap=MODULES, module=m, package=app, version=mv)
+                                        self.load_module_config(dataMap=MODULES, module=m, package=app, version=mv, mode=mode)
                                         if 'env' in dataMap[key]['packages'][app]['modules']:
                                             for var, val in dataMap[key]['packages'][package]['modules']['env'].iteritems():
                                                 self.add(var, val)

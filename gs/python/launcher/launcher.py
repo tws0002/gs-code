@@ -1,6 +1,6 @@
 __author__ = 'adamb'
 
-import sys, urllib2, subprocess, argparse, time
+import sys, urllib2, subprocess, argparse, time, ctypes
 
 from settings import *
 from utils import *
@@ -102,6 +102,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     os.environ['GSWORKGROUP'] = workgroup
     os.environ['GSPROJECT'] = project
     os.environ['GSWORKSPACE'] = workspace
+    os.environ['SCRATCHDISK'] = utils.getScratchDrive()
+    utils.createTempDir()
 
     # load the process env from the config files
     process_env = StudioEnvironment()
@@ -154,8 +156,10 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if os.path.isfile(proj_app):
         process_env.append_app_config_file(filepath=proj_app, app=app, version=version)
 
-    process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version)
-    process_env.load_app_config(process_env.app_data, app, version)
+    process_env.load_workgroup_config(process_env.workgroup_data, workgroup, app, version, mode)
+    process_env.load_app_config(process_env.app_data, app, version, mode)
+
+    process_env.append_current_env()
 
     process_env.append_current_env()
 
@@ -233,7 +237,6 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             #process_env.printout()
 
 
-
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
     cmd = executable + ' ' + add_args
@@ -256,8 +259,14 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     if mode == 'render':
         print cmd
+
+        # supress error window on crash
+        SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
+        ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
+        sf = 0x8000000
+
         try:
-            p = subprocess.Popen(cmd,bufsize=1, stdout=subprocess.PIPE, env=env, startupinfo=si)
+            p = subprocess.Popen(cmd,bufsize=1, stdout=subprocess.PIPE, env=env, startupinfo=si, creationflags=sf)
         except WindowsError:
             print "\n\nError: GS Launcher Process: {0} failed to execute. \n\nDoes program exist?".format(cmd)
             sys.exit(-1)

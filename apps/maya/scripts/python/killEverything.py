@@ -5,7 +5,7 @@
 # happening in here because of that... i was not good at understanding lambda functions and variable scope when this was
 # written. what you gonna do?
 
-
+import os
 import maya.cmds as cmds
 import maya.mel as mel
 import hfFixShading as hfFBS
@@ -26,6 +26,7 @@ class KillEverythingUI():
         self.kCameras = cmds.checkBox(l='kill cameras', v=1)
         self.kLights = cmds.checkBox(l='kill lights', v=0)
         self.kRefs = cmds.checkBox(l='kill references', v=1)
+        self.kKeepAbcRefs = cmds.checkBox(l='keep alembic refs', v=1)
         self.kLayers = cmds.checkBox(l='kill duplicate render layers', v=1)
         self.kUnk = cmds.checkBox(l='kill unknown nodes', v=1)
         self.kNamespaces = cmds.checkBox(l='remove namespaces', v=1)
@@ -70,12 +71,22 @@ class KillEverythingUI():
             pass
         return deathCount
 
-    def killRefs(self,*args):
+    def importAlembicRefs(self,*args):
+        importedRefs = []
+        refs = cmds.file(q=1,r=1)
+        for ref in refs:
+            if os.path.splitext(ref)[1] == 'abc':
+                cmds.file(ref,ir=1)
+                importedRefs.append(ref)
+        return importedRefs
+
+    def killRefs(self,keepAbc,*args):
         deadRefs = []
         refs = cmds.file(q=1,r=1)
         for ref in refs:
-            cmds.file(ref, rr=1)
-            deadRefs.append(ref)
+            if keepAbc and os.path.splitext(ref)[1] != '.abc':
+                cmds.file(ref, rr=1)
+                deadRefs.append(ref)
         return deadRefs
 
     def killImportedLayers(self,*args):
@@ -120,10 +131,16 @@ class KillEverythingUI():
         """ empty namespaces of objects and then remove them. """
         cmds.namespace(set=':') # go to root
         namespaces = cmds.namespaceInfo(lon=1)
+        # ignore ref namespaces
+        refns = []
+        refs = cmds.file(q=1,r=1)
+        for ref in refs:
+            ns = cmds.file(ref,q=1,ns=1)
+            refns.append(ns)
         deathCount = []
         for ns in namespaces:
             # we do NOT want to fuck with 'UI' or 'shared.' this will crash maya.
-            if ns != 'UI' and ns != 'shared':
+            if ns != 'UI' and ns != 'shared' and ns not in refns:
                 # remove all objects from this namespace.
                 cmds.namespace(mv=(ns,':'),force=1)
                 try:
@@ -208,6 +225,7 @@ class KillEverythingUI():
         # pick up checkbox values.
         cams = cmds.checkBox(self.kCameras,q=1,v=1)
         lights = cmds.checkBox(self.kLights,q=1,v=1)
+        keepabc = refs = cmds.checkBox(self.kKeepAbcRefs,q=1,v=1)
         refs = cmds.checkBox(self.kRefs,q=1,v=1)
         layers = cmds.checkBox(self.kLayers,q=1,v=1)
         unk = cmds.checkBox(self.kUnk,q=1,v=1)
@@ -238,10 +256,13 @@ class KillEverythingUI():
             if cmds.pluginInfo('vrayformaya.mll',q=1,l=1) == 1:
                 VRayLightTypes = ['VRayLightSphereShape', 'VRayLightDomeShape', 'VRayLightRectShape', 'VRayLightIESShape']
                 lightTypes.extend(VRayLightTypes)
+            if cmds.pluginInfo('redshift4maya.mll',q=1,l=1) == 1:
+                RedshiftLightTypes = ['RedshiftPhysicalLight', 'RedshiftIESLight', 'RedshiftPortalLight', 'RedshiftDomeLight']
+                lightTypes.extend(RedshiftLightTypes)
             lights = self.killNode(type=lightTypes)
-            resultStr = resultStr + '---LIGHTS REMOVED---\n' + '\n'.join(lights) + '\n\n'
+            resultStr = resultStr + '---LIGHTS REMOVED---\n' + '\n'.join(lights) + '\n\n'         
         if refs == True:
-            refs = self.killRefs()
+            refs = self.killRefs(keepAbc=keepabc)
             resultStr = resultStr + '---REFERENCES REMOVED---\n' + '\n'.join(refs) + '\n\n'
         if layers == True:
             layers = self.killImportedLayers()
