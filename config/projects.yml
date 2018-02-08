@@ -90,7 +90,7 @@ stage_templates:
 asset_templates:
   'asset_2d':
     parent: 'stage'
-    display_name: 'Assets'
+    display_name: 'Assets2D'
     display_order: 1
     lib_path: '<server>/projects/<job>/production/assets'
     match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
@@ -115,7 +115,7 @@ asset_templates:
     ignore_path: '' 
   'asset_3d':
     parent: 'stage'
-    display_name: '3DAssets'
+    display_name: 'Assets3D'
     display_order: 2
     match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'

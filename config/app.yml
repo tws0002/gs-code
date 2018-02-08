@@ -882,7 +882,9 @@ silhouette:
 houdini:
   env:
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
-    JOB: "//scholar/projects/%GSPROJECT%/03_production/01_cg/04_houdini"
+    JOB: "%GSPROJECT%"
+    SESI_LMHOST: "laxlic01"
+    HSITE: '%GSBRANCH%\apps\houdini'
   show: true
   tasks:
   - fx
@@ -890,15 +892,15 @@ houdini:
   - anim
   file_types: 'hip,hipnc,hiplc'
   versions:
-    '15.5.607':
+    '16.0.705':
       name: Houdini
       env:
-        ST_HOU: '15.5.607'
+        ST_HOU: '16.0.705'
       modes:
         ui:
           linux: /
           mac: /
-          win32: hindie.exe
+          win32: houdinicore.exe
         indie:
           linux: /
           mac: /
@@ -906,7 +908,7 @@ houdini:
         apprentice:
           linux: /
           mac: /
-          win32: happrentice.exe.exe
+          win32: happrentice.exe
         fx:
           linux: /
           mac: /
@@ -922,7 +924,7 @@ houdini:
       path:
         linux: /
         mac: /
-        win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
+        win32: 'C:/Program Files/Side Effects Software/Houdini 16.0.705/bin'
     '16.0.600':
       name: Houdini
       env:
@@ -939,7 +941,7 @@ houdini:
         apprentice:
           linux: /
           mac: /
-          win32: happrentice.exe.exe
+          win32: happrentice.exe
         fx:
           linux: /
           mac: /
@@ -956,6 +958,39 @@ houdini:
         linux: /
         mac: /
         win32: 'C:/Program Files/Side Effects Software/Houdini 16.0.600/bin'
+    '15.5.607':
+      name: Houdini
+      env:
+        ST_HOU: '15.5.607'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        indie:
+          linux: /
+          mac: /
+          win32: hindie.exe
+        apprentice:
+          linux: /
+          mac: /
+          win32: happrentice.exe
+        fx:
+          linux: /
+          mac: /
+          win32: houdinifx.exe
+        escape:
+          linux: /
+          mac: /
+          win32: hescape.exe
+        cli:
+          linux: /
+          mac: /
+          win32: hbatch.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
 pythonshell:
   name: Python Shell
   show: true

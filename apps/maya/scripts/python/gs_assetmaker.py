@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __author__ = "Adam Burke"
-__version__ = "0.5.0"
+__version__ = "0.7.0"
 __maintainer__ = "Adam Burke"
 __email__ = "adam@adamburke.net"
 
@@ -10,11 +10,10 @@ import os, sys, math, glob, re
 import yaml
 
 # import maya
-import maya.cmds as cmds
-import maya.OpenMayaUI as omui
-from maya.OpenMaya import MVector
-import maya.mel as mel
-from maya.app.general.mayaMixin import MayaQWidgetBaseMixin
+from maya import cmds
+from maya import mel
+from maya import OpenMayaUI as omui 
+from maya.app.general.mayaMixin import MayaQWidgetBaseMixin, MayaQWidgetDockableMixin
 
 try:
   from PySide2.QtCore import * 
@@ -28,14 +27,14 @@ except ImportError:
   from PySide import __version__
   from shiboken import wrapInstance 
 
-mayaMainWindowPtr = omui.MQtUtil.mainWindow() 
-mayaMainWindow= wrapInstance(long(mayaMainWindowPtr), QWidget) 
+mayaMainWindowPtr = omui.MQtUtil.mainWindow()
+mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
 
-# global pointers to prevent garbage collection until unload
-wind=None
-widg=None
-wind_lyt=None
+############ global pointers to prevent garbage collection until unload
+###########wind=None
+###########widg=None
+###########wind_lyt=None
 
 class LIgnoreValidator(QValidator):
     def validate(self, string, pos):
@@ -55,17 +54,17 @@ class LRegExpValidator(QRegExpValidator):
         return result[0], pos
 
 
-class AbxProperWindow(MayaQWidgetBaseMixin,QWidget):
+class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
 
     data_model = {}
     obj_list_model = None
     renameShader = True
 
     def __init__(self, parent=None, *args, **kwargs):
-        super(AbxProperWindow, self).__init__(parent=parent, *args, **kwargs) 
+        super(GSAssetMakerWindow, self).__init__(parent=parent, *args, **kwargs) 
 
 
-        self.parent = parent
+        #####self.parent = parent
         main_lyt = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(main_lyt)
         iconsize = QSize(48,48)
@@ -79,7 +78,7 @@ class AbxProperWindow(MayaQWidgetBaseMixin,QWidget):
         vertical = QVBoxLayout()
         createTab.setLayout(vertical)
 
-        self.setWindowTitle('GS Proper v0.1a')
+        self.setWindowTitle('GS AssetMaker v0.1a')
 
         self.startAsset = QPushButton("Start New Asset")
         vertical.addWidget(self.startAsset)
@@ -184,9 +183,9 @@ class AbxProperWindow(MayaQWidgetBaseMixin,QWidget):
 
         bbox = cmds.exactWorldBoundingBox(sl,ii=True)
         center = [(bbox[3] - bbox[0]) * .5+bbox[0], bbox[1], (bbox[5] - bbox[2])*.5+bbox[2]]
-        if cmds.objExists("Proper_asset_xform"):
-            cmds.delete("Proper_asset_xform")
-        new_loc = cmds.spaceLocator(n="Proper_asset_xform")
+        if cmds.objExists("AssetMaker_asset_xform"):
+            cmds.delete("AssetMaker_asset_xform")
+        new_loc = cmds.spaceLocator(n="AssetMaker_asset_xform")
 
         cmds.move(center[0], center[1], center[2], new_loc[0])
 
@@ -216,7 +215,7 @@ class AbxProperWindow(MayaQWidgetBaseMixin,QWidget):
 
     def doCreateAssetLocal(self):
         print("Creating Asset")
-        cmds.undoInfo(openChunk=True,chunkName="abxProperPrepAsset")
+        cmds.undoInfo(openChunk=True,chunkName="GSAssetMakerPrepAsset")
         ns = str(self.nameLE.text())
         createAssetBase(str(self.nameLE.text()))
 
@@ -232,14 +231,14 @@ class AbxProperWindow(MayaQWidgetBaseMixin,QWidget):
         temp_grp = cmds.createNode('transform',n="{0}:offset_grp".format(ns))
         cmds.parent(sel_list,temp_grp)
 
-        if cmds.objExists("Proper_asset_xform"):
-            asset_t = cmds.getAttr("Proper_asset_xform.translate")[0]
-            asset_r = cmds.getAttr("Proper_asset_xform.rotate")[0]
-            asset_s = cmds.getAttr("Proper_asset_xform.scale")[0]
+        if cmds.objExists("AssetMaker_asset_xform"):
+            asset_t = cmds.getAttr("AssetMaker_asset_xform.translate")[0]
+            asset_r = cmds.getAttr("AssetMaker_asset_xform.rotate")[0]
+            asset_s = cmds.getAttr("AssetMaker_asset_xform.scale")[0]
             cmds.move(asset_t[0]*-1, asset_t[1]*-1, asset_t[2]*-1, temp_grp)
             cmds.rotate(asset_r[0]*-1, asset_r[1]*-1, asset_r[2]*-1, temp_grp)
             cmds.scale(1/asset_s[0], 1/asset_s[1], 1/asset_s[2], temp_grp)
-            nl = cmds.rename("Proper_asset_xform","{0}_Placement".format(ns))
+            nl = cmds.rename("AssetMaker_asset_xform","{0}_Placement".format(ns))
             cmds.parent(temp_grp,"{0}:GEOgrp".format(ns))
             cmds.parent("{0}:{0}_GRP".format(ns),nl)
         else:
@@ -923,25 +922,25 @@ def get_alembic_in_scene():
 
 
 
-#def loadAbxProperUI(standalone=False):
+#def loadGSAssetMakerUI(standalone=False):
 #    
 #    if standalone:
 #        wind = get_maya_window()
-#        widg = AbxProperWindow(parent=wind)
+#        widg = GSAssetMakerWindow(parent=wind)
 #        widg.setWindowFlags( Qt.FramelessWindowHint )
 #
 #    else:
-#        wind = get_maya_window(window='abxProperWindow', title='AbxProper')
+#        wind = get_maya_window(window='GSAssetMakerWindow', title='GSAssetMaker')
 #        wind_lyt = QHBoxLayout()
-#        widg = AbxProperWindow(wind)
+#        widg = GSAssetMakerWindow(wind)
 #        wind_lyt.setContentsMargins(0,0,0,0)
 #        wind_lyt.addWidget(widg)
 #        wind.setLayout(wind_lyt)
-#        cmds.showWindow('abxProperWindow')
+#        cmds.showWindow('GSAssetMakerWindow')
 #
 #
-#loadAbxProperUI()
+#loadGSAssetMakerUI()
 
-wind = AbxProperWindow()
+wind = GSAssetMakerWindow()
 wind.show()
 windMayaName = wind.objectName()

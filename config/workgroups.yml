@@ -71,7 +71,9 @@ default:
     houdini:
       title: 'Houdini'
       app: 'houdini'
-      version: '16.0.600'
+      version: '16.0.705'
+      modules:
+        redshift: '2.5.40'
     3dsmax:
       title: '3DS Max'
       app: '3dsmax'
@@ -165,7 +167,7 @@ default:
     - aftereffects
     - photoshop
     - premiere
-    - houdini-indie
+    - houdini
     Compositing:
     - nuke
     - nuke-x
@@ -191,6 +193,8 @@ default:
     - mudbox
     - mari
     - photoshop
+    - houdini
+    - houdini-fx
     Utilities:
     - muster
     - pythonshell

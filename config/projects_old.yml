@@ -67,6 +67,8 @@ stage_templates:
         capture_path: '<server>/<share>/<job>/<stage>'
         package_root: '<server>/<share>/<job>/03_production'
         copy_tree: '<server>/<share>/_templates/project_template_2015/stage_basic'
+        user_scratch:  '<server>/<share>/<job>/03_production' 
+        package_root: '<server>/<share>/<job>/03_production' 
 
 # Asset Definitions: Assets are libraries of objects specific to a project/stage of 
 # Notes:
@@ -91,7 +93,7 @@ asset_templates:
   'shot_3d':
     parent: 'package'
     display_order: 1
-    display_name: 'Shots'
+    display_name: 'Shots3D'
     lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
     match_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<shot>"
@@ -103,7 +105,7 @@ asset_templates:
   'asset_3d':
     parent: 'package'
     display_order: 3
-    display_name: 'Assets'
+    display_name: 'Assets3D'
     lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
     match_path: "<server>/projects/<job>/03_<stage>/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"

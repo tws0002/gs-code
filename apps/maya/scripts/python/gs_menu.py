@@ -14,41 +14,21 @@ def init_gs_menu():
 		cmds.setParent(GS_MENU,menu=True)
 
 		# MUSTACHE
-		cmds.menuItem(divider=True,dl="MUSTACHE")
-		cmds.menuItem(l="Re-Init (Hello)",c='mustache.M.setUserUI(True)',i='mustache_M.bmp')
+		cmds.menuItem(divider=True,dl="PIPELINE")
+		cmds.menuItem(l="Quicksave",c='')
+		cmds.menuItem(l="Publish Scene",c='')
 		cmds.menuItem(divider=True)
-		cmds.menuItem(l="Quicksave",c='mustache.M.quickSave()',i='mustache_QS.bmp')
+		cmds.menuItem(l="Shot Loader",c='')
+		cmds.menuItem(l="Asset Manager",c='')
 		cmds.menuItem(divider=True)
-		cmds.menuItem(l="Asset Manager",c='mustache.M.AM.assetManagerUI()',i='mustache_AM.bmp')
-		cmds.menuItem(l="Scene Manager",c='mustache.M.SM.sceneManagerUI()',i='mustache_SM.bmp')
-		cmds.menuItem(l="Asset Library",c='mustache.M.DB.libraryUI()',i='mustache_DB.bmp')
-		cmds.menuItem(divider=True)
-		cmds.menuItem(l="Render Submit",c='mustache.M.MSUB.submitUI()', i='mustache_MSUB.bmp')
-
-		cmds.menuItem(divider=True,dl="QUICKLOAD PLUGINS")
+		cmds.menuItem(l="Render Submit",c='import gs_submit_muster;reload(gs_submit_muster)')
+		cmds.menuItem(divider=True,dl="DANDY TOOLS")
+		cmds.menuItem(l="AssetMaker",c='import gs_assetmaker;reload(gs_assetmaker)')
+		cmds.menuItem(l="LookBook",c='import gs_lookbook;reload(gs_lookbook)')
+		cmds.menuItem(l="Alembic Export",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
+		cmds.menuItem(l="Alembic Import",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadImporterUI()')
+		cmds.menuItem(divider=True,dl="LOAD RENDERER")
 		cmds.menuItem(l='Load VRay',c='cmds.loadPlugin("vrayformaya")')
 		cmds.menuItem(l='Load Redshift',c='cmds.loadPlugin("redshift4maya")')
 
-		
-		#cmds.menuItem(sm=True,l='Autodesk')
-		# Quick Loader
-		#cmds.menuItem(divider=True,dl="AUTODESK")
-		#autod = "xgenToolkit;BifrostMain;Substance;MASH;curveWarp;ATFPlugin"
-		#mod = sorted(autod.split(';'))
-		#for m in mod:
-		#	cmds.menuItem(l=m.title(),c='cmds.loadPlugin("{0}")'.format(str(m)))		
-		#
-		#cmds.setParent(GS_MENU,menu=True)
-		#cmds.menuItem(sm=True,l='GS Modules')
-		#cmds.menuItem(divider=True,dl="GS MODULES")
-		#
-		#if 'GS_MODULES' in os.environ:
-		#	mod = sorted(os.environ['GS_MODULES'].split(';'))
-		#	for m in mod:
-		#		cmds.menuItem(l=m.title(),c='cmds.loadPlugin("{0}")'.format(str(m)))
-
-
-
-
-		# Tools
 

@@ -151,7 +151,7 @@ class LauncherWindow(QMainWindow):
 
 
         # create sidebar items that show various launcher views
-        sidebar_items = ['Apps','Design','Production']
+        sidebar_items = ['Apps','Production']
         self.ui['lyt']['stack_layouts'] = {}
         i = 0
         # create a stack panel for each widget
@@ -174,7 +174,7 @@ class LauncherWindow(QMainWindow):
         self.updateServerShares('job_share')
 
         self.ui['lyt']['tab1_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Apps'])
-        self.ui['lyt']['tab2_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Design'])
+        #self.ui['lyt']['tab2_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Design'])
         self.ui['lyt']['tab3_layout'] = QVBoxLayout(self.ui['lyt']['stack_layouts']['Production'])
 
         ## Production Tab View
@@ -899,60 +899,61 @@ class LauncherWindow(QMainWindow):
         ''' this updates the current project '''
 
         items = self.ui['wdgt']['project_list'].getSelectedItems()
-        for i in items:
-            print 'sel_item:{0}'.format(i.text())
+        #for i in items:
+        #    print 'sel_item:{0}'.format(i.text())
         if len(items):
             p_name = str(items[0].text())
             p_path = str(items[1].text())
-            print ('setting project to {0}'.format(p_path))
+            if os.path.isdir(p_path):
+                print ('setting project to {0}'.format(p_path))
 
-            # this appears to be a little slow!
-            self.loadProjectConfig(p_path)
-            #self.set_project_combo(p)
-            self.p_data['project_name'] = p_path
-            d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
+                # this appears to be a little slow!
+                self.loadProjectConfig(p_path)
+                #self.set_project_combo(p)
+                self.p_data['project_name'] = p_path
+                d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
-            # update display groups but don't execute signals
-            self.ui['wdgt']['dispgroup_combo'].blockSignals(True)
-            self.updateDisplayGroups()
-            self.setDisplayGroup(d_grp)
-            d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
-            self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
-            self.updateAppsList(display_grp=d_grp)
-            print ("DISPLAY GROUPS UPDATED")
+                # update display groups but don't execute signals
+                self.ui['wdgt']['dispgroup_combo'].blockSignals(True)
+                self.updateDisplayGroups()
+                self.setDisplayGroup(d_grp)
+                d_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
+                self.ui['wdgt']['dispgroup_combo'].blockSignals(False)
+                self.updateAppsList(display_grp=d_grp)
+                print ("DISPLAY GROUPS UPDATED")
 
-            # TODO switch from a hardcoded test for which project.yml to load to something more elegant
-            # check if its an old project struct
-            if os.path.isdir('{0}/03_production'.format(p_path)):
-                config_path = '{0}/projects_old.yml'.format(CONFIG)
-                self.controller.proj_controller.setConfig(config_path)
-            else:
-                config_path = '{0}/projects.yml'.format(CONFIG)
-                self.controller.proj_controller.setConfig(config_path)
+                # TODO switch from a hardcoded test for which project.yml to load to something more elegant
+                # check if its an old project struct
+                if os.path.isdir('{0}/03_production'.format(p_path)):
+                    config_path = '{0}/projects_old.yml'.format(CONFIG)
+                    self.controller.proj_controller.setConfig(config_path)
+                else:
+                    config_path = '{0}/projects.yml'.format(CONFIG)
+                    self.controller.proj_controller.setConfig(config_path)
 
-            self.resetActiveData()
+                self.resetActiveData()
 
-            #update selected dict
-            self.active_data['job'] = p_name
-            self.active_path['job'] = p_path
+                #update selected dict
+                self.active_data['job'] = p_name
+                self.active_path['job'] = p_path
 
-            # update the active data by parsing the project
-            p_data = self.controller.proj_controller.pathParser.parsePath(p_path)
-            for key, val in p_data.iteritems():
-                self.active_data[key] = val
+                # update the active data by parsing the project
+                p_data = self.controller.proj_controller.pathParser.parsePath(p_path)
+                for key, val in p_data.iteritems():
+                    self.active_data[key] = val
 
-            print (p_data)
-            #self.update_items_list(p,'shot_3d')
-            #self.update_assets_list(p,'asset_3d')`
-            self.ui['wdgt']['scene_list'].clearAllItems()
-            self.ui['wdgt']['task_tabs'].clear()
-            self.updateAssetsTabs(p_path)
+                print (p_data)
+                #self.update_items_list(p,'shot_3d')
+                #self.update_assets_list(p,'asset_3d')`
+                self.ui['wdgt']['scene_list'].clearAllItems()
+                self.ui['wdgt']['task_tabs'].clear()
+                self.updateAssetsTabs(p_path)
 
 
-            #{
-            #    'server': '//{0}'.split(p_path)[0],
-            #    'project': str(p_name)
-            #}
+                #{
+                #    'server': '//{0}'.split(p_path)[0],
+                #    'project': str(p_name)
+                #}
 
     def assetListChange(self, selected, deselected):
         ''' slot receiver for asset_list selection changes signal
