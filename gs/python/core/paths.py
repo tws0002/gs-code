@@ -491,13 +491,26 @@ class PathParser:
 
         return result
 
-    def getProject(self, upl, app):
+    def getProject(self, upl):
         """
-        useful for setting projects variable when launching into a file
+        gets the path to the project that matches the upl_dict given
         :param upl: any filepath within the project
+        :param app:
         :return: the path to the root of othe project
         """
-        result = self.substTemplatePath(upl=upl, template_type='package', template_name=app, template_var='match_path')
+        result = self.substTemplatePath(upl=upl, template_type='var', template_var='project_root')
+        #result = self.substTemplatePath(upl=upl, template_type='package', template_name=app, template_var='match_path')
+
+        return result
+
+    def getWorkspace(self, upl, package):
+        """
+        gets the location of the maya project / houdini project / or any other applications project workspace
+        :param upl: any filepath within the project
+        :param package: defines which package to search for
+        :return: the path to the root of the app/package workspace
+        """
+        result = self.substTemplatePath(upl=upl, template_type='package', template_name=package, template_var='match_path')
 
         return result
 

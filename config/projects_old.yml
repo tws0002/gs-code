@@ -68,8 +68,6 @@ stage_templates:
         package_root: '<server>/<share>/<job>/03_production'
         copy_tree: '<server>/<share>/_templates/project_template_2015/stage_basic'
         user_scratch:  '<server>/<share>/<job>/03_production' 
-        package_root: '<server>/<share>/<job>/03_production' 
-
 # Asset Definitions: Assets are libraries of objects specific to a project/stage of 
 # Notes:
 # parent: specifies which template is the heierarchical parent -this depends on how you have organized

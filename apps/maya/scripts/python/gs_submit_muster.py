@@ -130,6 +130,9 @@ class Submitter:
             fixedName = oldName.split('_T_')[0]
         newPrefix1 = imagePrefix.replace('<Scene>', fixedName)
 
+        # TODO resolve image output paths with <RenderLayer> (one for each render layer submitted)
+        # TODO resolve relative path navigation dots ../../../ into a final path using os.path.normalize()
+
         # if <Layer> is in path, parse the active render layers
         newPrefix2 = newPrefix1.replace('/<Layer>', '')
         # if <Version> is in path
@@ -144,7 +147,7 @@ class Submitter:
     def getUploadFiles(self):
         files = list(remote_render.get_scene_files())
         reffiles = cmds.file(query=True, list=True)
-        workspacemel = os.path.join(os.environ['GSPROJECT'], 'workspace.mel')
+        workspacemel = os.path.join(os.environ['GSWORKSPACE'], 'workspace.mel')
         filelist = [workspacemel]
         
         # also make sure to include any pipeline configs
@@ -237,7 +240,7 @@ class Submitter:
         musterflags['-n']               = nameNoStamp
         musterflags['-parent']          = '33409'
         # TODO need a variable to provide the job name
-        musterflags['-group']           = 'testing' #self.M.projectName'
+        musterflags['-group']           = os.environ['GSPROJECT'].split('/')[-1] #self.M.projectName'
         musterflags['-proj']            = project
         musterflags['-pool']            = pool
         musterflags['-sf']              = str(start)
@@ -266,7 +269,7 @@ class Submitter:
                 ascpupflags['-n']       = '%s Asset Upload %s of %s' %(nameNoStamp, i, len(chunks))
                 ascpupflags['-parent']  = '33409'
                 # TODO need a variable to provide the job name
-                ascpupflags['-group']    = 'testing' #self.M.projectName
+                ascpupflags['-group']    = os.environ['GSPROJECT'].split('/')[-1] #self.M.projectName
                 ascpupflags['-pool']    = 'ASPERA'                
                 ascpupcmd = ''
                 if ascpupsubmit:
@@ -317,7 +320,7 @@ class Submitter:
                     ascpdownflags['-n']         = '%s Render Download' %(nameNoStamp)
                     ascpdownflags['-parent']    = '33409'
                     # TODO need a var to provide the job name
-                    ascpdownflags['-group']      = 'testing' #self.M.projectName
+                    ascpdownflags['-group']      = os.environ['GSPROJECT'].split('/')[-1] #self.M.projectName
                     ascpdownflags['-pool']      = 'ASPERA'
                     ascpdownflags['-wait']      = rendersubmit
                     
@@ -419,7 +422,7 @@ class Submitter:
                 exr2tiffFlags['-pool'] = 'NUKE'
                 exr2tiffFlags['-parent'] = '33409'
                 # TODO need a var to provide the job name
-                exr2tiffFlags['-group'] = 'testing'#self.M.projectName
+                exr2tiffFlags['-group'] = os.environ['GSPROJECT'].split('/')[-1]#self.M.projectName
                 exr2tiffFlags['-proj'] = project
                 exr2tiffFlags['-pr'] = '100'
                 exr2tiffFlags['-wait'] = newID
@@ -445,7 +448,7 @@ class Submitter:
         if '_T_' in oldName:
             fixedName = oldName.split('_T_')[0]
         # TODO need to provide a render scene dir should be ../../../publish/scene/version/filename
-        renderScenesDir = os.path.join(os.environ['GSPROJECT'], 'renderData', shot, 'mustache_renderScenes') #self.M.scenesDir
+        renderScenesDir = os.path.join(os.environ['GSWORKSPACE'], 'renderData', shot, 'mustache_renderScenes') #self.M.scenesDir
         if not os.path.exists(renderScenesDir):
             os.makedirs(renderScenesDir)
         imagePrefix = ''
@@ -676,12 +679,12 @@ class Submitter:
             irEnd = str(int(end) + int(cmds.getAttr('vraySettings.imap_interpFrames')))
             irName = os.path.basename(IRFile)
             # TODO set a var to give the job name
-            prepassID = self.musterSubmitJob(IRFile, irName, 'testing', pool, priority, depend, irStart, irEnd, step, packet, x, y, flags, notes + ' PREPASS', '', 0, '0', str(framePadding), suffix)
+            prepassID = self.musterSubmitJob(IRFile, irName, os.environ['GSPROJECT'].split('/')[-1], pool, priority, depend, irStart, irEnd, step, packet, x, y, flags, notes + ' PREPASS', '', 0, '0', str(framePadding), suffix)
             if not prepassID:
                 cmds.error('Error submitting prepass!')
         finalScene = self.save_render_file(suffix, endSuffix)
         # TODO set a var to give the job name
-        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), 'testing', pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, deep2matte, rsGpus)
+        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), os.environ['GSPROJECT'].split('/')[-1], pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, deep2matte, rsGpus)
         if finalScene == False:
             cmds.confirmDialog(title='Error submitting render!', message='Muster has found an ERROR. Check the script editor.', button="Please Resubmit")
         else:

@@ -100,6 +100,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     os.environ['GSINITIALS'] = initials
     os.environ['GSWORKGROUP'] = workgroup
+    os.environ['GSPROJECT'] = project
 
     # load the process env from the config files
     process_env = StudioEnvironment()
@@ -123,11 +124,12 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             import core
             controller = core.CoreController()
             filepath_unix = filepath.replace('\\','/')
-            project = controller.proj_controller.pathParser.getProject(filepath_unix,app)
+            os.environ['GSPROJECT'] = controller.proj_controller.pathParser.getProject(filepath_unix)
+            project = controller.proj_controller.pathParser.getWorkspace(filepath_unix,app)
             print ("Project Guess:{0}".format(project))
 
-    print ("GSPROJECT={0}".format(project))
-    os.environ['GSPROJECT'] = project
+    print ("GSWORKSPACE={0}".format(project))
+    os.environ['GSWORKSPACE'] = project
 
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
@@ -227,7 +229,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
             print "== END ENV VARS ==\n"
             #process_env.printout()
 
-    utils.updatePipelineFavorites()
+
 
     si = subprocess.STARTUPINFO()
     si.dwFlags = subprocess.STARTF_USESTDHANDLES
@@ -235,7 +237,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     if project != '':
         flag = process_env.get_flag(app=app, flag='project')
         if flag != '':
-            cmd += ' {0} "{1}"'.format(flag,os.environ['GSPROJECT'].replace('\\','/'))
+            cmd += ' {0} "{1}"'.format(flag,os.environ['GSWORKSPACE'].replace('\\','/'))
     if filepath != '':
         flag = process_env.get_flag(app=app, flag='file')
         if flag != '':

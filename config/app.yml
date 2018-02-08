@@ -95,13 +95,13 @@ maya:
     MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
     MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
     MAYA_MODULE_PATH: '%MAYA_STTOOLS%/modules/%ST_MAYA%'
-    MAYA_PLUG_IN_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
+    MAYA_PLUG_IN_PATH: '%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
     #MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
     MAYA_PRESET_PATH: '%MAYA_STTOOLS%/presets'
-    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
-    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/shelves/%ST_MAYA%'
-    XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/icons'
-    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
+    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
+    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;%GSPROJECT%/03_production/.pipeline/apps/maya/shelves/%ST_MAYA%'
+    XBMLANGPATH: '%MAYA_STTOOLS%/icons;%GSPROJECT%/03_production/.pipeline/apps/maya/icons'
+    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
     #GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
     MAYA_DISABLE_CLIC_IPM: '1'
     MAYA_DISABLE_CIP: '1'
@@ -249,7 +249,7 @@ nuke:
   shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
+    NUKE_PATH: '%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup'
     NUKE_DISK_CACHE: 'C:/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: 'C:/Temp/Nuke_Cache'
     PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python'
@@ -882,7 +882,7 @@ silhouette:
 houdini:
   env:
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
-    JOB: "%GSPROJECT%"
+    JOB: "%GSWORKSPACE%"
     SESI_LMHOST: "laxlic01"
     HSITE: '%GSBRANCH%\apps\houdini'
   show: true

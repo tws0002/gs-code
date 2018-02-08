@@ -6,7 +6,7 @@ from settings import *
 from utils import *
 #from widgets import *
 from dialogs import *
-import launcher, core
+import launcher, utils, core
 import functools
 
 import yaml
@@ -1104,7 +1104,8 @@ class LauncherWindow(QMainWindow):
         # create a project for the app in the current job/stage
         d = dict(self.active_data)
         d['package'] = app
-        status, response, project = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
+        status, response, workspace = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
+        project = self.controller.proj_controller.pathParser.getProject(self.active_path['job'])
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
         launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project, filepath=filepath)
@@ -1115,6 +1116,8 @@ class LauncherWindow(QMainWindow):
         test_timer.singleShot(4000, lambda: self.toggleLaunchStatus(self.app_layouts[button_name], text))
 
         self.addRecentProject(project)
+
+        utils.updatePipelineFavorites()
 
         return
 
