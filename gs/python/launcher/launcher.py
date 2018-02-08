@@ -86,7 +86,7 @@ def get_project_config(project='',config_type='workgroups'):
         #print ("GS Launcher: loading local project {1} config:{0}").format(found_config,config_type)
     return found_config 
 
-def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default', initials='', project='', filepath='', add_args=''):
+def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default', initials='', project='', workspace='', filepath='', add_args=''):
 
     app_config = CONFIG+'/app.yml'
     wrkgrp_config = CONFIG+'/workgroups.yml'
@@ -101,6 +101,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     os.environ['GSINITIALS'] = initials
     os.environ['GSWORKGROUP'] = workgroup
     os.environ['GSPROJECT'] = project
+    os.environ['GSWORKSPACE'] = workspace
 
     # load the process env from the config files
     process_env = StudioEnvironment()
@@ -111,6 +112,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     # load app from filepath if its not already specified
     if filepath != '':
+        print "Filepath specified:{0}".format(filepath)
         if app == '' or app is None:
             extension = filepath.split('.')[-1]
             app = process_env.get_app_from_ext(extension)
@@ -118,19 +120,20 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
 
     # if filepath is specified and project is not,
     if filepath != '':
-        print "Filepath specified:{0}".format(filepath)
-        if project == '' or project is None:
-            # get the project for the given path by calling core.pathsParser
-            import core
-            controller = core.CoreController()
-            filepath_unix = filepath.replace('\\','/')
-            os.environ['GSPROJECT'] = controller.proj_controller.pathParser.getProject(filepath_unix)
-            project = controller.proj_controller.pathParser.getWorkspace(filepath_unix,app)
-            print ("Project Guess:{0}".format(project))
+        # get the project for the given path by calling core.pathsParser
+        import core
+        controller = core.CoreController()
+        filepath_unix = filepath.replace('\\','/')
+        if workspace == '':
+            project = controller.proj_controller.pathParser.getProject(filepath_unix)
+            workspace = controller.proj_controller.pathParser.getWorkspace(filepath_unix, app)
+        if project == '':
+            project = controller.proj_controller.pathParser.getProject(filepath_unix)
 
-    print ("GSWORKSPACE={0}".format(project))
-    os.environ['GSWORKSPACE'] = project
-
+    print ("GSWORKSPACE={0}".format(workspace))
+    os.environ['GSWORKSPACE'] = workspace
+    print ("GSPROJECT={0}".format(project))
+    os.environ['GSPROJECT'] = project
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
     # workgroups vars should be able to override any other vars

@@ -1106,9 +1106,10 @@ class LauncherWindow(QMainWindow):
         d['package'] = app
         status, response, workspace = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
         project = self.controller.proj_controller.pathParser.getProject(self.active_path['job'])
+        #workspace = self.controller.proj_controller.pathParser.getWorkspace(self.active_path['job'],app)
 
         #print 'UI Launching {0} version: {1}'.format(app,version)
-        launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project, filepath=filepath)
+        launcher.launch_app(app, version=version, mode=mode, wrkgrp_config='', workgroup=workgroup, initials=initials, project=project, workspace=workspace, filepath=filepath)
 
         text = str(self.app_layouts[button_name].text())
         self.app_layouts[button_name].setText("Starting...")

@@ -15,7 +15,7 @@ default:
         ideform: '1.5.1' # -.3 startup cost (made startup time go up when disabled)
         bonustools: '17.0.1'  # 2.25 startup cost, speeds up maya shutdown to 04sec?! but was inconsistant
         krakatoa: '2.6.3' # 0.3 startup cost
-        redshift: '2.5.13' # 0.81 sec startup cost
+        redshift: '2.5.52' # 0.81 sec startup cost
         studiolibrary: '1.26.2' # 0.5 startup cost
         substance: '1.2.2.0' # 0.22 sec startup cost
         vray: '3.40.06' # 0.89 startup cost
