@@ -114,6 +114,9 @@ class Submitter:
 
     # used by aspera to get image prefixes
     def getImageOutputPath(self, *args):
+        """ returns a list out output paths that should be downloaded"""
+
+        result = []
         imagePrefix = ''
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
             imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
@@ -130,8 +133,7 @@ class Submitter:
             fixedName = oldName.split('_T_')[0]
         newPrefix1 = imagePrefix.replace('<Scene>', fixedName)
 
-        # TODO resolve image output paths with <RenderLayer> (one for each render layer submitted)
-        # TODO resolve relative path navigation dots ../../../ into a final path using os.path.normalize()
+
 
         # if <Layer> is in path, parse the active render layers
         newPrefix2 = newPrefix1.replace('/<Layer>', '')
@@ -142,7 +144,14 @@ class Submitter:
 
         projectImgFolder = os.path.join(cmds.workspace(q=1, fn=1), self.imagesFolder, newPrefix)
         normalizedFolder = projectImgFolder.replace('/', '\\')
-        return normalizedFolder
+        # TODO resolve image output paths with <RenderLayer> (one for each render layer submitted)
+        # TODO resolve relative path navigation dots ../../../ into a final path using os.path.normalize()
+        for each in self.getEnabledRenderLayers(self.renderLayerControls):
+            resolved_path = normalizedFolder.replace('<RenderLayer>',each)
+            # resolve any /../ relative path navigation
+            result.append(os.path.normpath(resolved_path))
+        #return normalizedFolder
+        return result
 
     def getUploadFiles(self):
         files = list(remote_render.get_scene_files())
@@ -217,8 +226,10 @@ class Submitter:
 
 
     def getDownloadFiles(self):
-        files = self.getImageOutputPath()
-        return files.replace('\\','/')
+        result = []
+        for ea in self.getImageOutputPath():
+            result.append(ea.replace('\\','/'))
+        return result
 
     def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, deep2matte = False, rsGpus = 0, *args):
         nameNoStamp = name
@@ -228,7 +239,7 @@ class Submitter:
 
         post_chunk_actions = ['C:\Windows\System32\cmd.exe /C C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/gs/python/sensu/post_chunk_action.py"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'])]
         if deep2matte:
-            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_action.py %%ATTR(start_frame) %%ATTR(end_frame) %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/')))
+            post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_action.py %%ATTR(start_frame) %%ATTR(end_frame) %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], ' '.join(self.getImageOutputPath()).replace('\\','/')))
         
         musterflags = {}
         if majorver and minorver:
@@ -241,7 +252,8 @@ class Submitter:
         musterflags['-parent']          = '33409'
         # TODO need a variable to provide the job name
         musterflags['-group']           = os.environ['GSPROJECT'].split('/')[-1] #self.M.projectName'
-        musterflags['-proj']            = project
+        # TODO we could depricate specifying the project since the launcher will figure this out automagically
+        musterflags['-proj']            = os.environ['GSWORKSPACE']
         musterflags['-pool']            = pool
         musterflags['-sf']              = str(start)
         musterflags['-ef']              = str(end)
@@ -325,10 +337,11 @@ class Submitter:
                     ascpdownflags['-wait']      = rendersubmit
                     
                     ascpdowncmd = ''
-                    f = self.getDownloadFiles().replace(" ", "\ ").replace("//","/")
-                    src = "%s/*" %(f)
-                    dest = f
-                    ascpdowncmd = ascpdowncmd + 'ascpgs %s render@nycbossman:%s;' %(src, dest)
+                    for ea in self.getDownloadFiles():
+                        f = ea.replace(" ", "\ ").replace("//","/")
+                        src = "%s/*" %(f)
+                        dest = f
+                        ascpdowncmd = ascpdowncmd + 'ascpgs %s render@nycbossman:%s;' %(src, dest)
                     ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
                     ascpdownsubmit = muster2.submit(ascpdownflags)
 
@@ -423,7 +436,7 @@ class Submitter:
                 exr2tiffFlags['-parent'] = '33409'
                 # TODO need a var to provide the job name
                 exr2tiffFlags['-group'] = os.environ['GSPROJECT'].split('/')[-1]#self.M.projectName
-                exr2tiffFlags['-proj'] = project
+                exr2tiffFlags['-proj'] = os.environ['GSWORKSPACE']
                 exr2tiffFlags['-pr'] = '100'
                 exr2tiffFlags['-wait'] = newID
                 exr2tiffFlags['-sf'] = '1'
@@ -455,15 +468,21 @@ class Submitter:
         sceneName = cmds.file(q=1, sn=1, shn=1)
 
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            imagePrefix = cmds.getAttr('vraySettings.fileNamePrefix')
+            imagePrefix = self.getRenderPrefix() 
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
             if newPrefix[-1] == '.':
                 newPrefix = newPrefix[:-1] + frameSuffix + '.'
             else:
                 newPrefix = newPrefix + frameSuffix
             cmds.setAttr('vraySettings.fileNamePrefix', newPrefix, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            imagePrefix = self.getRenderPrefix() 
+            print ("Setting render prefix to: {0}").format(imagePrefix)
+            newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
+            cmds.setAttr('redshiftOptions.imageFilePrefix', newPrefix, type='string')    
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')        
         else:
-            imagePrefix = cmds.getAttr('defaultRenderGlobals.imageFilePrefix')
+            imagePrefix = self.getRenderPrefix() 
             newPrefix = imagePrefix.replace('<Scene>', fixedName + sceneSuffix)
             if newPrefix[-1] == '.':
                 newPrefix = newPrefix[:-1] + frameSuffix + '.'
@@ -473,7 +492,8 @@ class Submitter:
                 cmds.setAttr('defaultRenderGlobals.imageFilePrefix', newPrefix, type='string')
             except:
                 pass
-        
+
+
         #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
         #    cmds.setAttr('redshiftOptions.exrForceMultilayer', True)
         
@@ -484,9 +504,10 @@ class Submitter:
 
         # restore image prefix without <scene> substitution
         if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-            cmds.setAttr('vraySettings.fileNamePrefix', imagePrefix, type='string')
-        else:
-            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', imagePrefix, type='string')
+            cmds.setAttr('vraySettings.fileNamePrefix', self.getRenderPrefix(), type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', self.getRenderPrefix(), type='string')
+        cmds.setAttr('defaultRenderGlobals.imageFilePrefix', self.getRenderPrefix(), type='string')
 
         if cmds.pluginInfo('xgenToolkit.mll', q=1, l=1):
             xgenFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.xgen')
@@ -507,22 +528,24 @@ class Submitter:
         return new_file
 
     def setRenderPrefix(self, imagePrefix, *args):
-        pass
         #if 'GS_MAYA_REND_PREFIX' in os.environ:
         #    imagePrefix = os.environ['GS_MAYA_REND_PREFIX']
         #    result = imagePrefix.replace("<gs_shot>",self.M.SM.checkedShot)
         #else:
         #    result = self.M.SM.checkedShot + '/<Scene>/<Scene>_<Layer>'
-        #
-        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
-        #    #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
-        #        #imagePrefix = imagePrefix + '.'
-        #    cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
-        #else:
-        #    try:
-        #        cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
-        #    except:
-        #        pass
+        result = self.getRenderPrefix()
+        if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'vray':
+            #if cmds.getAttr('vraySettings.imageFormatStr') == 'exr (multichannel)':
+                #imagePrefix = imagePrefix + '.'
+            cmds.setAttr('vraySettings.fileNamePrefix', result, type='string')
+        elif cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
+            cmds.setAttr('redshiftOptions.imageFilePrefix', result, type='string')
+            cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
+        else:
+            try:
+                cmds.setAttr('defaultRenderGlobals.imageFilePrefix', result, type='string')
+            except:
+                pass
 
     def getRenderPrefix(self, *args):
         imagePrefix = ''
@@ -801,12 +824,12 @@ class Submitter:
          (renderEngineLabel, 'left', lm5)])
         layersScroll = cmds.scrollLayout(w=250, h=150, parent=mayaGlobalSettings, ann='Render layers you want to render for this scene.')
         layersLabel = cmds.text(l='Render layers:', parent=mayaGlobalSettings)
-        renderLayerControls = []
+        self.renderLayerControls = []
         rlayers = sorted(cmds.ls(type='renderLayer'))
         rlayersFiltered = list(set([ f for f in rlayers if ':' not in f ]))
         for i in rlayersFiltered:
             layerCtrl = cmds.checkBox(l=i, v=cmds.getAttr(i + '.renderable'), parent=layersScroll)
-            renderLayerControls.append(layerCtrl)
+            self.renderLayerControls.append(layerCtrl)
 
         cameraCtrl = cmds.optionMenu(l='Render camera:', parent=mayaGlobalSettings, ann='The camera you want to render this scene with.', bgc=[1.0, 0.6, 0.7], cc=lambda *x: self.setImportantCtrl(cameraCtrl, cameraCtrl, poolCtrl, prepassCtrl, prepassLayerCtrl, submitBtn))
         defaultCams = ['topShape',
@@ -980,7 +1003,7 @@ class Submitter:
                 imgPlanes = cmds.checkBox(imagePlanesCtrl, q=1, v=1),
                 suffix = cmds.textField(sceneSuffixCtrl, q=1, tx=1),
                 endSuffix = cmds.textField(frameSuffixCtrl, q=1, tx=1),
-                renderLayers = self.getEnabledRenderLayers(renderLayerControls),
+                renderLayers = self.getEnabledRenderLayers(self.renderLayerControls),
                 prepassBeautyLayer = cmds.optionMenu(prepassLayerCtrl, q=1, v=1),
                 depend = '0',
                 framePadding = cmds.textField(paddingCtrl, q=1, tx=1),
