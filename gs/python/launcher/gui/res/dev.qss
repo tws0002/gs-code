@@ -226,7 +226,13 @@ QListWidget#Sidebar::item:selected {
     background-color: #f62375;
     border-color: #f62375;
 }
+QListWidget#Sidebar::item:selected:hover {
+    color:#282828;
+    background-color: #f62375;
+    border-color: #f62375;
+}
 QListWidget#Sidebar::item:hover {
+    color: #ffffff;
     border-color: #f62375;
 }
 

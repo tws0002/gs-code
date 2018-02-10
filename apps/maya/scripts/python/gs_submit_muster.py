@@ -564,7 +564,11 @@ class Submitter:
         #else:
         # TODO make this less hackey
         sceneName = cmds.file(q=1, sn=1)
-        bn = os.path.basename(sceneName)
+
+        fixedName = sceneName
+        if '_T_' in sceneName:
+            fixedName = sceneName.split('_T_')[0]
+        bn = os.path.basename(fixedName)
         se = os.path.splitext(bn)
         scene = se[0].split("_")[-2]
         ver = se[0].split("_")[-1]

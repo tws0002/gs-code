@@ -252,11 +252,11 @@ package_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/maya'
     scenefile_root: '%match_path%/scenes'
     extension: 'mb'
-  'c4d':
+  'cinema4d':
     parent: 'task'
     match_path: '%package_root%/c4d'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/packages/c4d'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/cinema4d'
     scenefile_root: '%package_root%/scenes'
     extension: 'c4d'
   'houdini':

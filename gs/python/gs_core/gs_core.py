@@ -3,7 +3,7 @@ __author__ = 'aburke'
 # import os,sys
 from glob import glob
 
-from settings import *
+from core_settings import *
 import projects
 
 
@@ -43,7 +43,7 @@ import projects
 
 
 class CoreController():
-    '''  The main funciton of core is to act as an interface between the data model (our file system, //scholar/projects) and views of that model (Launcher & other in-app tools)
+    '''  The main funciton of gs_core is to act as an interface between the data model (our file system, //scholar/projects) and views of that model (Launcher & other in-app tools)
     This makes Core the 'controller' in standard model-view-controller software architecture. The primary way of interacting with the model is a psuedo REST API (representational
     state transfer) wherby data is queried and manipulated with resource locators (in this case the filesystem paths) to locate and query data on the file server '''
 
@@ -83,7 +83,7 @@ class CoreController():
 
 
 def main():
-    ''' this is run if the core.py script is executed directly (not imported)'''
+    ''' this is run if the gs_core.py script is executed directly (not imported)'''
     # load the project config to enable the core to understand where files live on the server
     # based on this file, the core can map it to a data model storing information about the project
 

@@ -1,6 +1,6 @@
 __author__ = 'adamb'
 
-from settings import *
+from core_settings import *
 import yaml
 import re
 
@@ -24,7 +24,10 @@ class PathParser:
         f = open(filepath)
         # use safe_load instead load
         #dataMap = yaml.safe_load(f)
-        dataMap = yaml.load(f, Loader=yaml.CLoader)
+        try:
+            dataMap = yaml.load(f, Loader=yaml.CLoader)
+        except AttributeError:
+            dataMap = yaml.load(f, Loader=yaml.Loader)
         f.close()
         return dataMap
 
@@ -245,7 +248,7 @@ class PathParser:
         if '<' not in resultn[0]:
             result = resultn[0]
         else:
-            print "core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning empty result".format(resultn)
+            print "gs_core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning empty result".format(resultn)
 
         # if result == '':
         #        print ("Warning: subst_template_path(): No Exact Match Found, Closest match is {0}".format(resultn[0]))
@@ -310,7 +313,7 @@ class PathParser:
             result_path = min(m, key=len)
 
         if not os.path.exists(result_path):
-            print ("Warning: core.paths.getPath() path does not exists {0}".format(result_path))
+            print ("Warning: gs_core.paths.getPath() path does not exists {0}".format(result_path))
             result_path = ''
         return result_path
 

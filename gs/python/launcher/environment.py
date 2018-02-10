@@ -29,6 +29,18 @@ class StudioEnvironment():
                         self.add(k, v)
                 else:
                     self.add(k, v)
+        # system path is not getting updated in the os.environ after the script has started
+        # so we must
+        if 'PATH' not in self.vars:
+            self.add('PATH','')
+        split = self.vars['PATH'].split(';')
+        for p in sys.path:
+                if p not in split:
+                    split.append(p)
+
+        self.vars['PATH'] = ';'.join(split)
+
+
 
     def load_app_config_file(self, filepath, app=None, version=None):
         print ("Loading file path {0}".format(filepath))

@@ -6,7 +6,7 @@ from settings import *
 from utils import *
 #from widgets import *
 from dialogs import *
-import launcher, utils, core
+import launcher, utils, gs_core
 import functools
 
 import yaml
@@ -73,7 +73,7 @@ class LauncherWindow(QMainWindow):
         self.settings = QSettings('gs', 'launcher')
 
 
-        self.controller = core.CoreController()
+        self.controller = gs_core.CoreController()
 
         # OLD load Style Sheet for overall UI appearance
         # sStyleSheet = StyleSheet().styleSheet(1)
@@ -161,9 +161,12 @@ class LauncherWindow(QMainWindow):
             #item.setIcon(QIcon(os.path.join(RES, ("list_"+package+".png"))))
             self.ui['wdgt']['sidebar_list'].addItem(item)
             self.ui['lyt']['stack_layouts'][package] = QWidget()
+            item.setSelected(True) if package == 'Apps' else item.setSelected(False)
             self.ui['wdgt']['stack_widget'].addWidget(self.ui['lyt']['stack_layouts'][package])
             self.ui['lyt']['stack_layouts'][package].page_index = i
             i+=1
+
+
 
         # setup project
         self.ui['wdgt']['proj_cat'] = {}
@@ -393,7 +396,7 @@ class LauncherWindow(QMainWindow):
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
         # new way (temp disabled) # job_list = self.controller.get_projects_list('job_share')  #
-        job_list = core.list_jobs('jobs')
+        job_list = gs_core.list_jobs('jobs')
         if job_list:
             for j in sorted(job_list,key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -468,7 +471,7 @@ class LauncherWindow(QMainWindow):
             self.updateAssetList(project_path, asset_type)
 
         elapsed_time = time.time() - START_TIME
-        print("core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
+        print("gs_core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
 
         self.assetTabChanged(0)
 
@@ -554,7 +557,7 @@ class LauncherWindow(QMainWindow):
         return
 
     def updateTaskList(self, task_type):
-        #item_list = core.core.list_shots('jobs',project_name)
+        #item_list = gs_core.gs_core.list_shots('jobs',project_name)
 
         # get top level list of packages for the given task
         item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, task_type=task_type)
@@ -1104,7 +1107,11 @@ class LauncherWindow(QMainWindow):
         # create a project for the app in the current job/stage
         d = dict(self.active_data)
         d['package'] = app
-        status, response, workspace = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
+        # TODO: make this a better check for apps that dont support scratch workspaces
+        workspace=''
+        if app != 'pythonshell' and app != 'commandline' and app != 'muster':
+            print ("APP={0}").format(app)
+            status, response, workspace = self.controller.proj_controller.newScratch(upl_dict=d, allowExists=True)
         project = self.controller.proj_controller.pathParser.getProject(self.active_path['job'])
         #workspace = self.controller.proj_controller.pathParser.getWorkspace(self.active_path['job'],app)
 
