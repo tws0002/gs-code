@@ -501,6 +501,7 @@ class ProjectController():
 
     def getTaskScenesList(self, upl_dict=None, upl='', task_type=''):
         """
+        used to populate scene lists in the launcher and through other scene loaders
         :param upl_dict: optional project locator dictionary, if not provided upl path is used instead
         :param upl: a file path to interpret a upl_dict from, only used if upl_dict isn't provided
         :param task_type: specific type of task you're looking for
@@ -515,15 +516,8 @@ class ProjectController():
             else:
                 raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.getTaskScenesList()')
 
-
-        #task_path = upl
-        #if task_path == '':
-        #task_path = self.pathParser.getPath(upl_dict, hint_type='task')
         task_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='task', template_name=task_type, template_var='match_path')
         #print "core.projects.getTaskScenesList() upl={0} task_path={1}".format(upl_dict, task_path)
-
-        # iterates all subtree looking for patterns that match the glob *.mb
-        # result = [y for x in os.walk(upl) for y in glob(os.path.join(x[0], '*.mb'))]
 
         result_files = [y for x in os.walk(task_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip'])]
         #result_files = self.multiFastGlob(upl, ['mb', 'ma', 'nk', 'aep'])
@@ -536,6 +530,45 @@ class ProjectController():
         #return valid_result
         result = (task_path, valid_result)
         return result
+
+    def getScenefileList(self, upl_dict=None, upl='', template_type='scene_basic', scene_type='workscene', latest_version=False):
+        """
+        used to populate scene lists in the launcher and through other scene loaders
+        :param upl_dict: optional project locator dictionary, if not provided upl path is used instead
+        :param upl: a file path to interpret a upl_dict from, only used if upl_dict isn't provided
+        :param task_type: specific type of task you're looking for
+        :return: a list of scenes found. includes subdirectories to file based on package
+        """
+        valid_result = []
+
+        # if no upl dict is provided, parse it from the upl string
+        if not isinstance(upl_dict,dict):
+            if upl != '':
+                upl_dict = self.pathParser.parsePath(upl, exists=False)
+            else:
+                raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.getTaskScenesList()')
+
+        scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
+        #scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
+
+        result_files = [y for x in os.walk(scene_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
+
+        for name in result_files:
+            if not os.path.isdir(os.path.join(scene_path,name)) and not name.startswith('.') and not name.startswith('_'):
+                rel_path = name[len(scene_path)+1:]
+                filename = os.path.basename(rel_path)
+                valid_result.append(rel_path)
+
+        #return valid_result
+        result = (scene_path, valid_result)
+        return result
+
+    def getLatestSceneVersion(self, upl_dict, upl, scene_type='workscene'):
+        """
+        returns the latest found version of a specific file
+        :return:
+        :param scene_type: defines which scene file to check for latest version (workscene, publish, render)
+        """
 
     def multiGlob(self, path, filter_list):
         cpath = path.replace('\\','/')

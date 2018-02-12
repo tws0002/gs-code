@@ -567,6 +567,3 @@ class PathParser:
         :return: a list of default templates in defined asset
         """
         return self.templates['asset_templates'][asset_type]['default_tasks']
-
-
-            

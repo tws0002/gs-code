@@ -30,6 +30,8 @@ except ImportError:
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
+import gs_core
+
 
 ############ global pointers to prevent garbage collection until unload
 ###########wind=None
@@ -78,7 +80,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         vertical = QVBoxLayout()
         createTab.setLayout(vertical)
 
-        self.setWindowTitle('GS AssetMaker v0.1a')
+        self.setWindowTitle('GS AssetMaker v0.3a')
 
         self.startAsset = QPushButton("Start New Asset")
         vertical.addWidget(self.startAsset)
@@ -238,11 +240,11 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             cmds.move(asset_t[0]*-1, asset_t[1]*-1, asset_t[2]*-1, temp_grp)
             cmds.rotate(asset_r[0]*-1, asset_r[1]*-1, asset_r[2]*-1, temp_grp)
             cmds.scale(1/asset_s[0], 1/asset_s[1], 1/asset_s[2], temp_grp)
-            nl = cmds.rename("AssetMaker_asset_xform","{0}_Placement".format(ns))
-            cmds.parent(temp_grp,"{0}:GEOgrp".format(ns))
-            cmds.parent("{0}:{0}_GRP".format(ns),nl)
+            nl = cmds.rename("AssetMaker_asset_xform","{0}_placement".format(ns))
+            cmds.parent(temp_grp,"{0}:geogrp".format(ns))
+            cmds.parent("{0}:{0}_grp".format(ns),nl)
         else:
-            cmds.parent(temp_grp,"{0}:GEOgrp".format(ns))
+            cmds.parent(temp_grp,"{0}:geogrp".format(ns))
 
         cmds.undoInfo(closeChunk=True)
 
@@ -254,21 +256,30 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         asset_root = self.doExportAsset(asset_name)
 
     def doExportAsset(self, namespace):
+        ## eventually this will need to work with new pipeline
+        # 1. prep the asset for exporting
+        #   gather all the connected shaders for exporting
+        #   disconnect animation curves
+        #   set controllers to default/orig locations
+        #   determine what is in the model / rig / shading partition
+        # 2. export each partition of the rig to the appropriate work location
+        # 3. compile the rig & lookdev from scratch
+
         print("Creating Asset")
         # get asset placer
-        placer = '{0}_Placement'.format(namespace)
+        placer = '{0}_placement'.format(namespace)
         asset_name = str(namespace)
         if not cmds.objExists(placer):
             placer = ''
 
 
         # get asset root
-        asset_root  = '{0}:{0}_GRP'.format(namespace)
+        asset_root  = '{0}:{0}_grp'.format(namespace)
         if not cmds.objExists(placer):
             print ('Hmm something went wrong, I was looking for asset root:{0}. Check to make sure asset exists in scene before exporting').format(asset_root)
             return
 
-        striped_asset_root = '{0}_GRP'.format(namespace)
+        striped_asset_root = '{0}_grp'.format(namespace)
 
         # store a list of objects in the asset for later deletion
         nodes_to_delete = cmds.ls('{0}:*'.format(namespace))
@@ -330,7 +341,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             if 'GSPROJECT' in os.environ:
                 job = os.environ['GSPROJECT']
 
-        asset_dir = os.path.join('\\\\scholar\\projects',job,'03_production','01_cg','01_MAYA','scenes','01_cg_elements','01_models')
+        asset_dir = os.path.join(job,'production','01_cg','01_MAYA','scenes','01_cg_elements','01_models')
         if not os.path.exists(asset_dir):
             print ('Could not find asset lib path {0}'.format(asset_dir))
             return
@@ -940,7 +951,7 @@ def get_alembic_in_scene():
 #
 #
 #loadGSAssetMakerUI()
-
-wind = GSAssetMakerWindow()
-wind.show()
-windMayaName = wind.objectName()
+if __name__ == '__main__':
+    wind = GSAssetMakerWindow()
+    wind.show()
+    windMayaName = wind.objectName()

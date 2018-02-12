@@ -4,7 +4,7 @@ HAS_PYWIN = False
 HAS_PYAD = False
 
 import os, sys, shutil, errno
-import win32api, pywintypes
+#import win32api, pywintypes
 from settings import *
 
 # Load Pywin, if its available load pyad package
@@ -62,16 +62,19 @@ def win_shell_safe(filepath):
 
 def getScratchDrive():
     scratch = 'C:\\'
-    drives = win32api.GetLogicalDriveStrings()
-    drives = drives.split('\000')[:-1]
-    for d in drives:
-        try:
-            label = win32api.GetVolumeInformation(d)
-            if label[0] == 'SCRATCH':
-                scratch = d.replace('\\','')
-        except pywintypes.error as e:
-            #print 'Error reading {}: {}'.format(d, e[2])
-            continue
+    try:
+        drives = win32api.GetLogicalDriveStrings()
+        drives = drives.split('\000')[:-1]
+        for d in drives:
+            try:
+                label = win32api.GetVolumeInformation(d)
+                if label[0] == 'SCRATCH':
+                    scratch = d.replace('\\','')
+            except pywintypes.error as e:
+                #print 'Error reading {}: {}'.format(d, e[2])
+                continue
+    except:
+        pass
     return scratch
 
 def createTempDir():
