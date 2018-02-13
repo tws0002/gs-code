@@ -224,41 +224,43 @@ def testAPICalls():
     latest_publist_paths = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
     print latest_publist_paths
 
-    # define a uniform project location dictionary to pass to the getSceneList method.
-    f_data ={
-        'scenename': 'main',
-        'task': 'light',
-        'package': 'maya',
-        'share': 'projects',
-        'ext': 'mb',
-        'server': '//scholar',
-        'job': 'ab_testjob',
-        'version': '',
-        'asset': '005_00',
-        'asset_grp': 's01',
-        'asset_type': 'shot',
-        'stage': 'production'
-    }
-
-    # get the latest renders of a render sequence for a task/layer
-    latest_render_paths = proj.getScenefileList(upl_dict=f_data, scene_type='render', latest_version=True)
-    print latest_render_paths
-
-    # get the latest version of a publish for a task/layer
-    latest_publish_paths = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
-    print latest_publish_paths
+    ### define a uniform project location dictionary to pass to the getSceneList method.
+    ##f_data ={
+    ##    'scenename': 'main',
+    ##    'task': 'light',
+    ##    'package': 'maya',
+    ##    'share': 'projects',
+    ##    'ext': 'mb',
+    ##    'server': '//scholar',
+    ##    'job': 'ab_testjob',
+    ##    'version': '',
+    ##    'asset': '005_00',
+    ##    'asset_grp': 's01',
+    ##    'asset_type': 'shot',
+    ##    'stage': 'production'
+    ##}
+##
+    ### get the latest renders of a render sequence for a task/layer
+    ##latest_render_paths = proj.getScenefileList(upl_dict=f_data, scene_type='render', latest_version=True)
+    ##print latest_render_paths
+##
+    ### get the latest version of a publish for a task/layer
+    ##latest_publish_paths = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+    ##print latest_publish_paths
 
 
     # alternatively you can simply specify a filepath to determine the shot info and it will try to find the renders
     # or published scenefiles / alembics that go to that version or the latest version
 
-    latest_render_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True)
+    #latest_render_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True)
+    #print latest_render_paths
+
+    #latest_publish_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='publish', latest_version=True)
+    #print latest_publish_paths
+
+    # get formatted render paths
+    latest_render_paths = proj.getScenefileListFormatted(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True, style='nuke')
     print latest_render_paths
-
-    latest_publish_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='publish', latest_version=True)
-    print latest_publish_paths
-
-    # get a list of available scenenames
 
     # get a list of available renderLayers for a given scenename
 

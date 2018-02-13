@@ -611,7 +611,35 @@ class ProjectController():
             return (root_path, valid_results)
         else:
             print ("core.projects.getScenefileList() could not dermine scenename from upl_dict: {0}".format(upl_dict))
-            return ()
+            return '' ''
+
+    def getScenefileListFormatted(self, upl_dict=None, upl='', template_type='scene_basic', scene_type='workscene', latest_version=False, style='nuke'):
+        if style == 'nuke':
+            # nuke internally passes sequences around in this format full_path/file_seq.####.ext 1-50
+            root, fl = self.getScenefileList(upl_dict=upl_dict, upl=upl, scene_type=scene_type, template_type=template_type, latest_version=latest_version)
+            print root, fl
+            result = []
+            seq_dict = {} # sequence, min, max
+            for fil in fl:
+                sp = fil.split('.')
+                if sp[0] not in seq_dict:
+                    seq_dict[sp[0]] = {'path':fil,'ext':sp[2],'min':0,'max':0,'pad':len(sp[1])}
+                if int(sp[1]) < seq_dict[sp[0]]['min'] or seq_dict[sp[0]]['min'] == 0:
+                    seq_dict[sp[0]]['min'] = int(sp[1])
+                elif int(sp[1]) > seq_dict[sp[0]]['max']:
+                    seq_dict[sp[0]]['max'] = int(sp[1])
+
+            for s in seq_dict:
+                #frame = '%0{0}d'.format(seq_dict[s]['pad'])
+                frame = '#' * seq_dict[s]['pad']
+                sequence = '{0}.{1}.{2} {3}-{4}'.format(s,frame,seq_dict[s]['ext'],seq_dict[s]['min'],seq_dict[s]['max'])
+                result.append('/'.join([root,sequence]))
+
+            return result
+
+        else:
+            print "core.projects.getScenefileListFormatted() Formatting style: {0} not recognized".format(style)
+            return '' ''
 
     def getLatestSceneVersion(self, upl_dict, upl, scene_type='workscene'):
         """
