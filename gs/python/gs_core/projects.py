@@ -26,11 +26,11 @@ class ProjectController():
         """copies the template dir structure and substitutes any variable in filenames"""
         # TODO ideally this should eventually substitute any other varibales found within the copy tree
         print "dev: projects.copyTempTree('{0}','{1}')".format(src, dst)
-        try:
-            shutil.copytree(os.path.normpath(src), os.path.normpath(dst))
-        except WindowsError:
-            print 'gs_core.projects.copyTempTree() failed {0} to {1}'.format(src,dst)
-            raise StandardError
+        #try:
+        shutil.copytree(os.path.normpath(src), os.path.normpath(dst))
+        #except WindowsError:
+        #    print 'gs_core.projects.copyTempTree() failed {0} to {1}'.format(src,dst)
+        #    raise StandardError
 
         #substitute path names with variables
 
@@ -531,37 +531,87 @@ class ProjectController():
         result = (task_path, valid_result)
         return result
 
-    def getScenefileList(self, upl_dict=None, upl='', template_type='scene_basic', scene_type='workscene', latest_version=False):
+    def getScenefileList(self, upl_dict=None, upl='', template_type='scene_basic', scene_type='workscene', latest_version=False, combine_seq=True):
         """
-        used to populate scene lists in the launcher and through other scene loaders
+        used to populate scene lists in the launcher and through other scene loaders. renders may contain multiple paths
         :param upl_dict: optional project locator dictionary, if not provided upl path is used instead
         :param upl: a file path to interpret a upl_dict from, only used if upl_dict isn't provided
         :param task_type: specific type of task you're looking for
         :return: a list of scenes found. includes subdirectories to file based on package
         """
-        valid_result = []
+        valid_results = []
+        valid_ver = []
 
         # if no upl dict is provided, parse it from the upl string
         if not isinstance(upl_dict,dict):
             if upl != '':
-                upl_dict = self.pathParser.parsePath(upl, exists=False)
+                upl_dict = self.pathParser.parsePath(upl)
             else:
                 raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.getTaskScenesList()')
 
-        scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
-        #scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
+        if 'scenename' in upl_dict:
+            scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
+            #scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
+            #search_paths = [scene_path]
+            ver = upl_dict['version'] if 'version' in upl_dict else ''
+            paths_and_version = [(scene_path, '', ver)]
+            root_path = scene_path
+            # if there are layers in path, we must resolve them by looking at the file system and adding each to the search path
+            if scene_type == 'render':
+                if '/<layer>' in scene_path:
+                    paths_and_version = []
+                    search_paths = []
+                    # get the found layers and search each one
+                    root_layer_path = scene_path.split('/<layer>')[0]
+                    root_path = root_layer_path
+                    rlayers = os.listdir(root_layer_path)
+                    # TODO: this works but it won't support paths where the version comes before the layer. need
+                    # to think about a better way to do this
+                    for rl in rlayers:
+                        if not rl.startswith('.') and not rl.startswith('_'):
+                            # if the latest version is requested, we must search all versions with the layer
+                            if latest_version:
+                                max_ver = 0
+                                for ver in os.listdir('/'.join([root_layer_path,rl])):
+                                    if not ver.startswith('.') and not ver.startswith('_'):
+                                        v_int = int(re.search(r'[0-9]+', ver).group(0))
+                                        if v_int > max_ver:
+                                            max_ver = v_int
+                                # TODO make the zfill use a project-wide variable
+                                found_ver = 'v{0}'.format(str(max_ver).zfill(3))
+                                found_path = '/'.join([root_layer_path, rl, found_ver])
+                                paths_and_version.append((found_path, rl, found_ver))
+                            else:
+                                search_paths.append(scene_path.replace('<layer>',rl))
 
-        result_files = [y for x in os.walk(scene_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
+            for path, lyr, ver in paths_and_version:
+                upl_dict['version'] = ver
+                if lyr != '':
+                    upl_dict['layer'] = lyr
+                #scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
+                scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
+                scn_wo_vers = '_'.join(os.path.basename(scene_file).split('_')[:-3])
 
-        for name in result_files:
-            if not os.path.isdir(os.path.join(scene_path,name)) and not name.startswith('.') and not name.startswith('_'):
-                rel_path = name[len(scene_path)+1:]
-                filename = os.path.basename(rel_path)
-                valid_result.append(rel_path)
+                result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
 
-        #return valid_result
-        result = (scene_path, valid_result)
-        return result
+                for name in result_files:
+                    if not os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
+                        if os.path.basename(name).startswith(scn_wo_vers):
+                            rel_path = name[len(root_path)+1:]
+                            valid_results.append(rel_path)
+
+            # return sequences of frames as a single item
+            #if combine_seq:
+            #    combined_list = []
+            #    for r in valid_results:
+            #        frame = int(re.search(r'\.[0-9]+', ver).group(0))
+            #
+            #    valid_results = combined_list
+            #
+            return (root_path, valid_results)
+        else:
+            print ("core.projects.getScenefileList() could not dermine scenename from upl_dict: {0}".format(upl_dict))
+            return ()
 
     def getLatestSceneVersion(self, upl_dict, upl, scene_type='workscene'):
         """

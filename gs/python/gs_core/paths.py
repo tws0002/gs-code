@@ -240,15 +240,17 @@ class PathParser:
             if templ_file != '':
                 templ_path = '/'.join([templ_path, templ_file])
         # print ("template path is: {0}".format(templ_path))
+        # workaround for <layer> and <pass> attributes since they can only be known at render time
+
         resultn = rp.subn(lambda repl: '{0}'.format(upl_dict[repl.group()[1:-1]]), templ_path)
+
         # make sure that the number of matched groups is equal to or greater than the keys in the upl dictionary
         # this wont always be true however in cases where the variable requested only has
         # if resultn[1] >= len(upl_dict.keys()):
         # and no other <key> template strings are left, then print match found
-        if '<' not in resultn[0]:
-            result = resultn[0]
-        else:
-            print "gs_core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning empty result".format(resultn)
+        if '<' in resultn[0]:
+            print "gs_core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning partial result".format(resultn)
+        result = resultn[0]
 
         # if result == '':
         #        print ("Warning: subst_template_path(): No Exact Match Found, Closest match is {0}".format(resultn[0]))
@@ -423,9 +425,9 @@ class PathParser:
         # look for path match in task structs
         # (?P<file_share>.*)/(?P<job>.*)/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/(?P<shot>[^/]*)/(?P<task>[^/]*)/(?P<shot2>[^/]*)_(?P<cversion>.*)_(?P<aversion>.*)_(?P<lversion>.*)_(?P<initials>.*)\.(?P<ext>.*)
         # TODO conisder depricating since work_path isn't in use
-        if hint == 'task' or hint == '':
+        if hint == 'scene' or hint == '':
             for scn, data in self.templates['scenefile_templates'].iteritems():
-
+                #print ("checking scene_type={0}".format(scn))
                 if 'workscene_path' in data:
                     # should cache converted regexs
                     rgx_path = self.templateToRegex(filepath=self.getTemplatePath('scenefile', scn, 'workscene_path', upl_dict=upl_guess), limiters=['/'], exclude=['<server>'])
@@ -439,8 +441,8 @@ class PathParser:
                     # match the path first
                     # if rp.match(split_path[0]):
                     for m in rp.finditer(split_path[0]):
-                        if task_path_match == True:
-                            break
+                        #if task_path_match == True:
+                        #    break
                         # print ('Matched path with task_struct: {0}'.format(task))
                         # print m.groupdict()
                         result_obj.update(m.groupdict())
@@ -452,8 +454,8 @@ class PathParser:
                             for n in rf.finditer(split_path[1]):
                                 if task_file_match == True:
                                     break
-                                # print ('{0} matched filename with task_struct: {1}'.format(split_path[1],task))
-                                # print n.groupdict()
+                                print ('{0} matched filename with scenefile_template: {1}'.format(split_path[1],scn))
+                                print n.groupdict()
                                 task_file_match = True
                                 result_obj['scene_type'] = scn
                                 # manually update the file name object data, if a key doesn't match though, we have to return false

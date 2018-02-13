@@ -301,6 +301,13 @@ package_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/premiere'
     scenefile_root: '%match_path%'
     extension: "prproj"
+  'photoshop':
+    parent: 'task'
+    match_path: '%package_root%/photoshop'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/photoshop'
+    scenefile_root: '%match_path%'
+    extension: "prproj"
 
 # defines the naming convention of a specific scenefile. Each software package template has
 scenefile_templates:
@@ -309,23 +316,23 @@ scenefile_templates:
         copy_path: '<server>/projects/_templates/project_template_2018/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/publish/<version>'
+        render_path: '%task_root%/<task>/render/<scenename>/<layer>/<version>'
+        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
+        publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     'conform':
         parent: 'package'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/publish/<version>'
+        render_path: '%task_root%/<task>/render/<scenename>/<layer>/<version>'
+        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
+        publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
-    'styleframe':
-        parent: 'package'
-        workscene_path: '%scenefile_root%'
-        workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
-        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/publish/<version>'
-        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
+    #'styleframe':
+    #    parent: 'package'
+    #    workscene_path: '%scenefile_root%'
+    #    workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
+    #    render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+    #    render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+    #    publish_path: '%task_root%/publish/<version>'
+    #    publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'

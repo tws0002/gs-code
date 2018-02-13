@@ -187,16 +187,16 @@ def load_project_model():
     return
 
 def testAPICalls():
-
+    import gs_core
 
     # initialize the project controller. specify a project.yml file to load as the template file
-    proj = projects.ProjectController('//scholar/pipeline/dev/config/projects.yml')
+    #proj = gs_core.projects.ProjectController('//scholar/pipeline/dev/config/projects.yml')
+    proj = gs_core.projects.ProjectController(CONFIG + "/projects.yml")
 
     # get a python dictionary that parses the shot properties from the file
     p_dict = proj.pathParser.parsePath('//scholar/projects/ab_testjob/production')
 
     # get a list of shots for a stage of production
-    p_dict['stage'] = 'production'
     asset_lib, asset_names = proj.getAssetsList(upl_dict=p_dict, asset_type='shot')
     # returns: 2-tuple (string asset_lib_path, assets[]) assets are prefixed with asset group eg. "asset_grp/asset_name"
     # result: ('//scholar/projects/ab_testjob', ['s01/001_00', 's01/002_00', 's01/003_00', 's01/004_00', 's01/005_00'])
@@ -207,21 +207,60 @@ def testAPICalls():
     # result: ('//scholar/projects/ab_testjob/s01/001_00', ['anim', 'light', 'comp'])
 
     # get a list of scenefiles within a given task
-    task_path, rel_scenepath = proj.getTaskScenesList(upl='/'.join([task_root, task_names[0]]),task_type=task_names[0])
-    print task_path
-    print rel_scenepath
-    # returns: 2-tuple (string task_root_path, scenefile_paths[])
+    task_path, rel_scenepath = proj.getTaskScenesList(upl='/'.join([task_root, task_names[0]]), task_type=task_names[0])
     # result: ('//scholar/projects/ab_testjob/s01/001_00/comp', ['work/nuke/s01_001_00_comp_main_v000.nk', 'work/nuke/s01_001_00_comp_main_v001.nk', 'work/nuke/s01_001_00_comp_main_v002.nk'])
 
     # get scene name and version info from a filepath
-    #f_data = proj.pathParser.parsePath('//scholar/projects/ab_testjob/s01/001_00/comp/work/nuke/s01_001_00_comp_main_v000.nk')
-    #print f_data
+    f_data = proj.pathParser.parsePath('//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb')
+    print f_data
     # returns: python dict of any variables that it found in the path
     # result: {'server':'//scholar', 'share':'projects', 'job': 'ab_testjob', 'asset_type':'shot, 'asset_grp':'s01', 'asset':'001_00', 'task':'comp', 'package':'nuke', 'scenename':'main', 'version', 'v001', 'ext':'nk'}
 
-    # get render sequence of a task/layer/pass
+    # get the latest renders of a render sequence for a task/layer
+    latest_render_paths = proj.getScenefileList(upl_dict=f_data, scene_type='render', latest_version=True)
+    print latest_render_paths
 
-    # get the latest version of a render sequence for a task/layer
+    # get the latest version of a publish for a task/layer
+    latest_publist_paths = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+    print latest_publist_paths
+
+    # define a uniform project location dictionary to pass to the getSceneList method.
+    f_data ={
+        'scenename': 'main',
+        'task': 'light',
+        'package': 'maya',
+        'share': 'projects',
+        'ext': 'mb',
+        'server': '//scholar',
+        'job': 'ab_testjob',
+        'version': '',
+        'asset': '005_00',
+        'asset_grp': 's01',
+        'asset_type': 'shot',
+        'stage': 'production'
+    }
+
+    # get the latest renders of a render sequence for a task/layer
+    latest_render_paths = proj.getScenefileList(upl_dict=f_data, scene_type='render', latest_version=True)
+    print latest_render_paths
+
+    # get the latest version of a publish for a task/layer
+    latest_publish_paths = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+    print latest_publish_paths
+
+
+    # alternatively you can simply specify a filepath to determine the shot info and it will try to find the renders
+    # or published scenefiles / alembics that go to that version or the latest version
+
+    latest_render_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True)
+    print latest_render_paths
+
+    latest_publish_paths = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='publish', latest_version=True)
+    print latest_publish_paths
+
+    # get a list of available scenenames
+
+    # get a list of available renderLayers for a given scenename
 
 if __name__ == '__main__':
     main()
