@@ -947,6 +947,31 @@ houdini:
         linux: /
         mac: /
         win32: 'C:/Program Files/Side Effects Software/Houdini 15.5.607/bin'
+realflow:
+  env:
+    RF_10_PATH: 'C:/Program Files/NextLimit/Realflow/10.1.2.0162'
+    nextlimit_LICENSE: "5055@laxlic01"
+  show: true
+  tasks:
+  - fx
+  versions:
+    '10.1.2.0162':
+      name: Realflow
+      env:
+        ST_RFLOW: '10.1.2.0162'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: RealFlow.exe
+        cli:
+          linux: /
+          mac: /
+          win32: RealFlowNode.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:/Program Files/NextLimit/Realflow/10.1.2.0162'
 pythonshell:
   name: Python Shell
   show: true

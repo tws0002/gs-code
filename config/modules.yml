@@ -186,6 +186,15 @@ realflow:
       env:
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/realflow/%ST_REALFLOW%/win/%ST_MAYA%'
       versions:
+        '6.0.1.3':
+          env:
+            ST_REALFLOW: '6.0.1.3'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '2015.0.0.9':
           env:
             ST_REALFLOW: '2015.0.0.9'
@@ -227,10 +236,19 @@ advancedSkeleton:
       env:
         #MAYA_SCRIPT_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/scripts'
         #XMB_LANG_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/icons'
-        #PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/bin'
+        PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/bin'
         MAYA_MODULE_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%'
         MAYA_SHELF_PATH: '%GSROOT%/bin/external/maya/modules/AdvancedSkeleton/%ST_ADVSKEL%/win/%ST_MAYA%/shelves'
       versions:
+        '5.420':
+          env:
+            ST_ADVSKEL: '5.420'
+          path:
+            linux: /
+            mac: /
+            win32: /
+          versions:
+          - '2017'
         '5.250':
           env:
             ST_ADVSKEL: '5.250'
