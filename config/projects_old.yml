@@ -183,6 +183,11 @@ task_templates:
 # Defines available software packages. When creating a new scene, these template folder struct will get
 # copied to the specified path
 package_templates:
+  'none':
+    parent: 'stage'
+    match_path: '%package_root%'
+    capture_path: '%package_root%'
+    scenefile_root: '%match_path%'
   'maya':
     parent: 'stage'
     match_path: '%package_root%/01_cg/01_MAYA'

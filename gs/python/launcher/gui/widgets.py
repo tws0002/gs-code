@@ -252,10 +252,7 @@ class LchrTreeList(QWidget):
     pm = None
     le = None
     tvw = None
-
     qlyt = None
-
-
 
     # remapped signals
     selectionChanged = None

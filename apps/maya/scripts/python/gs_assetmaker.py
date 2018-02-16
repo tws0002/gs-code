@@ -65,7 +65,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(GSAssetMakerWindow, self).__init__(parent=parent, *args, **kwargs) 
 
-
+        
         #####self.parent = parent
         main_lyt = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(main_lyt)
@@ -230,7 +230,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             rn = self.add_namespace_to_children(ns,[onm])
             sel_list.extend(rn)
 
-        temp_grp = cmds.createNode('transform',n="{0}:offset_grp".format(ns))
+        temp_grp = cmds.createNode('transform',n="{0}:g_offset".format(ns))
         cmds.parent(sel_list,temp_grp)
 
         if cmds.objExists("AssetMaker_asset_xform"):
@@ -241,10 +241,10 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             cmds.rotate(asset_r[0]*-1, asset_r[1]*-1, asset_r[2]*-1, temp_grp)
             cmds.scale(1/asset_s[0], 1/asset_s[1], 1/asset_s[2], temp_grp)
             nl = cmds.rename("AssetMaker_asset_xform","{0}_placement".format(ns))
-            cmds.parent(temp_grp,"{0}:geogrp".format(ns))
-            cmds.parent("{0}:{0}_grp".format(ns),nl)
+            cmds.parent(temp_grp,"{0}:g_geo".format(ns))
+            cmds.parent("{0}:root".format(ns),nl)
         else:
-            cmds.parent(temp_grp,"{0}:geogrp".format(ns))
+            cmds.parent(temp_grp,"{0}:g_geo".format(ns))
 
         cmds.undoInfo(closeChunk=True)
 
@@ -404,10 +404,11 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         # get sg nodes but remove duplicates by casting to a set()
         sh_nodes = list(set(self.get_shading_nodes(geom_list)))
         for n in sh_nodes:
-            no_ns = n.split(":")[-1]
-            nn = '{0}:{1}'.format(namespace,str(no_ns))
-            print ('renaming shader {0} to {1}'.format(str(n),nn))
-            cmds.rename(n,nn)
+            if n != 'initialShadingGroup' and n != 'lambert1':
+                no_ns = n.split(":")[-1]
+                nn = '{0}:{1}'.format(namespace,str(no_ns))
+                print ('renaming shader {0} to {1}'.format(str(n),nn))
+                cmds.rename(n,nn)
 
     def get_shading_nodes(self, obj_list, force_dupe=False):
         print ("shading object list")
@@ -609,11 +610,11 @@ def createAssetBase(namespace=":"):
         valid_ns = cmds.namespace(set=valid_ns)
     #try:
     groups = []
-    groups.append(cmds.group(em=1, n='GEOgrp'))
-    groups.append(cmds.group(em=1, n='RIGgrp'))
-    groups.append(cmds.group(em=1, n='GUTSgrp'))
+    groups.append(cmds.group(em=1, n='g_geo'))
+    groups.append(cmds.group(em=1, n='g_rig'))
+    groups.append(cmds.group(em=1, n='g_guts'))
     cmds.select(groups, add=1)
-    groups.append(cmds.group(n=namespace + '_GRP'))
+    groups.append(cmds.group(n='root'))
     axes = ['x', 'y', 'z']
     chans = ['t', 'r', 's']
     for a in axes:
@@ -624,8 +625,16 @@ def createAssetBase(namespace=":"):
     #for g in groups:
         #cmds.lockNode(group, lock=True)
 
-    cacheset = cmds.sets(n='CACHEset', em=1)
-    rigset = cmds.sets(n='RIGset', em=1)
+    keyable = cmds.sets(n='s_keyable', em=1)
+    cacheset = cmds.sets(n='s_cache', em=1)
+    
+    subd = cmds.sets(n='s_subd', em=1)
+    obj = cmds.sets(n='s_obj', em=1)
+    creases = cmds.sets(n='s_creases', em=1)
+    render = cmds.sets(subd,obj,creases,n='s_render')
+    rigset = cmds.sets(n='s_rig', em=1)
+
+    cmds.sets( keyable, cacheset, render, rigset, n="sets")
     #cmds.lockNode(cacheset, lock=1)
     #cmds.lockNode(rigset, lock=1)
     #except:
@@ -951,7 +960,8 @@ def get_alembic_in_scene():
 #
 #
 #loadGSAssetMakerUI()
-if __name__ == '__main__':
+#if __name__ == '__main__':
+def main():
     wind = GSAssetMakerWindow()
     wind.show()
     windMayaName = wind.objectName()

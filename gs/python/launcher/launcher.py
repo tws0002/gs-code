@@ -93,7 +93,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     shell_mode = False
 
     # get a current working directory
-    cwd = r'//{0}/{1}/{2}'.format(SERVER,SHARES['projects'],project)
+    cwd = workspace if workspace != '' else r'c:\Temp'
+    # r'//{0}/{1}/{2}'.format(SERVER,SHARES['projects'],project)
     print ("Current Working Directory {0}".format(cwd))
     print 'Launching {0} version: {1}'.format(app,version)
 
@@ -136,6 +137,7 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     os.environ['GSWORKSPACE'] = workspace
     print ("GSPROJECT={0}".format(project))
     os.environ['GSPROJECT'] = project
+
     # load the modules in the specified workgroup config, this is hardcoded for now but will be adjustable in future UI
     # its also important to note that we load env vars in a cascading order of apps, modules, workgroups
     # workgroups vars should be able to override any other vars

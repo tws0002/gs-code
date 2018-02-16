@@ -486,17 +486,17 @@ class LauncherWindow(QMainWindow):
     def updateAssetList(self, project_path, asset_type):
 
         # get top level assets
-        item_tuple = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
+        asset_lib, asset_names = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
         # load projects from core
 
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
-        for item in sorted(item_tuple[1]):
+        for item in sorted(asset_names):
             split_name = item.split('/')
             if not split_name[0] in item_dict:
                 item_dict[split_name[0]] = {}
                 item_dict[split_name[0]]['name'] = split_name[0]
-                item_dict[split_name[0]]['filepath'] = '/'.join([item_tuple[0],split_name[0]])
+                item_dict[split_name[0]]['filepath'] = '/'.join([asset_lib,split_name[0]])
                 item_dict[split_name[0]]['status'] = "Active"
                 item_dict[split_name[0]]['is_group'] = False
                 item_dict[split_name[0]]['group'] = ''
@@ -505,15 +505,15 @@ class LauncherWindow(QMainWindow):
                 item_dict[split_name[0]]['is_group'] = True
                 item_dict[split_name[0]]['children'][split_name[1]] = {}
                 item_dict[split_name[0]]['children'][split_name[1]]['name'] = split_name[1]
-                item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([item_tuple[0],split_name[0],split_name[1]])
+                item_dict[split_name[0]]['children'][split_name[1]]['filepath'] = '/'.join([asset_lib,split_name[0],split_name[1]])
                 item_dict[split_name[0]]['children'][split_name[1]]['status'] = "Active"
                 item_dict[split_name[0]]['children'][split_name[1]]['is_group'] = False
                 item_dict[split_name[0]]['children'][split_name[1]]['group'] = split_name[0]
 
-        print ("Asset_Type:{0} Asset_Data{1}".format(asset_type,item_tuple))
+        print ("Asset_Type:{0} Asset_Data:({1},{2})".format(asset_type,asset_lib,asset_names))
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt'][asset_type].loadViewModelFromDict(item_dict)
-        self.ui['wdgt'][asset_type].current_path = item_tuple[0]
+        self.ui['wdgt'][asset_type].current_path = asset_lib
 
     def updateTaskTabs(self, project_path, asset_path):
         '''

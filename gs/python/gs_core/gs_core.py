@@ -259,10 +259,29 @@ def testAPICalls():
     #print latest_publish_paths
 
     # get formatted render paths
-    latest_render_paths = proj.getScenefileListFormatted(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True, style='nuke')
-    print latest_render_paths
+    #latest_render_paths = proj.getScenefileListFormatted(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00/light/work/maya/scenes/s01_005_00_light_main_v003.mb', scene_type='render', latest_version=True, style='nuke')
+    #print latest_render_paths
 
-    # get a list of available renderLayers for a given scenename
+    #latest_render_paths = proj.getScenefileListFormatted(upl='//scholar/projects/ab_testjob/production/shots/s01/005_00', scene_type='render', latest_version=True, style='nuke')
+    #print latest_render_paths
+
+    ## test passing just an asset folder
+    #f_data = proj.pathParser.parsePath('//scholar/projects/ab_testjob/production/assets/3d/char/testCharA')
+    #f_data['task'] = 'model'
+    #f_data['scenename'] = 'main'
+    #f_data['package'] = 'maya'
+    #f_data['ext'] = 'mb'
+
+    ## get the latest version of publish path
+    #pub_root, pub_files = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+    #print ('latest_publish={0} {1}'.format(pub_root,  pub_files))
+    ## get a list of available renderLayers for a given scenename
+
+    f_data = proj.pathParser.parsePath('//scholar/projects/ab_testjob/production/assets/3d/char/testCharA/rig/work/maya/scenes/char_testCharA_rig_main_v001.mb')
+    print f_data
+
+    next_avail = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/assets/3d/char/testCharA/rig/work/maya/scenes/char_testCharA_rig_main_v000.mb', scene_type='workscene', latest_version=True, new_version=True)
+    print next_avail
 
 if __name__ == '__main__':
     main()

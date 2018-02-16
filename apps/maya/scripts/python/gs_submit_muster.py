@@ -1098,11 +1098,11 @@ class Submitter:
 
 
 
+def main():
+    #wind = GSSubmitMuster()
+    #wind.show()
+    #windMayaName = wind.objectName()
 
-#wind = GSSubmitMuster()
-#wind.show()
-#windMayaName = wind.objectName()
-
-sb = Submitter()
-wind = sb.submitUI()
+    sb = Submitter()
+    wind = sb.submitUI()
 

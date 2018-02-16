@@ -262,7 +262,7 @@ class StudioAlembicUIWindow(MayaQWidgetBaseMixin,QWidget):
 			print (assets[a]['latest_cache'])
 			ver = QStandardItem(assets[a]['latest_cache'])
 			item.setCheckable(True)
-			item.setCheckState(2)
+			#item.setCheckState(Qt.CheckState)
 			self.asset_model.appendRow(item)
 			self.asset_model.setItem(r,2,ver)
 			r = r + 1

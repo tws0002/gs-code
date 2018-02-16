@@ -92,10 +92,10 @@ asset_templates:
     parent: 'stage'
     display_name: 'Assets2D'
     display_order: 1
-    lib_path: '<server>/projects/<job>/production/assets'
-    match_path: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
-    capture_path: '<server>/projects/<job>/<stage>/assets/<asset_grp>/<asset>'
-    task_root: '<server>/<share>/<job>/<stage>/assets/<asset_grp>/<asset>'
+    lib_path: '<server>/projects/<job>/production/assets/2d'
+    match_path: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
+    capture_path: '<server>/projects/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
+    task_root: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
     copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
     default_tasks: ''
     qualifier_path: '.info' # qualified assets must contain this subfolder/file
@@ -245,6 +245,13 @@ task_templates:
 # Defines available software packages. When creating a new scene, these template folder struct will get
 # copied to the specified path
 package_templates:
+  'none':
+    parent: 'task'
+    match_path: '%package_root%'
+    capture_path: '%package_root%'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/maya'
+    scenefile_root: '%match_path%'
+    extension: 'mb'
   'maya':
     parent: 'task'
     match_path: '%package_root%/maya'
@@ -320,14 +327,14 @@ scenefile_templates:
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
         publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
-    'conform':
-        parent: 'package'
-        workscene_path: '%scenefile_root%'
-        workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/<task>/render/<scenename>/<layer>/<version>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
-        publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
-        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
+    #'conform':
+    #    parent: 'package'
+    #    workscene_path: '%scenefile_root%'
+    #    workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
+    #    render_path: '%task_root%/<task>/render/<scenename>/<layer>/<version>'
+    #    render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
+    #    publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
+    #    publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
     #'styleframe':
     #    parent: 'package'
     #    workscene_path: '%scenefile_root%'
