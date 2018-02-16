@@ -46,6 +46,7 @@ project_templates:
         pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)'
         match_path: '<server>/projects/<job>'
         capture_path: '<server>/<share>/<job>'
+        project_path: '%match_path%'
         copy_tree: '<server>/projects/_templates/project_template_2015/job_basic'
 
 # Production Stage Definition
@@ -77,14 +78,14 @@ stage_templates:
 
 asset_templates:
   'shot_2d':
-    parent: 'package'
+    parent: 'stage'
     display_name: 'Comp'
     display_order: 2
     lib_path: "<server>/projects/<job>/03_production/02_composite"
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
     match_path: "<server>/projects/<job>/03_production/02_composite/<asset_grp>/<asset>"
     capture_path: "<server>/<share>/<job>/03_<stage>/02_<task>/<asset_grp>/<asset>"
-    task_root: "<server>/projects/<job>/03_production/02_composite/<asset_grp>/<asset>"
+    task_root: "%match_path%"
     default_tasks: 'comp'
     qualifier_path: '00_nuke' # qualifies if path contains this subfolder
     ignore_path: '_musterFiles*'
@@ -94,9 +95,9 @@ asset_templates:
     display_name: 'Shots3D'
     lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
-    match_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<shot>"
-    capture_path: "<server>/<share>/<job>/03_<stage>/01_cg/01_MAYA/scenes/02_cg_scenes/<shot>"
-    task_root: "<server>/projects/<job>/03_production/02_composite/<asset_grp>/<asset>"
+    match_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<asset>"
+    capture_path: "<server>/<share>/<job>/03_<stage>/01_cg/01_MAYA/scenes/02_cg_scenes/<asset>"
+    task_root: "%match_path%"
     default_tasks: 'animation,lighting'
     qualifier_path: 'animation' # qualifies if path contains this subfolder
     ignore_path: 'mustache_renderScenes*'
@@ -108,7 +109,7 @@ asset_templates:
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
     match_path: "<server>/projects/<job>/03_<stage>/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
     capture_path: "<server>/<share>/<job>/03_<stage>/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
-    task_root: "<server>/projects/<job>/03_production/02_composite/<asset_grp>/<asset>"
+    task_root: "%match_path%"
     default_task: 'model'
     qualifier_path: '_versions'
     ignore_path: 'mustache_renderScenes*'
@@ -135,7 +136,7 @@ task_templates:
     scenefile_type: 'styleframe'
   'conform':
     inherits: 'proto_task_basic'
-    parent: 'asset'
+    parent: 'stage'
     display_name: 'Conform'
     display_order: 1
     match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
@@ -152,7 +153,7 @@ task_templates:
     scenefile_type: 'conform'
   'model':
     inherits: 'proto_task_basic'
-    parent: 'asset'
+    parent: 'asset:asset_3d'
     display_name: 'Model'
     display_order: 1
     match_path: '%task_root%/_versions'
@@ -160,24 +161,24 @@ task_templates:
     work_file: "<asset>_<version>_<intials>.<ext>"
   'animation':
     inherits: 'proto_task_basic'
-    parent: 'asset'
+    parent: 'asset:shot_3d'
     display_name: 'Animation'
     display_order: 1
-    match_path: '%task_root%/anim'
+    match_path: '%task_root%/animation'
     default_package: 'maya'
   'lighting':
     inherits: 'proto_task_basic'
-    parent: 'asset'
+    parent: 'asset:shot_3d'
     display_name: 'Lighting'
     display_order: 3
-    match_path: '%task_root%/light'
+    match_path: '%task_root%/lighting'
     default_package: 'maya'
   'comp':
     inherits: 'proto_task_basic'
-    parent: 'asset'
+    parent: 'asset:shot_2d'
     display_name: 'Composite'
     display_order: 4
-    match_path: '%task_root%/comp'
+    match_path: '%task_root%'
     default_package: 'nuke'
 
 # Defines available software packages. When creating a new scene, these template folder struct will get
@@ -224,16 +225,16 @@ package_templates:
     scenefile_root: '%match_path%'
     exensions: 'ztl'
   'nuke':
-    parent: 'stage'
-    match_path: '%package_root%/02_composite/nuke'
-    capture_path: '%package_root%/02_composite/<package>'
+    parent: 'asset:shot_2d'
+    match_path: '%task_root%/00_nuke'
+    capture_path: '%task_root%/00_<package>'
     copy_tree: '<server>/projects/_templates/project_template_2015/packages/nuke'
     scenefile_root: '%match_path%'
     extension: 'nk'
   'ae':
-    parent: 'stage'
-    match_path: '%package_root%/02_composite/ae'
-    capture_path: '%package_root%/02_composite/<package>'
+    parent: 'asset:shot_2d'
+    match_path: '%task_root%/01_ae'
+    capture_path: '%task_root%/00_<package>'
     copy_tree: '<server>/projects/_templates/project_template_2015/packages/ae'
     scenefile_root: '%match_path%'
     extension: 'aep'
@@ -251,19 +252,19 @@ scenefile_templates:
         parent: 'task'
         copy_path: '<server>/projects/_templates/project_template_2015/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
-        workscene_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+        workscene_file: '<asset>_<camv>_<animv>_<lighv>_<intials>.<ext>'
+        render_path: '%package_root%/images/%workscene_file%/<layer>'
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/publish/<version>'
-        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
-    'conform':
-        parent: 'task'
+        publish_path: '%task_root%/mustache_renderScenes/'
+        publish_file: '<asset>_<camv>_<animv>_<lighv>_<intials>_T_<timecode>.<ext>'
+    'comp':
+        parent: 'package'
         workscene_path: '%scenefile_root%'
-        workscene_file: '<asset_grp>_<task>_<scenename>_<version>.<ext>'
-        render_path: '%task_root%/render/<scenename>/<layer>/<version>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
-        publish_path: '%task_root%/publish/<version>'
-        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
+        workscene_file: '<asset>_<task>_<version>.<ext>'
+        render_path: '%project_path%/04_renders/<package>/%workscene_file%'
+        render_file: '<asset>_<task>_<version>.%04d.<ext>'
+        publish_path: '%workscene_file%'
+        publish_file: '%workscene_file%'
     #'styleframe':
     #    parent: 'task'
     #    workscene_path: '%scenefile_root%'

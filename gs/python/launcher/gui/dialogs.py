@@ -209,7 +209,7 @@ class LauncherCreateAsset(LauncherDialog):
     def __init__(self, parent=None):
         super(LauncherCreateAsset, self).__init__(parent)
 
-        self.resize(700, 400)
+        self.resize(500, 300)
 
         self.ui_state = {
             'asset_type':'',
@@ -249,6 +249,8 @@ class LauncherCreateAsset(LauncherDialog):
         self.task_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.task_list.setModel(self.task_model)
         self.task_list.setColumnWidth(0, 100)
+        self.task_list.setColumnWidth(1, 250)
+        self.task_list.setColumnWidth(2, 50)
 
         self.footer = QHBoxLayout()
         self.okbtn = QPushButton('Create')
@@ -330,6 +332,7 @@ class LauncherCreateAsset(LauncherDialog):
         asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
         for path, name in sorted(asset_type_list):
             item = QStandardItem(name)
+            item.asset_type_name = path
             self.asset_type_cb.model().appendRow(item)
 
     def updateGroups(self):
@@ -357,6 +360,8 @@ class LauncherCreateAsset(LauncherDialog):
         return
 
     def assetTypeChanged(self):
+        # get the current index
+        # get the item from the index
         #self.ui_state['asset_type'] = str(self.asset_type_cb.currentText())
         if self.ui_state['asset_type'].startswith('asset'):
             self.asset_grplbl.setText('Category')

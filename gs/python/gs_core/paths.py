@@ -158,7 +158,15 @@ class PathParser:
         which can then help resolve substitution vars"""
         r = {}
         if 'parent' in d:
-            p_val = d['parent']
+            p_split = d['parent'].split(':')
+
+            p_type = ''
+            if len(p_split) > 1:
+                print ('parent={0}').format(d['parent'])
+                p_type = p_split[1]
+                print ('ptype={0}').format(p_type)
+            p_val = p_split[0]
+
             if parent_override != '':
                 p_val=parent_override
             p_tmplt = '{0}_templates'.format(p_val)
@@ -169,6 +177,12 @@ class PathParser:
                     p_val = 'asset_type' if p_val == 'asset' else p_val
                     p_val = 'scenefile_type' if p_val == 'scenefile' else p_val
                     p_dict = self.templates[p_tmplt][upl_dict[p_val]]
+
+                    if p_type != '':
+                        print ("USING DIRECTED TEMPLATE TYPE FORMAT!!!!!!!!!")
+                        print ("Loading self.templates[{0}][{1}]".format(p_tmplt,p_type))
+                        p_dict = self.templates[p_tmplt][p_type]
+                    print (p_dict)
                     # recurse
                     r = self.inheritParent(upl_dict, p_dict)
                 #else:

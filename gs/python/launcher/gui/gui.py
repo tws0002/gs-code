@@ -55,6 +55,9 @@ class LauncherWindow(QMainWindow):
             'filepath':'',
             'username':get_username()
         }
+
+        self.active_scene_list = None
+
         # caches the active data's path for quick references
         self.active_path = dict(self.active_data)
 
@@ -132,15 +135,17 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['sidebar_list'].setMaximumHeight(30)
         self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
         self.ui['lyt']['sidebar_layout'] = QVBoxLayout(self.ui['wdgt']['sidebar'])
+        self.ui['lyt']['mode_layout'] = QHBoxLayout()
 
         # project list
         #self.ui['lbl']['workgroup_label'] = QLabel("Projects")
         self.ui['wdgt']['project_list'] = LchrTreeList()
         self.ui['wdgt']['project_list'].setTitle("Projects")
 
-
-        
-        self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
+        self.ui['lyt']['mode_layout'].addWidget(QLabel("Mode:"))
+        self.ui['lyt']['mode_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
+        self.ui['lyt']['sidebar_layout'].addLayout(self.ui['lyt']['mode_layout'])
+        #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
         #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['lbl']['workgroup_label'])
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['project_list'])
 
@@ -215,8 +220,8 @@ class LauncherWindow(QMainWindow):
 
         self.ui['lyt']['file_layout'].addWidget(self.ui['wdgt']['file_tabs'])
         self.ui['lyt']['task_layout'].addWidget(self.ui['wdgt']['task_tabs'])
-        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['task_widget'],'Tasks')
-        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['scene_widget'],'Scenefiles')
+        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['task_widget'],'Task View')
+        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['scene_widget'],'All Scenefiles')
         self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
         self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
         self.ui['lyt']['launch_lyt'].addWidget(self.ui['wdgt']['launch_btn'])
@@ -536,12 +541,26 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt'][task_type].tvw.setRootIsDecorated(True)
                 self.ui['wdgt'][task_type].selectionChanged.connect(self.taskListChanged)
                 self.ui['wdgt'][task_type].setFilterParents(True)
-                self.ui['wdgt'][task_type].task_type = task_type
-                self.ui['wdgt'][task_type].current_path = ''
+
                 self.ui['wdgt'][task_type].titlebtn1.clicked.connect(self.showCreateScene)
 
-            self.ui['wdgt'][task_type].tvw.setAlternatingRowColors(True)
-            self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt'][task_type],task_type.title())
+                self.ui['wdgt'][task_type].tvw.setAlternatingRowColors(True)
+                self.ui['wdgt']['{0}_wdgt'.format(task_type)] = QWidget()
+                self.ui['wdgt']['{0}_wdgt'.format(task_type)].current_path = ''
+                self.ui['wdgt']['{0}_wdgt'.format(task_type)].tvw = self.ui['wdgt'][task_type]
+                self.ui['wdgt']['{0}_wdgt'.format(task_type)].task_type = task_type
+                self.ui['lyt'][task_type] = QVBoxLayout(self.ui['wdgt']['{0}_wdgt'.format(task_type)])
+                self.ui['lyt']['{0}_grid'.format(task_type)] = QGridLayout()
+                self.ui['wdgt']['{0}_launchbtn'.format(task_type)] = QPushButton('Launch')
+                #self.ui['wdgt']['{0}_addscene'.format(task_type)] = QPushButton('Add Scene')
+                self.ui['lyt'][task_type].addWidget(self.ui['wdgt'][task_type])
+                self.ui['lyt'][task_type].addLayout(self.ui['lyt']['{0}_grid'.format(task_type)])
+                #self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt']['{0}_addscene'.format(task_type)],0,1)
+                self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt']['{0}_launchbtn'.format(task_type)],1,1)
+
+                self.ui['wdgt']['{0}_launchbtn'.format(task_type)].clicked.connect(self.launchScenefile)
+
+            self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt']['{0}_wdgt'.format(task_type)],task_type.title())
 
             self.active_path['task'] = task_type
             self.updateTaskList(task_type)
@@ -551,6 +570,8 @@ class LauncherWindow(QMainWindow):
     def taskTabChanged(self, i):
 
         vis_item = self.ui['wdgt']['task_tabs'].currentWidget()
+        if hasattr(vis_item, 'tvw'):
+            self.active_scene_list = vis_item.tvw
         if vis_item:
             self.active_path['task'] = vis_item.current_path
             self.active_data['task'] = vis_item.task_type
@@ -1055,7 +1076,11 @@ class LauncherWindow(QMainWindow):
         workgroup = 'default' #str(self.ui['wdgt']['dispgroup_combo'].currentText())
 
         # get the filepath from teh scenefile list
-        item = self.ui['wdgt']['scene_list'].getSelectedItems()
+        #
+        if self.active_scene_list is not None:
+            item = self.active_scene_list.getSelectedItems()
+        else:
+            item = self.ui['wdgt']['scene_list'].getSelectedItems()
         if len(item):
             print "ITEM={0}".format(item)
             filepath = str(item[1].text())

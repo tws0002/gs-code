@@ -50,7 +50,7 @@ class CoreController():
     def __init__(self):
         pass
         # config path should eventually be set by studio.yml
-        self.config_path = (CONFIG+"/projects.yml")
+        self.config_path = ("{0}/projects.yml".format(os.environ['GSCONFIG']))
         # load the Project Controller that interacts with project data
         self.proj_controller = projects.ProjectController(self.config_path)
 

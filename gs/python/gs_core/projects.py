@@ -555,29 +555,56 @@ class ProjectController():
                 del upl_dict['version']
 
         if 'asset' in upl_dict:
-            scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type), exists=exists)
-            #scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
-            #search_paths = [scene_path]
-            ver = upl_dict['version'] if 'version' in upl_dict else ''
-            paths_and_version = [(scene_path, '', ver)]
-            root_path = scene_path
-            # if there are layers in path, we must resolve them by looking at the file system and adding each to the search path
-            if scene_type == 'render':
-                if '/<layer>' in scene_path:
-                    paths_and_version = []
-                    search_paths = []
-                    # get the found layers and search each one
-                    root_layer_path = scene_path.split('/<layer>')[0]
-                    root_path = root_layer_path
-                    rlayers = os.listdir(root_layer_path)
-                    # TODO: this works but it won't support paths where the version comes before the layer. need
-                    # to think about a better way to do this
-                    for rl in rlayers:
-                        if not rl.startswith('.') and not rl.startswith('_'):
-                            # if the latest version is requested, we must search all versions with the layer
-                            if latest_version:
-                                max_ver = 0
-                                for ver in os.listdir('/'.join([root_layer_path,rl])):
+            scenefile_types = []
+            if template_type == '':
+                for ea in self.templates['scenefile_templates']:
+                    scenefile_types.append(ea)
+            else:
+                scenefile_types.append(template_type)
+            for tt in scenefile_types:
+                scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=tt, template_var='{0}_path'.format(scene_type), exists=exists)
+                #scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type))
+                #search_paths = [scene_path]
+                ver = upl_dict['version'] if 'version' in upl_dict else ''
+                paths_and_version = [(scene_path, '', ver)]
+                root_path = scene_path
+                # if there are layers in path, we must resolve them by looking at the file system and adding each to the search path
+                if scene_type == 'render':
+                    if '/<layer>' in scene_path:
+                        paths_and_version = []
+                        search_paths = []
+                        # get the found layers and search each one
+                        root_layer_path = scene_path.split('/<layer>')[0]
+                        root_path = root_layer_path
+                        rlayers = os.listdir(root_layer_path)
+                        # TODO: this works but it won't support paths where the version comes before the layer. need
+                        # to think about a better way to do this
+                        for rl in rlayers:
+                            if not rl.startswith('.') and not rl.startswith('_'):
+                                # if the latest version is requested, we must search all versions with the layer
+                                if latest_version:
+                                    max_ver = 0
+                                    for ver in os.listdir('/'.join([root_layer_path,rl])):
+                                        if not ver.startswith('.') and not ver.startswith('_'):
+                                            v_int = int(re.search(r'[0-9]+', ver).group(0))
+                                            if v_int > max_ver:
+                                                max_ver = v_int
+                                    # TODO make the zfill use a project-wide variable
+                                    if new_version:
+                                        max_ver += 1
+                                    found_ver = 'v{0}'.format(str(max_ver).zfill(3))
+                                    found_path = '/'.join([root_layer_path, rl, found_ver])
+                                    paths_and_version.append((found_path, rl, found_ver))
+                                else:
+                                    search_paths.append(scene_path.replace('<layer>',rl))
+                else:
+                    if '/<version>' in scene_path:
+                        paths_and_version = []
+                        root_path = scene_path.split('/<version>')[0]
+                        if latest_version:
+                            max_ver = 0
+                            if os.path.isdir(root_path):
+                                for ver in os.listdir(root_path):
                                     if not ver.startswith('.') and not ver.startswith('_'):
                                         v_int = int(re.search(r'[0-9]+', ver).group(0))
                                         if v_int > max_ver:
@@ -586,79 +613,59 @@ class ProjectController():
                                 if new_version:
                                     max_ver += 1
                                 found_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                                found_path = '/'.join([root_layer_path, rl, found_ver])
-                                paths_and_version.append((found_path, rl, found_ver))
+                                found_path = '/'.join([root_path, found_ver])
+                                paths_and_version.append((found_path, '', found_ver))
                             else:
-                                search_paths.append(scene_path.replace('<layer>',rl))
-            else:
-                if '/<version>' in scene_path:
-                    paths_and_version = []
-                    root_path = scene_path.split('/<version>')[0]
-                    if latest_version:
-                        max_ver = 0
-                        if os.path.isdir(root_path):
-                            for ver in os.listdir(root_path):
-                                if not ver.startswith('.') and not ver.startswith('_'):
+                                print ('path not found {0}'.format(root_path))
+
+                for path, lyr, ver in paths_and_version:
+
+                    # we don't want <version> resolving in the call to substTemplatePath if we are hunting for latest version
+                    if not latest_version:
+                        upl_dict['version'] = ver
+
+                    if new_version:
+                        exists = False
+
+                    if lyr != '':
+                        upl_dict['layer'] = lyr
+
+                    # if its a workscene it doesn't have a versioned folder, so we have to evaluate latest version at the path level
+                    # so we should remove the upl_dict[ver] so it doesn't resolve
+
+                    #scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
+                    scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=tt, template_var='{0}_file'.format(scene_type), exists=exists)
+                    #scn_wo_vers = '_'.join(os.path.basename(scene_file).split('_')[:-3])
+                    scn_no_fr_ext = scene_file.split('.')[0]
+                    scn_wo_vers = scn_no_fr_ext.split('_<version>')[0]
+
+                    result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
+
+                    max_ver = 0
+                    latest_v_name = ''
+                    for name in result_files:
+                        if not os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
+                            if os.path.basename(name).startswith(scn_wo_vers):
+                                if latest_version and scene_type == 'workscene':
+                                    l = len(root_path)+1+len(scn_wo_vers) + 1
+                                    ver = name[l:].split(".")[0]
                                     v_int = int(re.search(r'[0-9]+', ver).group(0))
                                     if v_int > max_ver:
                                         max_ver = v_int
-                            # TODO make the zfill use a project-wide variable
-                            if new_version:
-                                max_ver += 1
+                                        latest_v_name = name[len(root_path)+1:]
+                                else:
+                                    rel_path = name[len(root_path)+1:]
+                                    valid_results.append(rel_path)
+
+                    if latest_version and scene_type == 'workscene':
+                        if new_version:
                             found_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                            found_path = '/'.join([root_path, found_ver])
-                            paths_and_version.append((found_path, '', found_ver))
+                            max_ver += 1
+                            new_ver = 'v{0}'.format(str(max_ver).zfill(3))
+                            new_v_name = latest_v_name.replace(found_ver,new_ver)
+                            valid_results.append(new_v_name)
                         else:
-                            print ('path not found {0}'.format(root_path))
-
-            for path, lyr, ver in paths_and_version:
-
-                # we don't want <version> resolving in the call to substTemplatePath if we are hunting for latest version
-                if not latest_version:
-                    upl_dict['version'] = ver
-
-                if new_version:
-                    exists = False
-
-                if lyr != '':
-                    upl_dict['layer'] = lyr
-
-                # if its a workscene it doesn't have a versioned folder, so we have to evaluate latest version at the path level
-                # so we should remove the upl_dict[ver] so it doesn't resolve
-
-                #scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
-                scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_file'.format(scene_type), exists=exists)
-                #scn_wo_vers = '_'.join(os.path.basename(scene_file).split('_')[:-3])
-                scn_no_fr_ext = scene_file.split('.')[0]
-                scn_wo_vers = scn_no_fr_ext.split('_<version>')[0]
-
-                result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
-
-                max_ver = 0
-                latest_v_name = ''
-                for name in result_files:
-                    if not os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
-                        if os.path.basename(name).startswith(scn_wo_vers):
-                            if latest_version and scene_type == 'workscene':
-                                l = len(root_path)+1+len(scn_wo_vers) + 1
-                                ver = name[l:].split(".")[0]
-                                v_int = int(re.search(r'[0-9]+', ver).group(0))
-                                if v_int > max_ver:
-                                    max_ver = v_int
-                                    latest_v_name = name[len(root_path)+1:]
-                            else:
-                                rel_path = name[len(root_path)+1:]
-                                valid_results.append(rel_path)
-
-                if latest_version and scene_type == 'workscene':
-                    if new_version:
-                        found_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                        max_ver += 1
-                        new_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                        new_v_name = latest_v_name.replace(found_ver,new_ver)
-                        valid_results.append(new_v_name)
-                    else:
-                        valid_results.append(latest_v_name)
+                            valid_results.append(latest_v_name)
 
             return (root_path, valid_results)
         else:
