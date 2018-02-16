@@ -31,7 +31,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(GSQuickSaveWindow, self).__init__(parent=parent, *args, **kwargs) 
 
-    	self.proj = gs_core.projects.ProjectController('//scholar/pipeline/dev/config/projects.yml')
+    	self.proj = gs_core.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
         self.p_dict = self.proj.pathParser.parsePath('{0}/production'.format(os.environ['GSPROJECT']))
 
         self.title = "Quick Save v0.2a"
@@ -55,7 +55,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
 
         self.noteslbl = QLabel('Notes:')
         self.notes = QPlainTextEdit()
-        self.notes.setPlaceholderText('What has changed with this version?')
+        #self.notes.setPlaceholderText('What has changed with this version?')
 
         self.cancelbtn = QPushButton('Cancel')
         self.savebtn = QPushButton('Save New Version')

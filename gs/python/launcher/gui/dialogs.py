@@ -209,49 +209,78 @@ class LauncherCreateAsset(LauncherDialog):
     def __init__(self, parent=None):
         super(LauncherCreateAsset, self).__init__(parent)
 
+        self.resize(700, 400)
+
+        self.ui_state = {
+            'asset_type':'',
+            'group':'',
+            'name':'',
+            'task_preset':'',
+            'task_list':[]
+        }
+
         self.setWindowTitle("Create New Shot/Asset")
 
+        self.asset_typelbl = QLabel("Location:")
+        self.asset_type_cb = QComboBox()
+
+        self.asset_grplbl = QLabel("Group:")
+        self.asset_grp = QComboBox()
+        self.asset_grp.setEditable(True)
+
+        self.asset_namelbl = QLabel("Name:")
         self.asset_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z0-9](?:_?[A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
         self.asset_name.setValidator(validator)
-        self.asset_name.setPlaceholderText('001_00')
 
-        self.asset_grp = QComboBox()
-        self.asset_grp.setEditable(True)
-        self.asset_type_cb = QComboBox()
 
         self.deftasks_cb = QCheckBox('Create Default Tasks')
         self.deftasks_cb.setChecked(1)
+
+        self.taskpresetlbl = QLabel("Task Presets:")
+        self.taskpresets = QComboBox()
+
+        self.task_list = QTreeView()
+        self.task_list.setUniformRowHeights(True)
+        self.task_model = QStandardItemModel(self.task_list)
+        self.task_model.setHorizontalHeaderLabels(['Task', 'SceneName', 'Package'])
+
+        self.task_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.task_list.setModel(self.task_model)
+        self.task_list.setColumnWidth(0, 100)
+
         self.footer = QHBoxLayout()
         self.okbtn = QPushButton('Create')
         self.cancelbtn = QPushButton('Cancel')
 
+        #### LAYOUT ####
         # ui control layout
         self.layout = QVBoxLayout(self)
-        self.grp_grp = QHBoxLayout()
+        self.presetgrp = QHBoxLayout()
+        self.presetgrp.addWidget(self.taskpresetlbl)
+        self.presetgrp.addWidget(self.taskpresets)
 
-        self.type_grp = QHBoxLayout()
-        self.type_grp.addWidget(QLabel("Location:"))
-        self.type_grp.addWidget(self.asset_type_cb)
+        self.gridlyt = QGridLayout()
+        self.gridlyt.setColumnStretch(2,2)
+        self.gridlyt.setColumnStretch(1,1,)
 
-        self.grp_grp.addWidget(QLabel("Group:"))
-        self.grp_grp.addWidget(self.asset_grp)
+        self.gridlyt.addWidget(self.asset_typelbl,0,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.asset_type_cb,0,2)
+        self.gridlyt.addWidget(self.asset_grplbl,1,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.asset_grp,1,2)
+        self.gridlyt.addWidget(self.asset_namelbl,2,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.asset_name,2,2)
 
-        self.name_grp = QHBoxLayout()
-        self.name_grp.addWidget(QLabel("Name:"))
-        self.name_grp.addWidget(self.asset_name)
-
-        self.layout.addLayout(self.type_grp)
-        self.layout.addLayout(self.grp_grp)
-        self.layout.addLayout(self.name_grp)
-        self.layout.addWidget(self.deftasks_cb)
+        self.layout.addLayout(self.gridlyt)
+        self.layout.addLayout(self.presetgrp)
+        self.layout.addWidget(self.task_list)
         self.layout.addLayout(self.footer)
 
         self.footer.addWidget(self.cancelbtn)
         self.footer.addWidget(self.okbtn)
 
-        #self.asset_grp.changed.connect(self.assetGrpChanged)
+        self.asset_type_cb.currentIndexChanged.connect(self.assetTypeChanged)
 
         self.cancelbtn.clicked.connect(self.doCancel)
         self.okbtn.clicked.connect(self.doCreate)
@@ -260,24 +289,40 @@ class LauncherCreateAsset(LauncherDialog):
 
     def updateUI(self):
         self.updateTypes()
-        at = self.parent.active_data['asset_type']
-        g = self.parent.active_data['asset_grp']
-        print ("Looking for type:{0} group:{1}".format(at, g))
+        self.ui_state['asset_type'] = self.parent.active_data['asset_type']
+        self.ui_state['group'] = self.parent.active_data['asset_grp']
+
+        self.updateLocation()
+        self.updateTaskPresets()
+
+    def updateLocation(self):
+
+        #self.asset_type_cb.model().clear()
+        print ("Looking for type:{0} group:{1}".format(self.ui_state['asset_type'], self.ui_state['group']))
         asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
         for asset_type, dname in asset_type_list:
             print ("asset_type={0}".format(asset_type))
-            if at == asset_type:
+            if self.ui_state['asset_type'] == asset_type:
                 i = self.asset_type_cb.findText(dname, Qt.MatchFixedString)
                 if i >= 0:
                     self.asset_type_cb.setCurrentIndex(i)
 
         self.updateGroups()
-
-        if g == '':
+        g=''
+        if self.ui_state['asset_type'] == '':
             g = "<None>"
         i = self.asset_grp.findText(g, Qt.MatchFixedString)
         if i >= 0:
             self.asset_grp.setCurrentIndex(i)
+
+        if self.ui_state['asset_type'].startswith('asset'):
+            self.asset_grplbl.setText('Category')
+            self.asset_namelbl.setText('Asset Name')
+            self.asset_name.setPlaceholderText('AssetNameA')
+        elif self.ui_state['asset_type'].startswith('shot'):
+            self.asset_grplbl.setText('Sequence')
+            self.asset_namelbl.setText('Shot Name')
+            self.asset_name.setPlaceholderText('001_00')
 
     def updateTypes(self):
         # clear the item model and init a new one
@@ -295,12 +340,35 @@ class LauncherCreateAsset(LauncherDialog):
         item = QStandardItem("<None>")
         self.asset_grp.model().appendRow(item)
         print (self.parent.active_data)
-        asset_grp_list = self.parent.controller.proj_controller.getAssetsList(upl_dict=self.parent.active_data, asset_type=self.parent.active_data['asset_type'], groups_only=True)
+        asset_grp_list = self.parent.controller.proj_controller.getAssetsList(upl_dict=self.parent.active_data, asset_type=self.ui_state['asset_type'], groups_only=True)
         print 'asset_grp_list={0}'.format(asset_grp_list)
         for name in asset_grp_list[1]:
             if name != '':
                 item = QStandardItem(name)
                 self.asset_grp.model().appendRow(item)
+        return
+
+    def updateTaskPresets(self):
+        preset_list = ['3D Production', '2D Production', 'Cel Production','VFX Production']
+        for name in preset_list:
+            if name != '':
+                item = QStandardItem(name)
+                self.taskpresets.model().appendRow(item)
+        return
+
+    def assetTypeChanged(self):
+        #self.ui_state['asset_type'] = str(self.asset_type_cb.currentText())
+        if self.ui_state['asset_type'].startswith('asset'):
+            self.asset_grplbl.setText('Category')
+            self.asset_namelbl.setText('Asset Name')
+            self.asset_name.setPlaceholderText('AssetNameA')
+        elif self.ui_state['asset_type'].startswith('shot'):
+            self.asset_grplbl.setText('Sequence')
+            self.asset_namelbl.setText('Shot Name')
+            self.asset_name.setPlaceholderText('001_00')
+        self.updateGroups()
+
+    def updateTaskList(self):
         return
 
     def doCreateAssetGroup(self):

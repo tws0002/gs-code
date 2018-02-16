@@ -35,7 +35,7 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         # setup the core handler
         # initialize the project controller. specify a project.yml file to load as the template file
-        self.proj = gs_core.projects.ProjectController('//scholar/pipeline/dev/config/projects.yml')
+        self.proj = gs_core.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
         self.p_dict = self.proj.pathParser.parsePath('{0}/production'.format(os.environ['GSPROJECT']))
 
         self.title = "Asset Loader v0.2a"

@@ -111,9 +111,11 @@ QComboBox#AppCombo QAbstractItemView#AppCombo {
 QComboBox#AppCombo::down-arrow
 {
     image: url(res/dropdown.png);
-    width: 16px;
+    border: 0px;
+    width: 36px;
     height: 16px;
 }
+
 QAbstractScrollArea {
     background: transparent;
 }
