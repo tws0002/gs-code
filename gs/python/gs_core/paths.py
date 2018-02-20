@@ -162,9 +162,9 @@ class PathParser:
 
             p_type = ''
             if len(p_split) > 1:
-                print ('parent={0}').format(d['parent'])
+                #print ('parent={0}').format(d['parent'])
                 p_type = p_split[1]
-                print ('ptype={0}').format(p_type)
+                #print ('ptype={0}').format(p_type)
             p_val = p_split[0]
 
             if parent_override != '':
@@ -179,10 +179,10 @@ class PathParser:
                     p_dict = self.templates[p_tmplt][upl_dict[p_val]]
 
                     if p_type != '':
-                        print ("USING DIRECTED TEMPLATE TYPE FORMAT!!!!!!!!!")
-                        print ("Loading self.templates[{0}][{1}]".format(p_tmplt,p_type))
+                        #print ("USING DIRECTED TEMPLATE TYPE FORMAT!!!!!!!!!")
+                        #print ("Loading self.templates[{0}][{1}]".format(p_tmplt,p_type))
                         p_dict = self.templates[p_tmplt][p_type]
-                    print (p_dict)
+                    #print (p_dict)
                     # recurse
                     r = self.inheritParent(upl_dict, p_dict)
                 #else:
@@ -269,7 +269,7 @@ class PathParser:
         # if result == '':
         #        print ("Warning: subst_template_path(): No Exact Match Found, Closest match is {0}".format(resultn[0]))
 
-        print result
+        #print result
         return result
 
     def getPath(self, upl_dict=None, hint_type='', hint_name='', hint_var=''):
@@ -500,7 +500,7 @@ class PathParser:
 
         # validate the data, (does the file exist?, is the file itself resolved or just the path, does the project have valid structure?)
         # print result_obj
-        print ('core.paths.pathParser() type_match={0}'.format(type_match))
+        # print ('core.paths.pathParser() type_match={0}'.format(type_match))
         return upl_guess
 
     # NOT USED ?

@@ -227,13 +227,27 @@ task_templates:
     display_order: 0
     match_path: '%task_root%/roto'
     default_package: 'nuke'
-  'cel':
+  'blocking':
     inherits: 'proto_task_basic'
     parent: 'asset'
-    display_name: 'Cel'
+    display_name: 'Blocking'
     display_order: 0
     match_path: '%task_root%/comp'
-    default_package: 'animate'
+    default_package: 'tvpaint'
+  'cleanup':
+    inherits: 'proto_task_basic'
+    parent: 'asset'
+    display_name: 'Cleanup'
+    display_order: 0
+    match_path: '%task_root%/comp'
+    default_package: 'tvpaint'
+  'color':
+    inherits: 'proto_task_basic'
+    parent: 'asset'
+    display_name: 'Color'
+    display_order: 0
+    match_path: '%task_root%/comp'
+    default_package: 'tvpaint'
   'layout':
     inherits: 'proto_task_basic'
     parent: 'asset'
@@ -315,6 +329,13 @@ package_templates:
     copy_tree: '<server>/projects/_templates/project_template_2018/packages/photoshop'
     scenefile_root: '%match_path%'
     extension: "prproj"
+  'tvpaint':
+    parent: 'task'
+    match_path: '%package_root%/tvpaint'
+    capture_path: '%package_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/tvpaint'
+    scenefile_root: '%match_path%'
+    extension: "tvpp"
 
 # defines the naming convention of a specific scenefile. Each software package template has
 scenefile_templates:

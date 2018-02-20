@@ -88,21 +88,26 @@ class LauncherCreateJob(LauncherDialog):
         super(LauncherCreateJob, self).__init__(parent)
 
         self.result = ''
+        self.resize(500, 150)
 
         self.setWindowTitle("Create New Project")
 
+        self.gridlyt = QGridLayout()
+        self.client_namelbl = QLabel("Client:")
         self.client_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z]([A-Za-z]+)*$')
         validator = LRegExpValidator(regexp)
         self.client_name.setValidator(validator)
         self.client_name.setPlaceholderText('client name')
 
+        self.proj_namelbl = QLabel("Project:")
         self.proj_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z](?:_?[A-Za-z]+)*$')
         validator = LRegExpValidator(regexp)
         self.proj_name.setValidator(validator)
         self.proj_name.setPlaceholderText('untitled')
 
+        self.proj_sharelbl = QLabel("Location:")
         self.proj_share = QComboBox()
         self.updateFileShares()
 
@@ -115,26 +120,21 @@ class LauncherCreateJob(LauncherDialog):
         self.cancelbtn = QPushButton('Cancel')
 
         # ui control layout
-
-        self.client_grp = QHBoxLayout()
-        self.client_grp.addWidget(QLabel("Client:"))
-        self.client_grp.addWidget(self.client_name)
-
-        self.proj_grp = QHBoxLayout()
-        self.proj_grp.addWidget(QLabel("Project:"))
-        self.proj_grp.addWidget(self.proj_name)
-
         self.layout = QVBoxLayout(self)
-        self.type_grp = QHBoxLayout()
-        self.type_grp.addWidget(QLabel("Location:"))
-        self.type_grp.addWidget(self.proj_share)
 
 
-        self.layout.addLayout(self.client_grp)
-        self.layout.addLayout(self.proj_grp)
-        self.layout.addLayout(self.type_grp)
-        self.layout.addWidget(self.prod_cb)
-        self.layout.addWidget(self.previs_cb)
+        self.gridlyt.addWidget(self.proj_sharelbl,0,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.proj_share,0,2)
+        self.gridlyt.addWidget(self.client_namelbl,1,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.client_name,1,2)
+        self.gridlyt.addWidget(self.proj_namelbl,2,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.proj_name,2,2)
+        self.gridlyt.addWidget(self.prod_cb, 3, 2)
+        self.gridlyt.addWidget(self.previs_cb, 4, 2)
+
+
+
+        self.layout.addLayout(self.gridlyt)
         self.layout.addLayout(self.footer)
 
         self.footer.addWidget(self.cancelbtn)
@@ -245,6 +245,7 @@ class LauncherCreateAsset(LauncherDialog):
         self.task_list.setUniformRowHeights(True)
         self.task_model = QStandardItemModel(self.task_list)
         self.task_model.setHorizontalHeaderLabels(['Task', 'SceneName', 'Package'])
+        self.task_list.setAlternatingRowColors(True)
 
         self.task_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.task_list.setModel(self.task_model)
@@ -283,6 +284,9 @@ class LauncherCreateAsset(LauncherDialog):
         self.footer.addWidget(self.okbtn)
 
         self.asset_type_cb.currentIndexChanged.connect(self.assetTypeChanged)
+        self.taskpresets.currentIndexChanged.connect(self.taskPresetChanged)
+
+
 
         self.cancelbtn.clicked.connect(self.doCancel)
         self.okbtn.clicked.connect(self.doCreate)
@@ -290,14 +294,20 @@ class LauncherCreateAsset(LauncherDialog):
         self.updateUI()
 
     def updateUI(self):
-        self.updateTypes()
-        self.ui_state['asset_type'] = self.parent.active_data['asset_type']
-        self.ui_state['group'] = self.parent.active_data['asset_grp']
 
+        self.ui_state['asset_type'] = str(self.parent.active_data['asset_type'])
+        print ('parent_active_data={0}'.format(self.parent.active_data['asset_type']))
+        self.ui_state['group'] = str(self.parent.active_data['asset_grp'])
+
+        self.asset_type_cb.blockSignals(True)
         self.updateLocation()
+        self.asset_type_cb.blockSignals(False)
         self.updateTaskPresets()
+        self.taskPresetChanged()
+        self.updateTaskList()
 
     def updateLocation(self):
+        self.updateTypes()
 
         #self.asset_type_cb.model().clear()
         print ("Looking for type:{0} group:{1}".format(self.ui_state['asset_type'], self.ui_state['group']))
@@ -359,10 +369,33 @@ class LauncherCreateAsset(LauncherDialog):
                 self.taskpresets.model().appendRow(item)
         return
 
+    def taskPresetChanged(self):
+        self.ui_state['task_preset'] = str(self.taskpresets.currentText())
+        if self.ui_state['task_preset'] == '3D Production' and self.ui_state['asset_type'] == 'shot':
+            self.ui_state['task_list'] = [('anim','maya','main'),('light','maya','main'),('comp','nuke','main')]
+        elif self.ui_state['task_preset'] == '3D Production' and self.ui_state['asset_type'] == 'asset_3d':
+            self.ui_state['task_list'] = [('model','maya','main'),('rig','maya','main'),('lookdev','maya','main')]
+        elif self.ui_state['task_preset'] == '2D Production' and self.ui_state['asset_type'] == 'shot':
+            self.ui_state['task_list'] = [('comp','ae','main')]
+        elif self.ui_state['task_preset'] == '2D Production' and self.ui_state['asset_type'] == 'asset_2d':
+            self.ui_state['task_list'] = [('design','ae','main')]
+        elif self.ui_state['task_preset'] == 'Cel Production' and self.ui_state['asset_type'] == 'shot':
+            self.ui_state['task_list'] = [('blocking','tvpaint','main'),('cleanup','tvpaint','main'),('color','tvpaint','main'),('comp','ae','main')]
+        elif self.ui_state['task_preset'] == 'Cel Production' and self.ui_state['asset_type'] == 'asset_2d':
+            self.ui_state['task_list'] = [('design','ae','main')]
+        if self.ui_state['task_preset'] == 'VFX Production' and self.ui_state['asset_type'] == 'shot':
+            self.ui_state['task_list'] = [('anim','maya','main'),('light','maya','main'),('comp','nuke','main'),('roto','nuke','main'),('track','nuke','main')]
+        elif self.ui_state['task_preset'] == 'VFX Production' and self.ui_state['asset_type'] == 'asset_3d':
+            self.ui_state['task_list'] = [('model','maya','main'),('rig','maya','main'),('lookdev','maya','main')]
+        self.updateTaskList()
+
     def assetTypeChanged(self):
-        # get the current index
-        # get the item from the index
-        #self.ui_state['asset_type'] = str(self.asset_type_cb.currentText())
+        asset_type_list = self.parent.controller.proj_controller.getAssetTypeList()
+        for asset_type, dname in asset_type_list:
+            print ("asset_type={0}".format(asset_type))
+            if str(self.asset_type_cb.currentText()) == dname:
+                self.ui_state['asset_type'] = asset_type
+
         if self.ui_state['asset_type'].startswith('asset'):
             self.asset_grplbl.setText('Category')
             self.asset_namelbl.setText('Asset Name')
@@ -372,8 +405,20 @@ class LauncherCreateAsset(LauncherDialog):
             self.asset_namelbl.setText('Shot Name')
             self.asset_name.setPlaceholderText('001_00')
         self.updateGroups()
+        self.taskPresetChanged()
 
     def updateTaskList(self):
+        self.task_model.clear()
+        self.task_model.setHorizontalHeaderLabels(['Task', 'SceneName', 'Package'])
+        task_type_list = self.ui_state['task_list']
+        #valid_tasks = self.parent.controller.proj_controller.getTaskTypesList()
+        for task, package, scenefile in sorted(task_type_list):
+            col1 = QStandardItem(task)
+            col2 = QStandardItem(scenefile)
+            col3 = QStandardItem(package)
+            self.task_model.appendRow([col1,col2,col3])
+            col1.setCheckable(True)
+            col1.setCheckState(2)
         return
 
     def doCreateAssetGroup(self):
@@ -397,9 +442,15 @@ class LauncherCreateAsset(LauncherDialog):
         d['asset_grp'] = g
         d['asset'] = str(self.asset_name.text())
 
+        if str(self.asset_name.text()) == '':
+            m = LauncherMessage(self, "Asset Creation Failed", 'Asset Creation Failed: No Asset Name Specified')
+            m.exec_()
+            return
 
-        add_tasks = self.parent.controller.proj_controller.getDefaultTasks(at) if self.deftasks_cb.isChecked() else []
-
+        #add_tasks = self.parent.controller.proj_controller.getDefaultTasks(at) if self.deftasks_cb.isChecked() else []
+        add_tasks = []
+        for task, package, scenefile in self.ui_state['task_list']:
+            add_tasks.append((task, package, scenefile))
         self.result = self.parent.controller.proj_controller.newAsset(d, add_tasks=add_tasks)
         (success, response, result) = self.result
         if success:
@@ -432,13 +483,19 @@ class LauncherCreateScene(LauncherDialog):
 
         self.setWindowTitle("Create New Task/Scene")
 
+        self.resize(300, 150)
+
+        self.gridlyt = QGridLayout()
+        self.scene_namelbl = QLabel("SceneName:")
         self.scene_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z0-9](?:_?[A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
         self.scene_name.setValidator(validator)
         self.scene_name.setPlaceholderText('main')
 
+        self.task_typelbl = QLabel("Task:")
         self.task_type_dl = QComboBox()
+        self.package_typelbl = QLabel("Package:")
         self.package_type_dl = QComboBox()
 
         self.footer = QHBoxLayout()
@@ -448,22 +505,14 @@ class LauncherCreateScene(LauncherDialog):
         # ui control layout
         self.layout = QVBoxLayout(self)
 
+        self.gridlyt.addWidget(self.task_typelbl,0,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.task_type_dl,0,2)
+        self.gridlyt.addWidget(self.scene_namelbl,1,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.scene_name,1,2)
+        self.gridlyt.addWidget(self.package_typelbl,2,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.package_type_dl,2,2)
 
-        self.task_type_grp = QHBoxLayout()
-        self.task_type_grp.addWidget(QLabel("Task:"))
-        self.task_type_grp.addWidget(self.task_type_dl)
-
-        self.name_grp = QHBoxLayout()
-        self.name_grp.addWidget(QLabel("Name:"))
-        self.name_grp.addWidget(self.scene_name)
-
-        self.package_grp = QHBoxLayout()
-        self.package_grp.addWidget(QLabel("Package:"))
-        self.package_grp.addWidget(self.package_type_dl)
-
-        self.layout.addLayout(self.task_type_grp)
-        self.layout.addLayout(self.name_grp)
-        self.layout.addLayout(self.package_grp)
+        self.layout.addLayout(self.gridlyt)
         self.layout.addLayout(self.footer)
 
         self.footer.addWidget(self.cancelbtn)

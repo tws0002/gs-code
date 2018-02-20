@@ -131,19 +131,25 @@ class ProjectController():
             if asset != '':
                 if os.path.isdir(asset):
                     print 'gs_core.projects.newAsset(): Aborting Asset Creation, Asset Already Exists:{0}'.format(asset)
-                    return False, "Job Exists", ""
+                    return False, "Asset Exists", ""
                 print 'gs_core.projects.newAsset(): Creating Asset:{0}'.format(asset)
                 self.copyTemplTree(src, asset)
 
                 print upl_dict
-                for task in add_tasks:
-                    src = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='copy_tree', exists=False)
-                    dest = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='match_path', exists=False)
-                    if dest != "":
-                        print 'gs_core.projects.newAsset(): Creating Task:{0} {1} from {2}'.format(task,dest,src)
-                        self.copyTemplTree(src, dest)
-                    else:
-                        return False, "Task:{0} Not Defined".format(task), ""
+                for task, package, scenename in add_tasks:
+                    upl_dict['task'] = task
+                    upl_dict['package'] = package
+                    upl_dict['scenename'] = scenename
+
+                    (success, response, result) = self.newTask(upl_dict=upl_dict, add_scenefiles=[(package,scenename)])
+
+                    #src = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='copy_tree', exists=False)
+                    #dest = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='match_path', exists=False)
+                    #if dest != "":
+                    #    print 'gs_core.projects.newAsset(): Creating Task:{0} {1} from {2}'.format(task,dest,src)
+                    #    self.copyTemplTree(src, dest)
+                    #else:
+                    #    return False, "Task:{0} Not Defined".format(task), ""
 
                 # update the model which is then responsible for sending signals to attached UI elements to update
                 # for now its a manual refresh
@@ -194,7 +200,7 @@ class ProjectController():
             return False, "No Stage Specified", ""
         return
 
-    def newTask(self, upl_dict=None, upl=''):
+    def newTask(self, upl_dict=None, upl='', add_scenefiles=[]):
         """
         create a new project structure based on the job. given a url path to the job to create it will generate
         the necessary dict and copy the template dir tree
@@ -223,6 +229,12 @@ class ProjectController():
                 print 'gs_core.projects.newTask(): Creating Task:{0}'.format(task)
                 self.copyTemplTree(src, task)
 
+                for package, scenename in add_scenefiles:
+                    upl_dict['package'] = package
+                    upl_dict['scenename'] = scenename
+
+                    (success, response, result) = self.newScenefile(upl_dict=upl_dict)
+
                 print upl_dict
                 # update the model which is then responsible for sending signals to attached UI elements to update
                 # for now its a manual refresh
@@ -249,6 +261,8 @@ class ProjectController():
             else:
                 raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.newScenefile()')
         if 'scenename' in upl_dict:
+            if 'ext' not in upl_dict:
+                upl_dict['ext'] = self.pathParser.getPackageExtension(upl_dict['package'])
             # copy package template
             src = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='copy_tree', exists=False)
             pkg = self.pathParser.substTemplatePath(upl_dict, template_type='package', template_name=upl_dict['package'], template_var='match_path', exists=False)

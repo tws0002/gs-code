@@ -16,7 +16,7 @@ def init_gs_menu():
 		# MUSTACHE
 		cmds.menuItem(divider=True,dl="PIPELINE")
 		cmds.menuItem(l="Quicksave",c='import gs_quicksave;reload(gs_quicksave);gs_quicksave.main()')
-		cmds.menuItem(l="Publish Scene", en=False, c='import gs_publish;reload(gs_publish);gs_publish.main()')
+		cmds.menuItem(l="Publish Scene", en=True, c='import gs_publish;reload(gs_publish);gs_publish.main()')
 		cmds.menuItem(divider=True)
 		cmds.menuItem(l="Scene Loader",en=False,c='import gs_sceneloader;reload(gs_sceneloader);gs_sceneloader.main()')
 		cmds.menuItem(l="Asset Loader",c='import gs_assetloader;reload(gs_assetloader);gs_assetloader.main()')
