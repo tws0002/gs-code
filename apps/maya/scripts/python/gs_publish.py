@@ -33,7 +33,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.title = "Publish Scene v0.2a"
         self.setWindowTitle(self.title)
 
-        self.resize(600, 300)
+        self.resize(400, 600)
 
         self.main_lyt = QVBoxLayout(self)
 
@@ -50,10 +50,14 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.assetgrp = QLineEdit()
         self.assetnamelbl = QLabel('Asset:')
         self.assetname = QLineEdit()
+        self.tasklbl = QLabel('Task:')
+        self.taskname = QLineEdit()
         self.scenenamelbl = QLabel('SceneName:')
         self.scenename = QLineEdit()
         self.versionlbl = QLabel('Version:')
         self.version = QLineEdit()
+        self.cameralbl = QLabel('Camera:')
+        self.camera = QComboBox()
 
         self.asset_list = QTreeView()
         self.asset_list.setUniformRowHeights(True)
@@ -67,22 +71,24 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         rangeEditGroup = QBoxLayout(QBoxLayout.LeftToRight)
         
+        self.rangelbl = QLabel('Range:')
         self.rangeLbl1 = QLabel('Start:')
-        rangeEditGroup.addWidget(self.rangeLbl1)
+        rangeEditGroup.addWidget(self.rangeLbl1,Qt.AlignRight)
         self.rangeLE1 = QSpinBox()
         self.rangeLE1.setRange(0, 100000)
         self.rangeLE1.setValue(101)
         
         rangeEditGroup.addWidget(self.rangeLE1)
         self.rangeLbl2 = QLabel('End:')
-        rangeEditGroup.addWidget(self.rangeLbl2)
+        rangeEditGroup.addWidget(self.rangeLbl2,Qt.AlignRight)
         self.rangeLE2 = QSpinBox()
         self.rangeLE2.setRange(0, 100000)
         self.rangeLE2.setValue(201)
         
         rangeEditGroup.addWidget(self.rangeLE2)
+
         self.rangeLbl3 = QLabel('Step:')
-        rangeEditGroup.addWidget(self.rangeLbl3)
+        rangeEditGroup.addWidget(self.rangeLbl3,Qt.AlignRight)
         self.rangeLE3 = QSpinBox()
         self.rangeLE3.setRange(1, 100)
         self.rangeLE3.setValue(1)
@@ -119,16 +125,23 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.gridlyt.addWidget(self.assetgrp,3,2)
         self.gridlyt.addWidget(self.assetnamelbl,4,1,Qt.AlignRight)
         self.gridlyt.addWidget(self.assetname,4,2)
-        self.gridlyt.addWidget(self.scenenamelbl,5,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.scenename,5,2)
-        self.gridlyt.addWidget(self.versionlbl,6,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.version,6,2)
+        self.gridlyt.addWidget(self.tasklbl,5,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.taskname,5,2)
+        self.gridlyt.addWidget(self.scenenamelbl,6,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.scenename,6,2)
+        self.gridlyt.addWidget(self.versionlbl,7,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.version,7,2)
+        self.gridlyt.addWidget(self.cameralbl,8,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.camera,8,2)
+        self.gridlyt.addWidget(self.rangelbl,9,1,Qt.AlignRight)
+        self.gridlyt.addLayout(rangeEditGroup,9,2)
+
 
         self.footer.addWidget(self.cancelbtn)
         self.footer.addWidget(self.publishbtn)
         
         self.main_lyt.addLayout(self.gridlyt)
-        self.main_lyt.addLayout(rangeEditGroup)
+        #self.main_lyt.addLayout(rangeEditGroup)
         self.main_lyt.addLayout(optionsGroup)
         self.main_lyt.addLayout(pathEditGroup)
         self.main_lyt.addWidget(self.asset_list)
