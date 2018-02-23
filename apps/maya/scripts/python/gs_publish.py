@@ -232,6 +232,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.asset_list.setColumnWidth(0,150)
         self.asset_list.setColumnWidth(1,150)
         self.asset_list.setColumnWidth(2,50)
+        self.ui_state['output_list'] = []
 
         
         item = QStandardItem('Entire Scene')
@@ -379,6 +380,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.publishScene()
 
     def publishScene(self):
+        print 'starting publ;is'
         # gather information about export
         current_scene = str(cmds.file(q=1,sn=1))
         f_data = self.proj.pathParser.parsePath(current_scene)
@@ -386,25 +388,35 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.ui_state['start'] = float(self.rangeLE1.value())
         self.ui_state['end'] = float(self.rangeLE2.value())
         self.ui_state['step'] = float(self.rangeLE3.value())
-        self.ui_state['output_list']
 
         print 'current_scene={0}'.format(current_scene)
         print self.ui_state['output_list']
         # for each item in the output list export the appropriate data
         for item, exp_type, ver in self.ui_state['output_list']:
-            if exp_type == 'Alembic (Start/End)':
+            if exp_type == 'Alembic ( Start/End )':
+                print ('exporting animated alembic')
                 d = dict(f_data)
                 d['layer'] = item
                 d['ext'] = 'abc'
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
-                    self.exportAlembicCache(out_scene=out_scene, asset_list=[item], in_frame=self.ui_state['start'], out_frame=self.ui_state['end'],step=self.ui_state['step'])
+                    self.exportAlembicCache(out_path=out_scene, asset_list=[item], in_frame=self.ui_state['start'], out_frame=self.ui_state['end'],step=self.ui_state['step'])
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
-            #elif out_type == 'Alembic (Static)':
-            #    self.exportAlembicCache()
+            elif exp_type == 'Alembic ( Static )':
+                print ('exporting static alembic')
+                d = dict(f_data)
+                d['layer'] = 'publish'
+                d['ext'] = 'abc'
+                pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+                if len(pub_files) > 0:
+                    out_scene = '/'.join([pub_root,pub_files[0]])
+                    self.exportAlembicCache(out_path=out_scene, asset_list=[d['layer']], in_frame=1, out_frame=1,step=1)
+                else:
+                    print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
             elif exp_type == 'MayaBinary':
+                print ('exporting maya scene')
                 d = dict(f_data)
                 d['layer'] = 'publish'
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
@@ -440,13 +452,22 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         """ exports the alembic cache to a preconfigured location """
         job_strings = []
         print asset_list
+        try:
+            cmds.loadPlugin( 'AbcExport.mll' )
+            cmds.loadPlugin( 'AbcImport.mll' )
+        except:
+            pass
 
         for a in asset_list:
-            cache_set = (a+':CACHEset')
-            try:
+            cache_set = ''
+            if a == 'publish':
+                cache_set = 'cache'
+            else:
+                cache_set = '{0}:cache'.format(a)
+            if cmds.objExists(cache_set):
                 obj_list = cmds.sets(str(cache_set),q=1)
-            except:
-                obj_list = ()
+            else:
+                obj_list = cmds.ls('')
             obj_str= ','.join(obj_list)
             out_filename = os.path.basename(out_path)+'_'+a+'.abc'
             asset_out_path = os.path.join(out_path,out_filename)
@@ -456,17 +477,29 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 if not os.path.isdir(os.path.join(out_path)):
                     raise
 
-            job_str = ('filename='+asset_out_path+';')
-            job_str += ('objects='+obj_str+';')
-            job_str += ('uvs=0;')
-            job_str += ('globalspace=1;')
-            job_str += ('withouthierarchy=1;')
-            job_str += ('in='+in_frame+';')
-            job_str += ('out='+out_frame+';')
-            job_str += ('step='+step+';')
-            job_str += ('ogawa=1')
+            job_str = (' -file '+out_path)
+            job_str += (' -root '+obj_str)
+            job_str += (' -uvWrite')
+            job_str += (' -worldSpace')
+            job_str += ' -framerange {0} {1}'.format(in_frame,out_frame)
+            job_str += (' -dataFormat ogawa')
             job_strings.append(job_str)
-        cmds.ExocortexAlembic_export(j=job_strings)
+   
+            # exocortex method
+            #job_str = ('filename='+asset_out_path+';')
+            #job_str += ('objects='+obj_str+';')
+            #job_str += ('uvs=0;')
+            #job_str += ('globalspace=1;')
+            #job_str += ('withouthierarchy=1;')
+            #job_str += ('in='+in_frame+';')
+            #job_str += ('out='+out_frame+';')
+            #job_str += ('step='+step+';')
+            #job_str += ('ogawa=1')
+            #job_strings.append(job_str)
+        #cmds.ExocortexAlembic_export(j=job_strings)
+
+        #AbcExport -j "-frameRange 1 50 -uvWrite -worldSpace -dataFormat ogawa -root |testCharA1:_UNKNOWN_REF_NODE_fosterParent1|testCharA1:dad_model_grp -file C:/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/cache/alembic/test.abc";
+        cmds.AbcExport(j=job_strings)
         
     def exportPlayblast(self):
         return
@@ -489,7 +522,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 f.write( yaml.safe_dump(asset_info, default_flow_style=False, encoding='utf-8', allow_unicode=False) )
 
     def saveSceneCopy(self, out_path='', create_dir=False):
-        print ("SAVING SCENE:{0}".format(out_path))
+        print ("SAVING SCENE COPY:{0}".format(out_path))
         if create_dir:
             dir_name = os.path.dirname(out_path)
             if not os.path.isdir(dir_name):
