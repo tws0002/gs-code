@@ -346,8 +346,8 @@ scenefile_templates:
         workscene_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
         render_path: '%task_root%/<task>/render/<scenename>/<layer>/<version>'
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
-        publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
-        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
+        publish_path: '%task_root%/<task>/publish/<scenename>/<layer>/<version>'
+        publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.<ext>'
     #'conform':
     #    parent: 'package'
     #    workscene_path: '%scenefile_root%'

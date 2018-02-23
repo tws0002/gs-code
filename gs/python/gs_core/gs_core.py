@@ -283,6 +283,11 @@ def testAPICalls():
     next_avail = proj.getScenefileList(upl='//scholar/projects/ab_testjob/production/assets/3d/char/testCharA/rig/work/maya/scenes/char_testCharA_rig_main_v000.mb', scene_type='workscene', latest_version=True, new_version=True)
     print next_avail
 
+    # test getting publish version from workscene path
+    current_scene = '//scholar/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/scenes/s01_005_00_anim_main_v003.mb'
+    next_path, next_file = proj.getScenefileList(upl=current_scene, scene_type='publish')
+    print next_path, next_file
+
 if __name__ == '__main__':
     main()
 

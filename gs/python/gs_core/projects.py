@@ -446,7 +446,7 @@ class ProjectController():
         '''
         valid_result = []
         # iterates all subtree looking for patterns that match the glob *.mb
-        result = [y for x in os.walk(filepath) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip'])]
+        result = [y for x in os.walk(filepath) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'tvpp', 'psd'])]
         #result = self.v(filepath, ['mb', 'ma', 'nk', 'aep'])
         for name in result:
             if not os.path.isdir(os.path.join(filepath, name)) and not name.startswith('.') and not name.startswith('_'):
@@ -650,36 +650,40 @@ class ProjectController():
                     #scene_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=template_type, template_var='{0}_path'.format(scene_type))
                     scene_file = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='scenefile', template_name=tt, template_var='{0}_file'.format(scene_type), exists=exists)
                     #scn_wo_vers = '_'.join(os.path.basename(scene_file).split('_')[:-3])
-                    scn_no_fr_ext = scene_file.split('.')[0]
-                    scn_wo_vers = scn_no_fr_ext.split('_<version>')[0]
+                    # if latest version is specified we must search for it
+                    if latest_version:
+                        scn_no_fr_ext = scene_file.split('.')[0]
+                        scn_wo_vers = scn_no_fr_ext.split('_<version>')[0]
 
-                    result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov'])]
+                        result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov', 'psd', 'tvpp'])]
 
-                    max_ver = 0
-                    latest_v_name = ''
-                    for name in result_files:
-                        if not os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
-                            if os.path.basename(name).startswith(scn_wo_vers):
-                                if latest_version and scene_type == 'workscene':
-                                    l = len(root_path)+1+len(scn_wo_vers) + 1
-                                    ver = name[l:].split(".")[0]
-                                    v_int = int(re.search(r'[0-9]+', ver).group(0))
-                                    if v_int > max_ver:
-                                        max_ver = v_int
-                                        latest_v_name = name[len(root_path)+1:]
-                                else:
-                                    rel_path = name[len(root_path)+1:]
-                                    valid_results.append(rel_path)
+                        max_ver = 0
+                        latest_v_name = ''
+                        for name in result_files:
+                            if not os.path.isdir(os.path.join(path,name)) and not name.startswith('.') and not name.startswith('_'):
+                                if os.path.basename(name).startswith(scn_wo_vers):
+                                    if latest_version and scene_type == 'workscene':
+                                        l = len(root_path)+1+len(scn_wo_vers) + 1
+                                        ver = name[l:].split(".")[0]
+                                        v_int = int(re.search(r'[0-9]+', ver).group(0))
+                                        if v_int > max_ver:
+                                            max_ver = v_int
+                                            latest_v_name = name[len(root_path)+1:]
+                                    else:
+                                        rel_path = name[len(root_path)+1:]
+                                        valid_results.append(rel_path)
 
-                    if latest_version and scene_type == 'workscene':
-                        if new_version:
-                            found_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                            max_ver += 1
-                            new_ver = 'v{0}'.format(str(max_ver).zfill(3))
-                            new_v_name = latest_v_name.replace(found_ver,new_ver)
-                            valid_results.append(new_v_name)
-                        else:
-                            valid_results.append(latest_v_name)
+                        if scene_type == 'workscene':
+                            if new_version:
+                                found_ver = 'v{0}'.format(str(max_ver).zfill(3))
+                                max_ver += 1
+                                new_ver = 'v{0}'.format(str(max_ver).zfill(3))
+                                new_v_name = latest_v_name.replace(found_ver,new_ver)
+                                valid_results.append(new_v_name)
+                            else:
+                                valid_results.append(latest_v_name)
+                else:
+                    valid_results.append(scene_file)
 
             return (root_path, valid_results)
         else:

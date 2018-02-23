@@ -33,6 +33,19 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.title = "Publish Scene v0.2a"
         self.setWindowTitle(self.title)
 
+        self.type_list = ['Static Cache','Maya Rig','LookDev', 'Animated Cache','Render']
+
+        self.ui_state = {
+            'f_data': {},
+            'version':'',
+            'camera': '',
+            'start': 1,
+            'end': 100,
+            'step':1,
+            'publish_type':'',
+            'output_list':[],
+        }
+
         self.resize(400, 600)
 
         self.main_lyt = QVBoxLayout(self)
@@ -42,32 +55,48 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.gridlyt.setColumnStretch(1,1)
         self.projectlbl = QLabel('Project:')
         self.project = QLineEdit()
+        self.project.setEnabled(False)
         self.stagelbl = QLabel('Stage:')
         self.stage = QLineEdit()
+        self.stage.setEnabled(False)
         self.assetliblbl = QLabel('Location:')
         self.assetlib = QLineEdit()
+        self.assetlib.setEnabled(False)
         self.assetgrplbl = QLabel('Group:')
         self.assetgrp = QLineEdit()
+        self.assetgrp.setEnabled(False)
         self.assetnamelbl = QLabel('Asset:')
         self.assetname = QLineEdit()
+        self.assetname.setEnabled(False)
         self.tasklbl = QLabel('Task:')
         self.taskname = QLineEdit()
+        self.taskname.setEnabled(False)
         self.scenenamelbl = QLabel('SceneName:')
         self.scenename = QLineEdit()
+        self.scenename.setEnabled(False)
         self.versionlbl = QLabel('Version:')
         self.version = QLineEdit()
+        self.version.setEnabled(False)
         self.cameralbl = QLabel('Camera:')
         self.camera = QComboBox()
 
+        self.gridlyt2 = QGridLayout()
+        self.gridlyt2.setColumnStretch(2,2)
+        self.gridlyt2.setColumnStretch(1,1)
+
+        self.outputslbl = QLabel('Publish Outputs:')
+        self.publishtypelbl = QLabel('Publish Type:')
+        self.publishtype = QComboBox()
+
         self.asset_list = QTreeView()
         self.asset_list.setUniformRowHeights(True)
+        self.asset_list.setAlternatingRowColors(True)
+        self.asset_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.asset_model = QStandardItemModel(self.asset_list)
-        self.asset_model.setHorizontalHeaderLabels(['Output Item', 'Export Type', 'New Version', 'Previous Version', 'Range'])
-        
 
         self.asset_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.asset_list.setModel(self.asset_model)
-        self.asset_list.setColumnWidth(0,200)
+        self.asset_list.setRootIsDecorated(False)
 
         rangeEditGroup = QBoxLayout(QBoxLayout.LeftToRight)
         
@@ -76,14 +105,14 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         rangeEditGroup.addWidget(self.rangeLbl1,Qt.AlignRight)
         self.rangeLE1 = QSpinBox()
         self.rangeLE1.setRange(0, 100000)
-        self.rangeLE1.setValue(101)
+        self.rangeLE1.setValue(1)
         
         rangeEditGroup.addWidget(self.rangeLE1)
         self.rangeLbl2 = QLabel('End:')
         rangeEditGroup.addWidget(self.rangeLbl2,Qt.AlignRight)
         self.rangeLE2 = QSpinBox()
         self.rangeLE2.setRange(0, 100000)
-        self.rangeLE2.setValue(201)
+        self.rangeLE2.setValue(100)
         
         rangeEditGroup.addWidget(self.rangeLE2)
 
@@ -94,21 +123,6 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.rangeLE3.setValue(1)
         rangeEditGroup.addWidget(self.rangeLE3)
         optionsGroup = QBoxLayout(QBoxLayout.LeftToRight)
-        
-        self.uvCB = QCheckBox('Export UVs')
-        optionsGroup.addWidget(self.uvCB)
-        self.fhCB = QCheckBox('Flatten Hierarchy')
-        self.fhCB.setChecked(1)
-        optionsGroup.addWidget(self.fhCB)
-        self.gsCB = QCheckBox('Globalspace')
-        self.gsCB.setChecked(1)
-        optionsGroup.addWidget(self.gsCB)
-        pathEditGroup = QBoxLayout(QBoxLayout.LeftToRight)
-        
-        self.pathLbl = QLabel('Output Path:')
-        self.nameLE = QLineEdit()
-        pathEditGroup.addWidget(self.pathLbl)
-        pathEditGroup.addWidget(self.nameLE)
 
         self.footer = QBoxLayout(QBoxLayout.LeftToRight)
         self.publishbtn = QPushButton("Publish Scene")
@@ -136,20 +150,23 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.gridlyt.addWidget(self.rangelbl,9,1,Qt.AlignRight)
         self.gridlyt.addLayout(rangeEditGroup,9,2)
 
-
+        self.gridlyt2.addWidget(self.outputslbl,0,1,Qt.AlignRight)
+        self.gridlyt2.addWidget(self.publishtypelbl,0,2,Qt.AlignRight)
+        self.gridlyt2.addWidget(self.publishtype,0,3)
         self.footer.addWidget(self.cancelbtn)
         self.footer.addWidget(self.publishbtn)
         
         self.main_lyt.addLayout(self.gridlyt)
-        #self.main_lyt.addLayout(rangeEditGroup)
-        self.main_lyt.addLayout(optionsGroup)
-        self.main_lyt.addLayout(pathEditGroup)
+        self.main_lyt.addLayout(self.gridlyt2)
         self.main_lyt.addWidget(self.asset_list)
         self.main_lyt.addLayout(self.footer)
 
-        # Set up slots and signals.
+        #### SIGNALS ####
+        self.publishtype.currentIndexChanged.connect(self.publishTypeChanged)
+        self.camera.currentIndexChanged.connect(self.cameraComboChanged)
         self.publishbtn.clicked.connect(self.doPublishScene)
         self.cancelbtn.clicked.connect(self.doCancel)
+
 
         self.updateUi()
 
@@ -158,43 +175,160 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         current_scene = str(cmds.file(q=1,sn=1))
         f_data = self.proj.pathParser.parsePath(current_scene)
 
+
+        self.ui_state['f_data'] = dict(f_data)
+        self.ui_state['version'] = str(f_data['version'])
+        print self.ui_state['f_data']
+
         self.project.setText('/'.join([f_data['server'],f_data['share'],f_data['job']]))
         self.stage.setText(f_data['stage'])
         self.assetlib.setText(f_data['asset_type'])
         self.assetgrp.setText(f_data['asset_grp'])
         self.assetname.setText(f_data['asset'])
+        self.taskname.setText(f_data['task'])
         self.scenename.setText(f_data['scenename'])
         self.version.setText(f_data['version'])
 
-        # populate list with assets found in scene
-        assets = self.getInSceneAssets()
-        r = 0
-        for a in assets:
-            item = QStandardItem(a)
-            print (assets[a]['latest_cache'])
-            ver = QStandardItem(assets[a]['latest_cache'])
-            item.setCheckable(True)
-            #item.setCheckState(Qt.CheckState)
-            self.asset_model.appendRow(item)
-            self.asset_model.setItem(r,2,ver)
-            r = r + 1
+        # update labels depending on shot or asset
+        if f_data['asset_type'].startswith('asset'):
+            self.assetgrplbl.setText('Category')
+            self.assetnamelbl.setText('Asset Name')
+        elif f_data['asset_type'].startswith('shot'):
+            self.assetgrplbl.setText('Sequence')
+            self.assetnamelbl.setText('Shot')
+
+        self.updateCamList()
+        self.updatePublishTypeList()
+        
+        # set publish type by task type
+        if f_data['task'] == 'model':
+            self.setPublishType('Static Cache')
+        elif f_data['task'] == 'rig':
+            self.setPublishType('Maya Rig')
+        elif f_data['task'] == 'lookdev':
+            self.setPublishType('LookDev')
+        elif f_data['task'] == 'anim':
+            self.setPublishType('Animated Cache')
+        elif f_data['task'] == 'effects':
+            self.setPublishType('Animated Cache')
+        elif f_data['task'] == 'light':
+            self.setPublishType('Render')
+        elif f_data['task'] == 'comp':
+            self.setPublishType('Render')
+
+        self.updateOutputList()
+
+    def setPublishType(self, publish_type):
+        i = self.publishtype.findText(publish_type, Qt.MatchFixedString)
+        if i >= 0:
+            self.publishtype.setCurrentIndex(i)        
         return
 
-    def exportAlembicUI(self):
-        print("exporting alembics")
-        # get the assets from the UI as text strings
-        asset_list = []
-        for index in xrange(self.asset_model.rowCount()):
-            asset_list.append(self.asset_model.item(index))
-        asset_names = [str(i.text()) for i in asset_list]
 
-        # get the export flags
-        out_path = str(self.nameLE.text())
-        in_frame = str(self.rangeLE1.value())
-        out_frame = str(self.rangeLE2.value())
-        step = str(self.rangeLE3.value())
-        exportAlembicCache(out_path=out_path,asset_list=asset_names,in_frame=in_frame,out_frame=out_frame,step=step)
-        self.parent.close()
+    def updateOutputList(self):
+
+        self.asset_model.clear()
+        self.asset_model.setHorizontalHeaderLabels(['Output Item', 'Type', 'Version'])
+        self.asset_list.setColumnWidth(0,150)
+        self.asset_list.setColumnWidth(1,150)
+        self.asset_list.setColumnWidth(2,50)
+
+        
+        item = QStandardItem('Entire Scene')
+        item.setCheckable(True)
+        item.setCheckState(Qt.Checked)
+        exp_type = QStandardItem('MayaBinary')
+        ver = QStandardItem(self.ui_state['version'])
+        self.asset_model.appendRow([item,exp_type,ver])  
+        self.ui_state['output_list'].append(('Entire Scene','MayaBinary',self.ui_state['version']))      
+
+        # add camera
+        if self.ui_state['publish_type'] == 'Animated Cache':
+            item = QStandardItem('Camera ({0})'.format(self.ui_state['camera']))
+            item.setCheckable(True)
+            item.setCheckState(Qt.Checked)
+            exp_type = QStandardItem('Alembic ( Start/End )')
+            ver = QStandardItem(self.ui_state['version'])
+            self.asset_model.appendRow([item,exp_type,ver])   
+            self.ui_state['output_list'].append(('Camera ({0})'.format(self.ui_state['camera']),'Alembic ( Start/End )',self.ui_state['version']))  
+
+        # populate list with assets found in scene
+        if self.ui_state['publish_type'] == 'Animated Cache':
+            assets = self.getInSceneAssets()
+            for r, ref_path, ref_ns in assets:
+                item = QStandardItem(ref_ns)
+                item.setCheckable(True)
+                item.setCheckState(Qt.Checked)
+                exp_type = QStandardItem('Alembic ( Start/End )')
+                ver = QStandardItem(self.ui_state['version'])
+                self.asset_model.appendRow([item,exp_type,ver])
+                self.ui_state['output_list'].append((ref_ns,'Alembic ( Start/End )',self.ui_state['version'])) 
+                #self.asset_model.setItem(r,2,ver)
+
+        if self.ui_state['publish_type'] == 'Static Cache':
+            item = QStandardItem('Local Geometry')
+            item.setCheckable(True)
+            item.setCheckState(Qt.Checked)
+            exp_type = QStandardItem('Alembic ( Static )')
+            ver = QStandardItem(self.ui_state['version'])
+            self.asset_model.appendRow([item,exp_type,ver]) 
+            self.ui_state['output_list'].append(('Local Geometry','Alembic ( Static )',self.ui_state['version'])) 
+
+        # add playblast
+        if self.ui_state['publish_type'] == 'Animated Cache':
+            render_layers = self.getInSceneRenderLayers()
+            for r, enabled in render_layers:
+                item = QStandardItem(r)
+                item.setCheckable(True)
+                if enabled:
+                    item.setCheckState(Qt.Checked)
+                exp_type = QStandardItem('Playblast ( Start/End )')
+                ver = QStandardItem(self.ui_state['version'])
+                self.asset_model.appendRow([item,exp_type,ver])
+                self.ui_state['output_list'].append((r,'Playblast ( Start/End )',self.ui_state['version'])) 
+
+        if self.ui_state['publish_type'] == 'Render' or self.ui_state['publish_type'] == 'LookDev':
+            render_layers = self.getInSceneRenderLayers()
+            for r, enabled in render_layers:
+                item = QStandardItem(r)
+                item.setCheckable(True)
+                if enabled:
+                    item.setCheckState(Qt.Checked)
+                exp_type = QStandardItem('Farm Render ( Start/End )')
+                ver = QStandardItem(self.ui_state['version'])
+                self.asset_model.appendRow([item,exp_type,ver])
+                self.ui_state['output_list'].append((r,'Farm Render ( Start/End )',self.ui_state['version'])) 
+                #self.asset_model.setItem(r,2,ver)
+
+        return
+
+    def updateCamList(self):
+        # clear the item model and init a new one
+        self.camera.model().clear()
+        cam_list = self.getInSceneCameras()
+        for name in cam_list:
+            if name != '':
+                item = QStandardItem(name)
+                self.camera.model().appendRow(item)
+        return
+
+    def cameraComboChanged(self):
+        self.ui_state['camera'] = str(self.camera.currentText())
+        self.updateOutputList()
+
+    def updatePublishTypeList(self):
+        # clear the item model and init a new one
+        self.publishtype.model().clear()
+        for name in self.type_list:
+            if name != '':
+                item = QStandardItem(name)
+                self.publishtype.model().appendRow(item)
+        return
+
+    def publishTypeChanged(self, out_path):
+        self.ui_state['publish_type'] = str(self.publishtype.currentText())
+        self.updateOutputList()
+
 
     def getInSceneAssets(self):
         asset_list = []
@@ -207,30 +341,30 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         return asset_list
 
-    def getOutputItems(self, publish_type):
-        # populate the item list with a dictionary
-        current_scene = str(cmds.file(q=1,sn=1))
-        output_list = [('Scene','MayaBinary','','','static')]
+    def getInSceneRenderLayers(self):
+        rlayers = cmds.ls(type='renderLayer')
+        layers = []
+        for layer in rlayers:
+            if not layer.endswith(':defaultRenderLayer'):
+                if cmds.getAttr(layer + '.renderable') == 1:
+                    layers.append((layer,True))
+                else:
+                    layers.append((layer,False))
+        return layers
 
-        if publish_type == 'animation':
-            # add a list of cameras
-            # add a playblast
-            # list of assets - alembic cache sequence
-            # list of assets - animation curves
-            pass
+    def getInSceneCameras(self):
+        defaultCams = ['top','side','front','persp']
+        camShapes = cmds.ls(type='camera')
+        camXforms = []
+        for shape in camShapes:
+            xforms = cmds.listRelatives(shape, p=1)
+            try:
+                camXforms.extend(xforms)
+            except TypeError:
+                pass
 
-        if publish_type == 'asset':
-            # alembic cache static
-            # optional add a list of shaders
-            # optional render
-            pass
-
-        if publish_type == 'render':
-            # list of render layers
-            pass
-
-            # get a list
-        return output_list
+        finalCams = [ f for f in camXforms if f not in defaultCams ]
+        return finalCams
     
     # project, asset_lib, asset, task, package, scenename, version
 
@@ -245,22 +379,136 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.publishScene()
 
     def publishScene(self):
-        # gather options
+        # gather information about export
         current_scene = str(cmds.file(q=1,sn=1))
-        #f_data = self.proj.pathParser.parsePath(current_scene)
-        
-        #pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
-        next_path, next_file = self.proj.getScenefileList(upl=current_scene, scene_type='workscene', latest_version=True, new_version=True)
-        pub_scene = '{0}/{1}'.format(next_path,next_file[0])
-        cmds.file(rename=pub_scene)
-        cmds.file(save=True, force=True, options="v=0", typ="mayaBinary")
+        f_data = self.proj.pathParser.parsePath(current_scene)
+
+        self.ui_state['start'] = float(self.rangeLE1.value())
+        self.ui_state['end'] = float(self.rangeLE2.value())
+        self.ui_state['step'] = float(self.rangeLE3.value())
+        self.ui_state['output_list']
+
+        print 'current_scene={0}'.format(current_scene)
+        print self.ui_state['output_list']
+        # for each item in the output list export the appropriate data
+        for item, exp_type, ver in self.ui_state['output_list']:
+            if exp_type == 'Alembic (Start/End)':
+                d = dict(f_data)
+                d['layer'] = item
+                d['ext'] = 'abc'
+                pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+                if len(pub_files) > 0:
+                    out_scene = '/'.join([pub_root,pub_files[0]])
+                    self.exportAlembicCache(out_scene=out_scene, asset_list=[item], in_frame=self.ui_state['start'], out_frame=self.ui_state['end'],step=self.ui_state['step'])
+                else:
+                    print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
+            #elif out_type == 'Alembic (Static)':
+            #    self.exportAlembicCache()
+            elif exp_type == 'MayaBinary':
+                d = dict(f_data)
+                d['layer'] = 'publish'
+                pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+                if len(pub_files) > 0:
+                    out_scene = '/'.join([pub_root,pub_files[0]])
+                    self.saveSceneCopy(out_path=out_scene,create_dir=True)
+                else:
+                    print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
+            #elif out_type == 'Maya Export':
+            #    self.exportScene()
+            #elif out_type == 'Maya nCache':
+            #    self.exportScene()
+            
+            # export the publish data
+            #self.exportPublishData(out_path)
         return
 
     def exportScene(self):
         return
     
-    def exportAlembic(self, startFrame, endFrame):
+
+    def get_alembic_output_path(self):
+        ''' given a shot_info (returned from a call to get_shot_info_from_path()) this will return an abc output path '''
+        output_path = ''
+        if len(shot_info) > 1:
+            dir_name = "_".join((shot_info['shot'],shot_info['cam_version'],shot_info['anim_version'],shot_info['light_version']))
+            file_name = (dir_name+'.abc')
+            output_path = os.path.join(shot_info['server'],shot_info['job'],'03_production','01_cg','01_MAYA','scenes','02_cg_scenes',shot_info['shot'],shot_info['dept'],'cache',dir_name)
+        return output_path
+
+
+    def exportAlembicCache(self, out_path='', asset_list=[], in_frame=1, out_frame=100, step=1):
+        """ exports the alembic cache to a preconfigured location """
+        job_strings = []
+        print asset_list
+
+        for a in asset_list:
+            cache_set = (a+':CACHEset')
+            try:
+                obj_list = cmds.sets(str(cache_set),q=1)
+            except:
+                obj_list = ()
+            obj_str= ','.join(obj_list)
+            out_filename = os.path.basename(out_path)+'_'+a+'.abc'
+            asset_out_path = os.path.join(out_path,out_filename)
+            try: 
+                os.makedirs(os.path.join(out_path))
+            except OSError:
+                if not os.path.isdir(os.path.join(out_path)):
+                    raise
+
+            job_str = ('filename='+asset_out_path+';')
+            job_str += ('objects='+obj_str+';')
+            job_str += ('uvs=0;')
+            job_str += ('globalspace=1;')
+            job_str += ('withouthierarchy=1;')
+            job_str += ('in='+in_frame+';')
+            job_str += ('out='+out_frame+';')
+            job_str += ('step='+step+';')
+            job_str += ('ogawa=1')
+            job_strings.append(job_str)
+        cmds.ExocortexAlembic_export(j=job_strings)
+        
+    def exportPlayblast(self):
         return
+
+    def exportPublishData(self, out_path='', asset_list=[]):
+        asset_info = get_assets_in_scene()
+        remove_assets = []
+        # remove any asset data that isn't in the asset_list argument
+        for a in asset_info:
+            if any(a in s for s in asset_list):
+                remove_assets.append(str(a))
+
+        for a in remove_assets:
+            del asset_info[a]
+
+        if out_path != '':
+            out_filename = os.path.basename(out_path)+'.yml'
+            out_file =os.path.join(out_path,out_filename)
+            with open(out_file, 'w') as f:
+                f.write( yaml.safe_dump(asset_info, default_flow_style=False, encoding='utf-8', allow_unicode=False) )
+
+    def saveSceneCopy(self, out_path='', create_dir=False):
+        print ("SAVING SCENE:{0}".format(out_path))
+        if create_dir:
+            dir_name = os.path.dirname(out_path)
+            if not os.path.isdir(dir_name):
+                os.makedirs(dir_name)
+        current_scene = str(cmds.file(q=1,sn=1))
+        cmds.file(rename=out_path)
+        cmds.file(save=True, force=True, options="v=0", typ="mayaBinary")
+        cmds.file(rename=current_scene)
+
+    def exportScenePartial(self, out_path):
+        # gather options
+        current_scene = str(cmds.file(q=1,sn=1))
+        #f_data = self.proj.pathParser.parsePath(current_scene)
+        
+        #pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+        next_path, next_file = self.proj.getScenefileList(upl=current_scene, scene_type='publish', latest_version=True, new_version=True)
+        pub_scene = '{0}/{1}'.format(next_path,next_file[0])
+        cmds.file(rename=pub_scene)
+        cmds.file(save=True, force=True, options="v=0", typ="mayaBinary")
     
     def exportCurves(self):
         return
@@ -269,8 +517,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         return
 
     def doCancel(self):
-        self.parent.close()
-        
+        self.close()        
 
 def main():
     wind = GSPublishSceneWindow()
@@ -311,3 +558,15 @@ def main():
 # 7. export of nHair
 # 8. export of xgen data
 # 
+
+# model publish post process
+# update 
+
+# lookdev tools
+#  - publish and update model changes
+#    - first make sure you have the model version up to date
+
+# rigging tools
+#  - publish and update model changes
+#lookdev publish post process
+# [] update model task and publish

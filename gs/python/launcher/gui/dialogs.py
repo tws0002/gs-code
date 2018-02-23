@@ -227,6 +227,9 @@ class LauncherCreateAsset(LauncherDialog):
         self.asset_grplbl = QLabel("Group:")
         self.asset_grp = QComboBox()
         self.asset_grp.setEditable(True)
+        regexp = QRegExp('^[A-Za-z0-9]([A-Za-z0-9]+)*$')
+        validator = LRegExpValidator(regexp)
+        self.asset_grp.setValidator(validator)
 
         self.asset_namelbl = QLabel("Name:")
         self.asset_name = QLineEdit()
@@ -320,7 +323,7 @@ class LauncherCreateAsset(LauncherDialog):
                     self.asset_type_cb.setCurrentIndex(i)
 
         self.updateGroups()
-        g=''
+        g = self.ui_state['group']
         if self.ui_state['asset_type'] == '':
             g = "<None>"
         i = self.asset_grp.findText(g, Qt.MatchFixedString)

@@ -14,7 +14,7 @@ def init_gs_menu():
 		cmds.setParent(GS_MENU,menu=True)
 
 		# MUSTACHE
-		cmds.menuItem(divider=True,dl="PIPELINE")
+		cmds.menuItem(divider=True,dl="Pipeline")
 		cmds.menuItem(l="Quicksave",c='import gs_quicksave;reload(gs_quicksave);gs_quicksave.main()')
 		cmds.menuItem(l="Publish Scene", en=True, c='import gs_publish;reload(gs_publish);gs_publish.main()')
 		cmds.menuItem(divider=True)
@@ -29,8 +29,8 @@ def init_gs_menu():
 		cmds.menuItem(divider=True,dl="Animation Tools")
 		cmds.menuItem(l="Animation Transfer",en=False,c='')
 		cmds.menuItem(l="Pose Library",en=False,c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
-		cmds.menuItem(l="Alembic Import",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadImporterUI()')
-		cmds.menuItem(l="Alembic Export",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
+		#cmds.menuItem(l="Alembic Import",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadImporterUI()')
+		#cmds.menuItem(l="Alembic Export",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
 		cmds.menuItem(l="Sticky Nulls",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
 		cmds.menuItem(divider=True,dl="Render Tools")
 		cmds.menuItem(l="LookBook", en=False, c='import gs_lookbook;reload(gs_lookbook);gs_lookbook.main()')

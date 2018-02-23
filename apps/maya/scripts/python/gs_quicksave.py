@@ -103,7 +103,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
 
     	if 'version' in f_data and 'scenename' in f_data:
     		# get the next avail versions
-    		scene_minus_ver = '_'.join([f_data['asset_grp'],f_data['asset'],f_data['scenename']])
+    		scene_minus_ver = '_'.join([f_data['asset_grp'],f_data['asset'],f_data['task'],f_data['scenename']])
     		self.asset_name.setText(scene_minus_ver)
     		self.vnum.setText(f_data['version'])
     		self.file_dest = fp
