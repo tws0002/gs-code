@@ -288,6 +288,23 @@ def testAPICalls():
     next_path, next_file = proj.getScenefileList(upl=current_scene, scene_type='publish')
     print next_path, next_file
 
+    # test loading an asset as the latest found version and layer
+    f_data = {'scenename': 'main', 'layer': 'publish', 'task': 'model', 'package': 'maya', 'share': 'projects', 'ext': 'mb', 'server': '//scholar', 'job': 'ab_testjob', 'asset': 'testCharA', 'asset_grp': 'char', 'asset_type': 'asset_3d', 'stage': 'production'}
+    next_path, next_file = proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+    print next_path, next_file
+
+    # test if v000 still successfully reports as latest version
+    current_scene = '//scholar/projects/ab_testjob/production/assets/3d/char/testCharA/model/work/maya/scenes/char_testCharA_model_main_v001.mb'
+    next_path, next_file = proj.getScenefileList(upl=current_scene, scene_type='workscene', latest_version=True, new_version=True)
+    print next_path, next_file
+
+    # test if v000 still successfully reports as latest version
+    current_scene = '//scholar/projects/ab_testjob/production/assets/3d/char/testCharA/lookdev/work/maya/scenes/char_testCharA_lookdev_main_v000.mb'
+    next_path, next_file = proj.getScenefileList(upl=current_scene, scene_type='workscene', latest_version=True, new_version=True)
+    print next_path, next_file
+
+
+
 if __name__ == '__main__':
     main()
 

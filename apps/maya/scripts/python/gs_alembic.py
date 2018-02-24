@@ -37,6 +37,8 @@ except ImportError:
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
+import gs_core
+
 # global pointers to prevent garbage collection until unload
 wind=None
 widg=None
@@ -137,7 +139,7 @@ class StudioAlembicUIWindowImport(MayaQWidgetBaseMixin,QWidget):
 			cur_cache = QStandardItem(assets[a]['current_cache'])
 			ver = QStandardItem(assets[a]['latest_cache'])
 			item.setCheckable(True)
-			item.setCheckState(2)
+			item.setCheckState(Qt.Checked)
 			self.asset_model.appendRow(item)
 			self.asset_model.setItem(r,1,cur_cache)
 			self.asset_model.setItem(r,2,ver)

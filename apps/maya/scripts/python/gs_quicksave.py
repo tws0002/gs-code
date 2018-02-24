@@ -92,6 +92,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
     		return
 
     	#new_scene = self.proj.getNewVersion(upl=current_scene)
+        print (current_scene)
     	next_path, next_file = self.proj.getScenefileList(upl=current_scene, scene_type='workscene', latest_version=True, new_version=True)
     	fp = '/'.join([next_path,next_file[0]])
     	print "file to write= {0}".format(current_scene)

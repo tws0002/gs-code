@@ -118,9 +118,11 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             print ('task={0}'.format(f_data['task']))
             f_data['scenename'] = 'main'
             f_data['package'] = 'maya'
+            f_data['layer'] = 'publish'
             f_data['ext'] = 'mb'
 
             # get the latest version of publish path
+            print f_data
             pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
             print ('latest_publish={0} {1}'.format(pub_root,pub_files))
             if not os.path.isdir(pub_root):
@@ -256,8 +258,31 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.main_lyt.addLayout(self.footerlyt)
 
         #### WIDGET SIGNALS #####
-        
+        self.removebtn.clicked.connect(self.doRemoveAsset)
+        self.renamebtn.clicked.connect(self.doRenameAsset)
+        self.reloadbtn.clicked.connect(self.doReloadAsset)
+        self.unloadbtn.clicked.connect(self.doUnloadAsset)
 
+    def getSelectedRefs(self):
+        sel_refs = []
+        return sel_refs
+
+    def doRemoveAsset(self):
+
+        for ref_n, ref_ns, ref_path in self.getSelectedRefs():
+            cmds.file(ref_n, rr=1)
+            cmds.namespace(rm=ref_ns)
+            print 'Removed Reference: {0}'.format(ref_n)
+        return
+
+    def doRenameAsset(self):
+        return
+
+    def doReloadAsset(self):
+        return
+
+    def doUnloadAsset(self):
+        return
 
 class CustomSortFilterProxyModel(QSortFilterProxyModel):
 

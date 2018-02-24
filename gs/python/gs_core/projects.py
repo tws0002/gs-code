@@ -654,8 +654,12 @@ class ProjectController():
                     if latest_version:
                         scn_no_fr_ext = scene_file.split('.')[0]
                         scn_wo_vers = scn_no_fr_ext.split('_<version>')[0]
+                        # filter to extention if specified
+                        ext_list = ['mb', 'ma', 'nk', 'aep', 'hip', 'exr', 'abc', 'mov', 'psd', 'tvpp']
+                        if 'ext' in upl_dict:
+                            ext_list = [upl_dict['ext']]
 
-                        result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'exr','abc','mov', 'psd', 'tvpp'])]
+                        result_files = [y for x in os.walk(path) for y in self.multiGlob(x[0], ext_list)]
 
                         max_ver = 0
                         latest_v_name = ''
@@ -666,7 +670,7 @@ class ProjectController():
                                         l = len(root_path)+1+len(scn_wo_vers) + 1
                                         ver = name[l:].split(".")[0]
                                         v_int = int(re.search(r'[0-9]+', ver).group(0))
-                                        if v_int > max_ver:
+                                        if v_int >= max_ver:
                                             max_ver = v_int
                                             latest_v_name = name[len(root_path)+1:]
                                     else:
@@ -682,8 +686,8 @@ class ProjectController():
                                 valid_results.append(new_v_name)
                             else:
                                 valid_results.append(latest_v_name)
-                else:
-                    valid_results.append(scene_file)
+                    else:
+                        valid_results.append(scene_file)
 
             return (root_path, valid_results)
         else:
