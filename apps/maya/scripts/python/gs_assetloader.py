@@ -43,16 +43,48 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         # main layout
         self.main_layout = QVBoxLayout(self)
+        self.locationlyt = QHBoxLayout()
+
         #self.main_layout.addSpacing(40)
         self.pane_split = QSplitter()
-        self.main_layout.addWidget(self.pane_split)
 
-        self.loader_tree = GSAssetLoaderAssetLib(parent=self)
-        self.in_scene_list = GSAssetLoaderInSceneList(parent=self)
-        self.in_scene_list.tree_list.hidden_headers = ['filepath','is_group','ref_node','status', 'group']
+        # location bar
+        spl = self.p_dict['job'].split('_')
+        scene_name = cmds.file(q=1,sn=1,shn=1).split('.')[0]
+        proj_nice_name = '{0} {1}  |  {2}'.format(spl[0].title(),spl[1].title(),scene_name)
+        self.projectlbl = QLabel(proj_nice_name)
+        font = self.projectlbl.font()
+        font.setPointSize(12)
+        self.projectlbl.setFont(font)
+
+        self.asset_lib_tab = QTabWidget()
+        # asset loader
+        self.loader_tree = GSAssetLoaderAssetLib(self)
+        self.lr_del = LargeRowDelegate()
+        self.loader_tree.tree_list.tvw.setItemDelegate(self.lr_del)
+
+        self.shots_tree = GSAssetLoaderAssetLib(self)
+        self.shots_tree.tree_list.tvw.setItemDelegate(self.lr_del)        
+
+        self.in_scene_list = GSAssetLoaderInSceneList(self)
+        self.in_scene_list.tree_list.tvw.setItemDelegate(self.lr_del)
+        self.in_scene_list.tree_list.hidden_headers = ['filepath','is_group','5:ref_node','status', 'group']
+        self.editorDelegate = ComboBoxDelegate()
+        self.in_scene_list.tree_list.tvw.setItemDelegate(self.editorDelegate)
         #self.loader_tree.parent_class = self
 
-        self.pane_split.addWidget(self.loader_tree)
+        #### LAYOUT ####
+
+        self.asset_lib_tab.addTab(self.loader_tree,'3D Assets')
+        self.asset_lib_tab.addTab(self.shots_tree,'Shots')
+
+        self.locationlyt.addWidget(self.projectlbl)
+
+        self.main_layout.addLayout(self.locationlyt)
+        self.main_layout.addWidget(self.pane_split)
+        self.main_layout.setStretchFactor(self.pane_split,1)
+
+        self.pane_split.addWidget(self.asset_lib_tab)
         self.pane_split.addWidget(self.in_scene_list)
         self.pane_split.setSizes([100, 400])
 
@@ -67,6 +99,7 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         
         # get a list of shots for a stage of production
         asset_lib, asset_names = self.proj.getAssetsList(upl_dict=self.p_dict, asset_type=asset_type)   
+
 
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
@@ -126,7 +159,8 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
             print ('latest_publish={0} {1}'.format(pub_root,pub_files))
             if not os.path.isdir(pub_root):
-                cmds.error('No publish found for Asset: Looking for {0}'.format(pub_root))
+                cmds.confirmDialog( title='Publish Not Found:', message='Publish Not Found: {0} {1} Check to make sure it has been published'.format(a_name,f_data['task']), button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
+                #cmds.error('No publish found for Asset: Looking for {0}'.format(pub_root))
                 return
             else:
                 asset_scenefile = '/'.join([pub_root,pub_files[0]])
@@ -141,8 +175,9 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         ref_nodes = cmds.file(q=1,r=1)
         for r in ref_nodes:
             ref_path = cmds.referenceQuery(r,f=1,wcn=1)
+            ref_node = cmds.referenceQuery(r,rfn=1)
             ref_ns = cmds.file(r,q=1,namespace=1)
-            asset_list.append((r, ref_path, ref_ns))
+            asset_list.append((ref_node, ref_path, ref_ns))
 
         return asset_list
 
@@ -156,16 +191,41 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             asset_data[namespace] = {}
             asset_data[namespace]['name'] = namespace
             asset_data[namespace]['filepath'] = path
-            asset_data[namespace]['version'] = f_data['version']
-            asset_data[namespace]['type'] = f_data['task']
-            asset_data[namespace]['latest_publish'] = f_data['version']
-            asset_data[namespace]['ref_node'] = node
+            asset_data[namespace]['3:version'] = f_data['version']
+            asset_data[namespace]['2:type'] = f_data['task']
+            asset_data[namespace]['4:cache'] = f_data['version']
+            asset_data[namespace]['5:ref_node'] = node
             asset_data[namespace]['status'] = "Active"
             asset_data[namespace]['is_group'] = False
             asset_data[namespace]['group'] = f_data['asset_grp']
 
         self.in_scene_list.tree_list.loadViewModelFromDict(asset_data)
 
+    def getSelectedRefs(self):
+        sel_refs = self.in_scene_list.tree_list.getSelectedList()
+        print ("SELECTED REFS={0}").format(sel_refs)
+        # TODO this is terrible way to do this
+        return [(sel_refs[4], sel_refs[0], sel_refs[5])]
+
+    def doRemoveAsset(self):
+
+        for ref_n, ref_ns, ref_path in self.getSelectedRefs():
+            fp = cmds.referenceQuery(ref_n, filename=1)
+            cmds.file(fp, rr=1)
+            if cmds.namespace(exists=ref_ns):
+                cmds.namespace(rm=ref_ns)
+            print 'Removed Reference: {0}'.format(ref_n)
+            self.updateInSceneAssets()
+        return
+
+    def doRenameAsset(self):
+        return
+
+    def doReloadAsset(self):
+        return
+
+    def doUnloadAsset(self):
+        return
 
 class GSAssetLoaderAssetLib(MayaQWidgetBaseMixin,QWidget):
     data_model = {}
@@ -178,6 +238,7 @@ class GSAssetLoaderAssetLib(MayaQWidgetBaseMixin,QWidget):
         self.parent_class = None
 
         self.main_lyt = QVBoxLayout()
+        self.main_lyt.setContentsMargins(0,0,0,0)
         self.setLayout(self.main_lyt)
 
         self.headerlyt = QHBoxLayout()
@@ -185,8 +246,9 @@ class GSAssetLoaderAssetLib(MayaQWidgetBaseMixin,QWidget):
         self.footerlyt = QHBoxLayout()
         self.footerlyt.setContentsMargins(0,0,0,0)
 
-        self.title = QLabel('3D Assets')
+        self.title = QLabel('')
         self.tree_list = GSAssetLoaderTreeList()
+        self.tree_list.tvw.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.typelbl = QLabel('Type:')
         self.typecombo = QComboBox()
         self.ref_btn = QPushButton('Reference >>')
@@ -224,6 +286,7 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
 
         #### WIDGET CREATE ####
         self.main_lyt = QVBoxLayout()
+        self.main_lyt.setContentsMargins(0,0,0,0)
         self.setLayout(self.main_lyt)
 
         self.footerlyt = QHBoxLayout()
@@ -258,31 +321,11 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.main_lyt.addLayout(self.footerlyt)
 
         #### WIDGET SIGNALS #####
-        self.removebtn.clicked.connect(self.doRemoveAsset)
-        self.renamebtn.clicked.connect(self.doRenameAsset)
-        self.reloadbtn.clicked.connect(self.doReloadAsset)
-        self.unloadbtn.clicked.connect(self.doUnloadAsset)
+        self.removebtn.clicked.connect(self.parent().doRemoveAsset)
+        self.renamebtn.clicked.connect(self.parent().doRenameAsset)
+        self.reloadbtn.clicked.connect(self.parent().doReloadAsset)
+        self.unloadbtn.clicked.connect(self.parent().doUnloadAsset)
 
-    def getSelectedRefs(self):
-        sel_refs = []
-        return sel_refs
-
-    def doRemoveAsset(self):
-
-        for ref_n, ref_ns, ref_path in self.getSelectedRefs():
-            cmds.file(ref_n, rr=1)
-            cmds.namespace(rm=ref_ns)
-            print 'Removed Reference: {0}'.format(ref_n)
-        return
-
-    def doRenameAsset(self):
-        return
-
-    def doReloadAsset(self):
-        return
-
-    def doUnloadAsset(self):
-        return
 
 class CustomSortFilterProxyModel(QSortFilterProxyModel):
 
@@ -391,7 +434,7 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
         self.tvw.setHeaderHidden(True)
         self.tvw.setItemsExpandable(True)
         self.tvw.setAlternatingRowColors(True)
-        self.tvw.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        #self.tvw.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.setModel(model)
 
@@ -412,6 +455,12 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
 
     def lineEdit(self):
         return self.le
+
+    def setColumnPersistentEditor(self, column):
+        # setup persistant comboboxes
+        for row in range(0, self.tvw.model().rowCount()):
+            self.tvw.openPersistentEditor(self.tvw.model().index(row, column))
+        return
 
     def setTitle(self,title):
         self.title.setText(title)
@@ -434,22 +483,36 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
         qregex = QRegExp(regExpStr)
         self.pm.setFilterRegExp(qregex)
         self.tvw.expandAll()
+
+        # set persietent editors on certain columns
+        self.setColumnPersistentEditor(1)
+        self.setColumnPersistentEditor(2)
+        self.setColumnPersistentEditor(3)        
         
 
     def filterListEditChanged(self):
         regstr = self.le.text()
-        if len(regstr) < 3 and len(regstr) > 0:
+        if len(regstr) < 2 and len(regstr) > 0:
             regstr = '^{0}'.format(regstr)
 
         self.setFilterRegExpStr(regstr)
 
-    def getSelectedItems (self):
+    def getSelectedItems(self):
         items = []
         for index in self.tvw.selectionModel().selectedIndexes():
             # index of selectedModel is for the proxy filter model only, we have to map to the source model to get valid item
             src_index = self.pm.mapToSource(index)
             item = self.sm.itemFromIndex(src_index)
             items.append(item)
+        return items
+
+    def getSelectedList(self):
+        items = []
+        for index in self.tvw.selectionModel().selectedIndexes():
+            # index of selectedModel is for the proxy filter model only, we have to map to the source model to get valid item
+            src_index = self.pm.mapToSource(index)
+            item = self.sm.itemFromIndex(src_index)
+            items.append(item.text())
         return items
 
     def expandItem(self, qStandardItem):
@@ -519,6 +582,76 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
                 if header in self.hidden_headers:
                     self.tvw.setColumnHidden(col,True)
                 col += 1
+
+        # set persietent editors on certain columns
+        #self.setColumnPersistentEditor(1)
+        #self.setColumnPersistentEditor(2)
+        #self.setColumnPersistentEditor(3)
+
+        self.tvw.setColumnWidth(0,250)
+        self.tvw.setColumnWidth(1,100)
+        self.tvw.setColumnWidth(2,75)
+        self.tvw.setColumnWidth(3,75)
+
+# reimplement editable columns to allow for editing combo boxes
+class GSInSceneItemModel(QStandardItemModel):
+
+    def flags(self, index):
+        if (index.column() > 0):
+            return Qt.ItemIsEditable | Qt.ItemIsEnabled
+        else:
+            return Qt.ItemIsEnabled                
+
+class LargeRowDelegate(QItemDelegate):
+    def __init__(self, parent=None, *args, **kwargs):
+        super(LargeRowDelegate, self).__init__(parent=parent, *args, **kwargs) 
+
+    def sizeHint(self, option, index):
+        print "size hint called"
+        return QSize(100, 20)
+
+# sets up and handles using a combobox as an item in the treeviewlist
+class ComboBoxDelegate(QItemDelegate):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super(ComboBoxDelegate, self).__init__(parent=parent, *args, **kwargs) 
+
+    def createEditor(self, parent, option, index):
+        editor = QComboBox(parent)
+        #editor.sizeHint(QSize(100, 20))
+        self.connect(editor, SIGNAL("currentIndexChanged(int)"), self, SLOT("currentIndexChanged()"))
+        return editor
+
+    def setEditorData(self, editor, index):
+        editor.blockSignals(True)
+        #editor.setCurrentIndex(int(index.model().data(index)))
+        data_str = index.model().data(index, Qt.EditRole)
+        print ("setting data to{0}".format(data_str))
+        i = editor.findText(data_str, Qt.MatchFixedString)
+        if i < 1:
+            editor.addItems([data_str])
+            i = editor.findText(data_str, Qt.MatchFixedString)
+        else:
+            editor.setCurrentIndex(i) 
+
+        editor.blockSignals(False)
+
+    def setModelData(self, editor, model,index):
+        model.setData(index, index.model().data(index, Qt.EditRole))
+        #model.setData(index, editor.currentIndex())
+
+    def updateEditorGeometry(self, editor, option, index):
+        size = QRect(option.rect.x(),option.rect.y()+2,option.rect.width()-4,option.rect.height()-4)
+        editor.setGeometry(size)
+
+    #def setData(self, index, value, role=Qt.DisplayRole):
+        #print "setData", index.row(), index.column(), value
+    #    return
+
+    def sizeHint(self, option, index):
+        print "size hint called"
+        return QSize(100, 24)
+        # todo: remember the data
 
 def main():
     wind = GSAssetLoaderWindow()

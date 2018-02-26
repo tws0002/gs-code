@@ -27,6 +27,7 @@ def init_gs_menu():
 		cmds.menuItem(l="Clean Scene",en=False,c='')
 		cmds.menuItem(l="Turntable Setup",c='import gs_assetmaker;reload(gs_assetmaker);gs_assetmaker.main()')
 		cmds.menuItem(divider=True,dl="Animation Tools")
+		cmds.menuItem(l="Playblaster",en=False,c='')
 		cmds.menuItem(l="Animation Transfer",en=False,c='')
 		cmds.menuItem(l="Pose Library",en=False,c='import gs_alembic;reload(gs_alembic);gs_alembic.loadExporterUI()')
 		cmds.menuItem(l="Alembic Import",c='import gs_alembic;reload(gs_alembic);gs_alembic.loadImporterUI()')

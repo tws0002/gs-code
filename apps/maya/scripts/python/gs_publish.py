@@ -91,8 +91,10 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.asset_list = QTreeView()
         self.asset_list.setUniformRowHeights(True)
         self.asset_list.setAlternatingRowColors(True)
-        self.asset_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.asset_model = QStandardItemModel(self.asset_list)
+        #self.asset_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.list_delegate = LargeRowDelegate()
+        self.asset_list.setItemDelegate(self.list_delegate)
+        self.asset_model = GSAbstractItemModel(self.asset_list)
 
         self.asset_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.asset_list.setModel(self.asset_model)
@@ -378,24 +380,20 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         return finalCams
     
     # project, asset_lib, asset, task, package, scenename, version
+    def doPublishScene(self):
+        self.doPreflightCheck()
+        self.publishScene()
+        self.doPostPublish()
 
-    def doPreflightCheck(self, preflight_type):
+    def doPreflightCheck(self):
         # does the publish version already exists
+
         # is the current version saved? 
         # has a clean script been run?
         return
 
-    def doPostPublish(self):
-        # force SaveAs mode to prevent ctrl-s after publish
-        # display sucess dialog
-        # version up the scenefile
-        return
-    
-    def doPublishScene(self):
-        self.publishScene()
-
     def publishScene(self):
-        print 'starting publ;is'
+        print 'starting publish'
         # gather information about export
         current_scene = str(cmds.file(q=1,sn=1))
         f_data = self.proj.pathParser.parsePath(current_scene)
@@ -440,6 +438,8 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
+                    if os.path.exists(out_scene):
+                        cmds.confirmDialog( title='Confirm', message='{0} exists Already. Are you sure?'.format(pub_files[0]), button=['Yes, Overwrite {0}'.format(d['version']),'No, Save {0} and Publish'.format(d['version'])], defaultButton='Yes', cancelButton='No', dismissString='No' )
                     self.saveSceneCopy(out_path=out_scene,create_dir=True)
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
@@ -450,6 +450,8 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
+                    if os.path.exists(out_scene):
+                        cmds.confirmDialog( title='Confirm', message='{0} exists Already. Are you sure?'.format(pub_files[0]), button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
                     self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
@@ -460,6 +462,12 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             
             # export the publish data
             #self.exportPublishData(out_path)
+        return
+
+    def doPostPublish(self):
+        # force SaveAs mode to prevent ctrl-s after publish
+        # display sucess dialog
+        # version up the scenefile
         return
 
     def exportScene(self):
@@ -613,6 +621,66 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
     def doCancel(self):
         self.close()        
+
+
+class GSAbstractItemModel(QStandardItemModel):
+    
+    def __init__(self, parent=None, *args, **kwargs):
+        super(GSAbstractItemModel, self).__init__(parent=parent, *args, **kwargs) 
+
+    ##def data(self, index, role = Qt.DisplayRole):
+    #    #super(GSAbstractItemModel, self).data(index, role = Qt.DisplayRole)
+    #    if not index.isValid():
+    #        return None
+    #    if role == Qt.DisplayRole:
+    #        item = index.internalPointer()
+    #        return item.data[index.column()]
+    #    elif role == Qt.SizeHintRole:
+    #        print "giving size hint"
+    #        return QSize(40,40)
+    #
+    #    return None
+    #    # Other roles - maybe return None if you don't use them.
+
+class LargeRowDelegate(QItemDelegate):
+    def __init__(self, parent=None, *args, **kwargs):
+        super(LargeRowDelegate, self).__init__(parent=parent, *args, **kwargs) 
+
+    def sizeHint(self, option, index):
+        print "size hint called"
+        return QSize(100, 24)
+
+
+class SpinBoxDelegate(QItemDelegate):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super(SpinBoxDelegate, self).__init__(parent=parent, *args, **kwargs) 
+
+
+    def createEditor(self, parent, option, index):
+        editor = QSpinBox(parent)
+        editor.setMinimum(0)
+        editor.setMaximum(100)
+        return editor
+
+    def setEditorData(self, editor, index):
+
+        value = int(index.model().data(index, Qt.EditRole))
+        spinBox = QSpinBox(editor)
+        spinBox.setValue(value)
+
+    def setModelData(self, editor, model,index):
+
+        spinBox = QSpinBox(editor)
+        spinBox.interpretText()
+        value = int(spinBox.value())
+
+        model.setData(index, value, Qt.EditRole)
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
+
+
 
 def main():
     wind = GSPublishSceneWindow()

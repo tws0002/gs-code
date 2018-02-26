@@ -486,11 +486,11 @@ class LauncherCreateScene(LauncherDialog):
 
         self.setWindowTitle("Create New Task/Scene")
 
-        self.resize(300, 150)
+        self.resize(500, 150)
 
         self.gridlyt = QGridLayout()
         self.scene_namelbl = QLabel("SceneName:")
-        self.scene_name = QLineEdit()
+        self.scene_name = QLineEdit('main')
         regexp = QRegExp('^[A-Za-z0-9](?:_?[A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
         self.scene_name.setValidator(validator)
