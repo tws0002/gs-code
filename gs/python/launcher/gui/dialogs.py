@@ -337,7 +337,7 @@ class LauncherCreateAsset(LauncherDialog):
         elif self.ui_state['asset_type'].startswith('shot'):
             self.asset_grplbl.setText('Sequence')
             self.asset_namelbl.setText('Shot Name')
-            self.asset_name.setPlaceholderText('001_00')
+            self.asset_name.setPlaceholderText('###_##   (shot#_subshot#)')
 
     def updateTypes(self):
         # clear the item model and init a new one
@@ -452,7 +452,9 @@ class LauncherCreateAsset(LauncherDialog):
 
         #add_tasks = self.parent.controller.proj_controller.getDefaultTasks(at) if self.deftasks_cb.isChecked() else []
         add_tasks = []
+
         for task, package, scenefile in self.ui_state['task_list']:
+            print ("task_list={0}".format((task, package, scenefile)))
             add_tasks.append((task, package, scenefile))
         self.result = self.parent.controller.proj_controller.newAsset(d, add_tasks=add_tasks)
         (success, response, result) = self.result

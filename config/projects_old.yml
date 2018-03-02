@@ -83,8 +83,8 @@ asset_templates:
     display_order: 2
     lib_path: "<server>/projects/<job>/03_production/02_composite"
     copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
-    match_path: "<server>/projects/<job>/03_production/02_composite/<asset_grp>/<asset>"
-    capture_path: "<server>/<share>/<job>/03_<stage>/02_<task>/<asset_grp>/<asset>"
+    match_path: "<server>/projects/<job>/03_production/02_composite/<asset>"
+    capture_path: "<server>/<share>/<job>/03_<stage>/02_<task>/<asset>"
     task_root: "%match_path%"
     default_tasks: 'comp'
     qualifier_path: '00_nuke' # qualifies if path contains this subfolder
@@ -151,14 +151,14 @@ task_templates:
     match_path: '%task_root%/comp'
     default_package: 'premiere'
     scenefile_type: 'conform'
-  'model':
+  '_versions':
     inherits: 'proto_task_basic'
     parent: 'asset:asset_3d'
     display_name: 'Model'
     display_order: 1
     match_path: '%task_root%/_versions'
     default_package: 'maya'
-    work_file: "<asset>_<version>_<intials>.<ext>"
+    #work_file: "<asset>_<version>_<intials>.<ext>"
   'animation':
     inherits: 'proto_task_basic'
     parent: 'asset:shot_3d'
@@ -173,13 +173,22 @@ task_templates:
     display_order: 3
     match_path: '%task_root%/lighting'
     default_package: 'maya'
-  'comp':
+  '00_nuke':
     inherits: 'proto_task_basic'
     parent: 'asset:shot_2d'
-    display_name: 'Composite'
+    display_name: 'Nuke'
     display_order: 4
     match_path: '%task_root%'
+    scenefile_root: '%match_path%/00_nuke'
     default_package: 'nuke'
+  '00_ae':
+    inherits: 'proto_task_basic'
+    parent: 'asset:shot_2d'
+    display_name: 'AE'
+    display_order: 4
+    match_path: '%task_root%'
+    scenefile_root: '%match_path%/00_ae'
+    default_package: 'ae'
 
 # Defines available software packages. When creating a new scene, these template folder struct will get
 # copied to the specified path
@@ -253,15 +262,24 @@ scenefile_templates:
         copy_path: '<server>/projects/_templates/project_template_2015/scenefiles/<scenetype>.<ext>'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset>_<camv>_<animv>_<lighv>_<intials>.<ext>'
-        render_path: '%package_root%/images/%workscene_file%/<layer>'
-        render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+        render_path: '%package_root%/images/<filename>/<layer>'
+        render_file: '<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
         publish_path: '%task_root%/mustache_renderScenes/'
         publish_file: '<asset>_<camv>_<animv>_<lighv>_<intials>_T_<timecode>.<ext>'
+    'asset_basic':
+        parent: 'task'
+        copy_path: '<server>/projects/_templates/project_template_2015/scenefiles/<scenetype>.<ext>'
+        workscene_path: '%scenefile_root%'
+        workscene_file: '<asset>_<version>_<intials>.<ext>'
+        render_path: '%package_root%/images/<filename>/<layer>'
+        render_file: '<asset>_<version>_<intials>_<layer>.%04d.<ext>'
+        publish_path: '%task_root%'
+        publish_file: '<asset>.<ext>'
     'comp':
-        parent: 'package'
+        parent: 'task'
         workscene_path: '%scenefile_root%'
         workscene_file: '<asset>_<task>_<version>.<ext>'
-        render_path: '%project_path%/04_renders/<package>/%workscene_file%'
+        render_path: '%project_path%/04_renders/<package>/<filename>'
         render_file: '<asset>_<task>_<version>.%04d.<ext>'
         publish_path: '%workscene_file%'
         publish_file: '%workscene_file%'

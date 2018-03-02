@@ -232,6 +232,7 @@ class ProjectController():
                 for package, scenename in add_scenefiles:
                     upl_dict['package'] = package
                     upl_dict['scenename'] = scenename
+                    upl_dict['version'] = 'v000'
 
                     (success, response, result) = self.newScenefile(upl_dict=upl_dict)
 
@@ -533,13 +534,14 @@ class ProjectController():
         task_path = self.pathParser.substTemplatePath(upl_dict=upl_dict, template_type='task', template_name=task_type, template_var='match_path')
         #print "core.projects.getTaskScenesList() upl={0} task_path={1}".format(upl_dict, task_path)
 
-        result_files = [y for x in os.walk(task_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip'])]
+        result_files = [y for x in os.walk(task_path) for y in self.multiGlob(x[0], ['mb', 'ma', 'nk', 'aep', 'hip', 'tvpp', 'psd'])]
         #result_files = self.multiFastGlob(upl, ['mb', 'ma', 'nk', 'aep'])
         for name in result_files:
             if not os.path.isdir(os.path.join(task_path,name)) and not name.startswith('.') and not name.startswith('_'):
-                rel_path = name[len(task_path)+1:]
-                filename = os.path.basename(rel_path)
-                valid_result.append(rel_path)
+                if 'muster' not in name:
+                    rel_path = name[len(task_path)+1:]
+                    filename = os.path.basename(rel_path)
+                    valid_result.append(rel_path)
 
         #return valid_result
         result = (task_path, valid_result)

@@ -232,28 +232,28 @@ task_templates:
     parent: 'asset'
     display_name: 'Blocking'
     display_order: 0
-    match_path: '%task_root%/comp'
+    match_path: '%task_root%/blocking'
     default_package: 'tvpaint'
   'cleanup':
     inherits: 'proto_task_basic'
     parent: 'asset'
     display_name: 'Cleanup'
-    display_order: 0
-    match_path: '%task_root%/comp'
+    display_order: 1
+    match_path: '%task_root%/cleanup'
     default_package: 'tvpaint'
   'color':
     inherits: 'proto_task_basic'
     parent: 'asset'
     display_name: 'Color'
-    display_order: 0
-    match_path: '%task_root%/comp'
+    display_order: 2
+    match_path: '%task_root%/color'
     default_package: 'tvpaint'
   'layout':
     inherits: 'proto_task_basic'
     parent: 'asset'
     display_name: 'Layout'
     display_order: 0
-    match_path: '%task_root%/roto'
+    match_path: '%task_root%/layout'
     default_package: 'photoshop'
 
 # Defines available software packages. When creating a new scene, these template folder struct will get
