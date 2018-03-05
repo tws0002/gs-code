@@ -288,7 +288,7 @@ class LchrTreeList(QWidget):
         self.qtblyt.setStretchFactor(self.title,1)
         self.qtblyt.addWidget(self.titlebtn1)
         #self.qtblyt.addWidget(self.titlebtn2)
-        self.qlyt.addLayout(self.qtblyt)
+        #self.qlyt.addLayout(self.qtblyt)
         self.qlyt.addWidget(self.le)
         self.qlyt.addWidget(self.tvw)
 

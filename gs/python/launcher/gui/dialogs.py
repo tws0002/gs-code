@@ -209,7 +209,10 @@ class LauncherCreateAsset(LauncherDialog):
     def __init__(self, parent=None):
         super(LauncherCreateAsset, self).__init__(parent)
 
-        self.resize(500, 300)
+        self.dpi = QApplication.desktop().logicalDpiX()
+        self.dpi_w = 500 / 96 * self.dpi
+        self.dpi_h = 300 / 96 * self.dpi
+        self.resize(self.dpi_w, self.dpi_h)
 
         self.ui_state = {
             'asset_type':'',
@@ -218,6 +221,8 @@ class LauncherCreateAsset(LauncherDialog):
             'task_preset':'',
             'task_list':[]
         }
+
+
 
         self.setWindowTitle("Create New Shot/Asset")
 
@@ -252,9 +257,9 @@ class LauncherCreateAsset(LauncherDialog):
 
         self.task_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.task_list.setModel(self.task_model)
-        self.task_list.setColumnWidth(0, 100)
+        self.task_list.setColumnWidth(0, 200)
         self.task_list.setColumnWidth(1, 250)
-        self.task_list.setColumnWidth(2, 50)
+        self.task_list.setColumnWidth(2, 200)
 
         self.footer = QHBoxLayout()
         self.okbtn = QPushButton('Create')
@@ -337,7 +342,7 @@ class LauncherCreateAsset(LauncherDialog):
         elif self.ui_state['asset_type'].startswith('shot'):
             self.asset_grplbl.setText('Sequence')
             self.asset_namelbl.setText('Shot Name')
-            self.asset_name.setPlaceholderText('###_##   (shot#_subshot#)')
+            self.asset_name.setPlaceholderText('###_##   ( shot_subshot )')
 
     def updateTypes(self):
         # clear the item model and init a new one
@@ -422,6 +427,10 @@ class LauncherCreateAsset(LauncherDialog):
             self.task_model.appendRow([col1,col2,col3])
             col1.setCheckable(True)
             col1.setCheckState(2)
+
+        self.task_list.setColumnWidth(0, 250)
+        self.task_list.setColumnWidth(1, 100)
+        self.task_list.setColumnWidth(2, 100)
         return
 
     def doCreateAssetGroup(self):

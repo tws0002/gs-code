@@ -6,6 +6,7 @@ from settings import *
 from utils import *
 #from widgets import *
 from dialogs import *
+from environment import *
 import launcher, utils, gs_core
 import functools
 
@@ -23,7 +24,6 @@ class LauncherApp(QApplication):
 
 class LauncherWindow(QMainWindow):
 
-    #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR '] = 'TRUE'
     a_data = {}
     w_data = {}
     p_data = {}
@@ -34,7 +34,6 @@ class LauncherWindow(QMainWindow):
 
         elapsed_time = time.time() - START_TIME
         print("Launcher window init start in {0} sec".format(elapsed_time))
-
 
         # this is the UI Model for storing the present display state of the UI
         # any change signals should modify these values and then call the appropriate signals to update the UI
@@ -55,6 +54,26 @@ class LauncherWindow(QMainWindow):
             'filepath':'',
             'username':get_username()
         }
+        # ui state property, anything the user clicks is saved and used to preserve highlighting
+        self.ui_state = {
+            'mode_item':'Apps',
+            'project_item':'',
+            'asset_tab':'',
+            'asset_item':'',
+            'task_tab':'',
+            'task_item':'',
+            'app_group':''
+        }
+
+        # load the app configs for use in determining launch info
+        app_config = CONFIG + '/app.yml'
+        wrkgrp_config = CONFIG + '/workgroups.yml'
+        # load the process env from the config files
+        self.process_env = StudioEnvironment()
+
+        # load studiotools env vars
+        self.process_env.load_app_config_file(filepath=app_config, app='studiotools')
+        self.process_env.load_app_config(self.process_env.app_data, 'studiotools', '1.0')
 
         self.active_scene_list = None
 
@@ -63,10 +82,15 @@ class LauncherWindow(QMainWindow):
 
         #self.load_project_config("")
         self.update_gui = False
-        self.resize(1100, 600)
+        self.dpi = self.getDPI()
+        dpi_w  = 1100 / 96 * self.dpi
+        dpi_h = 600 / 96 * self.dpi
+        self.resize(dpi_w, dpi_h)
         self.app_layouts = {}
         self.isLaunching = False
         self.lastLaunch = ''
+
+        print ('DPI MODE: {0}'.format(self.dpi))
 
         # animation init
         #self.timeline = QTimeLine(1000)
@@ -132,8 +156,8 @@ class LauncherWindow(QMainWindow):
 
         self.ui['wdgt']['sidebar_list'] = QListWidget()
         self.ui['wdgt']['sidebar_list'].setObjectName('Sidebar')
-        self.ui['wdgt']['sidebar_list'].setMaximumHeight(30)
-        self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
+        self.ui['wdgt']['sidebar_list'].setMaximumHeight(self.ui['wdgt']['sidebar_list'].minimumSizeHint().height())
+        #self.ui['wdgt']['sidebar_list'].setFlow(QListView.LeftToRight)
         self.ui['lyt']['sidebar_layout'] = QVBoxLayout(self.ui['wdgt']['sidebar'])
         self.ui['lyt']['mode_layout'] = QHBoxLayout()
 
@@ -143,17 +167,25 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['project_list'].setTitle("Projects")
 
         self.ui['lyt']['mode_layout'].addWidget(QLabel("Mode:"))
-        self.ui['lyt']['mode_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
-        self.ui['lyt']['sidebar_layout'].addLayout(self.ui['lyt']['mode_layout'])
+        #self.ui['lyt']['mode_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
+        #self.ui['lyt']['sidebar_layout'].addLayout(self.ui['lyt']['mode_layout'])
+
+
         #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
         #self.ui['lyt']['sidebar_layout'].addWidget(self.ui['lbl']['workgroup_label'])
+        self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
         self.ui['lyt']['sidebar_layout'].addWidget(self.ui['wdgt']['project_list'])
+        #self.ui['lyt']['sidebar_layout'].setStretchFactor(self.ui['wdgt']['sidebar_list'],0)
+        self.ui['lyt']['sidebar_layout'].setStretchFactor(self.ui['wdgt']['project_list'],1)
 
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['sidebar'])
         self.ui['wdgt']['stack_widget'] = QStackedWidget()
         self.ui['wdgt']['sp1'].addWidget(self.ui['wdgt']['stack_widget'])
-        self.ui['wdgt']['sp1'].setSizes([160, 500])
 
+        self.ui['wdgt']['sp1'].setStretchFactor(0, 0)
+        self.ui['wdgt']['sp1'].setStretchFactor(1, 1)
+        self.ui['wdgt']['sp1'].setSizes([160, 500])
+        self.ui['wdgt']['sidebar'].setMinimumWidth(350)
 
         # create sidebar items that show various launcher views
         sidebar_items = ['Apps','Production']
@@ -198,16 +230,33 @@ class LauncherWindow(QMainWindow):
         # asset_pane layout
         self.ui['lyt']['item_layout'] = QVBoxLayout(self.ui['wdgt']['asset_pane'])
         self.ui['wdgt']['asset_tabs'] = QTabWidget()
+        key = "image:{0}".format(os.path.join(RES, "tool_add.png"))
+        pixmap = QPixmap()
+        if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
+            pixmap = QPixmap(os.path.join(RES, "tool_add.png"))
+            QPixmapCache.insert(key, pixmap)
+        icon = QIcon(pixmap)
+        self.asset_cornerbtn = QPushButton()
+        self.asset_cornerbtn.setIcon(icon)
+        self.asset_cornerbtn.setIconSize(QSize(16, 16))
+        self.ui['wdgt']['asset_tabs'].setCornerWidget(self.asset_cornerbtn,Qt.TopRightCorner)
+
         self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_tabs'])
 
         # file_pane layout (tabs showing Tasks, Scenefiles views)
         self.ui['lyt']['file_layout'] = QVBoxLayout(self.ui['wdgt']['file_pane'])
-        self.ui['wdgt']['file_tabs'] = QTabWidget()
+        self.ui['wdgt']['file_tabs'] = QTabWidget()# sQStackedWidget()
+
 
         # task_pane layout sublayout of file_pane
         self.ui['wdgt']['task_widget'] = QWidget()
         self.ui['lyt']['task_layout'] = QVBoxLayout(self.ui['wdgt']['task_widget'])
         self.ui['wdgt']['task_tabs'] = QTabWidget()
+
+        self.task_cornerbtn = QPushButton()
+        self.task_cornerbtn.setIcon(icon)
+        self.task_cornerbtn.setIconSize(QSize(16, 16))
+        self.ui['wdgt']['task_tabs'].setCornerWidget(self.task_cornerbtn,Qt.TopRightCorner)
 
         # scene_pane layout sublayout of file_pane
         self.ui['wdgt']['scene_widget'] = QWidget()
@@ -218,9 +267,10 @@ class LauncherWindow(QMainWindow):
         self.ui['lyt']['launch_lyt'] = QHBoxLayout()
         self.ui['wdgt']['launch_btn'] = QPushButton('Launch')
 
-        self.ui['lyt']['file_layout'].addWidget(self.ui['wdgt']['file_tabs'])
-        self.ui['lyt']['task_layout'].addWidget(self.ui['wdgt']['task_tabs'])
-        self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['task_widget'],'Task View')
+        #self.ui['lyt']['file_layout'].addWidget(self.ui['wdgt']['file_tabs'])
+        self.ui['lyt']['file_layout'].addWidget(self.ui['wdgt']['task_tabs'])
+        #self.ui['lyt']['task_layout'].addWidget(self.ui['wdgt']['task_tabs'])
+        #self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['task_widget'],'Task View')
         self.ui['wdgt']['file_tabs'].addTab(self.ui['wdgt']['scene_widget'],'All Scenefiles')
         self.ui['lyt']['scene_layout'].addWidget(self.ui['wdgt']['scene_list'])
         self.ui['lyt']['scene_layout'].addLayout(self.ui['lyt']['launch_lyt'])
@@ -325,6 +375,8 @@ class LauncherWindow(QMainWindow):
 
         # connect button signals
         self.ui['wdgt']['project_list'].titlebtn1.clicked.connect(self.showCreateJob)
+        self.asset_cornerbtn.clicked.connect(self.showCreateAsset)
+        self.task_cornerbtn.clicked.connect(self.showCreateScene)
 
 
         self.ui['wdgt']['launch_btn'].clicked.connect(self.launchScenefile)
@@ -349,6 +401,9 @@ class LauncherWindow(QMainWindow):
         #self.update_disp_groups()
         #self.update_apps()
         self.ui['wdgt']['project_combo'].blockSignals(False)
+
+    def getDPI(self):
+        return QApplication.desktop().logicalDpiX()
 
     def loadStyle(self):
         branch = 'base'
@@ -424,6 +479,7 @@ class LauncherWindow(QMainWindow):
         self.updateProjectsList()
 
     def updateProjectsList(self):
+        self.ui['wdgt']['project_list'].blockSignals(True)
         item_list = self.controller.getProjectsList(self.active_data['file_share'])
         # setup app context menu
         if isAdmin():
@@ -443,12 +499,14 @@ class LauncherWindow(QMainWindow):
 
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt']['project_list'].loadViewModelFromDict(item_dict)
+        self.ui['wdgt']['project_list'].blockSignals(False)
 
     def updateAssetsTabs(self, project_path):
         '''
         :param project_path: the path to the project to query for asset libraries
         :return:
         '''
+        self.ui['wdgt']['asset_tabs'].blockSignals(True)
         # clear any current tabs
         self.ui['wdgt']['asset_tabs'].clear()
 
@@ -470,7 +528,8 @@ class LauncherWindow(QMainWindow):
                 # TODO current_path should store the asest lib path by calling pathParser
                 self.ui['wdgt'][asset_type].current_path = ''
                 self.ui['wdgt'][asset_type].tvw.setAlternatingRowColors(True)
-                self.ui['wdgt'][asset_type].titlebtn1.clicked.connect(self.showCreateAsset)
+                #self.ui['wdgt'][asset_type].titlebtn1.clicked.connect(self.showCreateAsset)
+
 
             self.ui['wdgt']['asset_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
             self.updateAssetList(project_path, asset_type)
@@ -479,6 +538,7 @@ class LauncherWindow(QMainWindow):
         print("gs_core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
 
         self.assetTabChanged(0)
+        self.ui['wdgt']['asset_tabs'].blockSignals(False)
 
     def assetTabChanged(self, i):
 
@@ -486,10 +546,12 @@ class LauncherWindow(QMainWindow):
         if vis_item:
             self.active_path['asset_type'] = vis_item.current_path
             self.active_data['asset_type'] = vis_item.asset_type
+            self.ui_state['asset_tab'] = vis_item.asset_type
         return
 
     def updateAssetList(self, project_path, asset_type):
 
+        self.ui['wdgt'][asset_type].blockSignals(True)
         # get top level assets
         asset_lib, asset_names = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
         # load projects from core
@@ -519,12 +581,14 @@ class LauncherWindow(QMainWindow):
         # loads the above dictionary into a treeview as standard items
         self.ui['wdgt'][asset_type].loadViewModelFromDict(item_dict)
         self.ui['wdgt'][asset_type].current_path = asset_lib
+        self.ui['wdgt'][asset_type].blockSignals(False)
 
     def updateTaskTabs(self, project_path, asset_path):
         '''
         :param project_path: the path to the project to query for asset libraries
         :return:
         '''
+        self.ui['wdgt']['task_tabs'].blockSignals(True)
         # clear any current tabs
         self.ui['wdgt']['task_tabs'].clear()
 
@@ -551,12 +615,17 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt']['{0}_wdgt'.format(task_type)].task_type = task_type
                 self.ui['lyt'][task_type] = QVBoxLayout(self.ui['wdgt']['{0}_wdgt'.format(task_type)])
                 self.ui['lyt']['{0}_grid'.format(task_type)] = QGridLayout()
-                self.ui['wdgt']['{0}_launchbtn'.format(task_type)] = QPushButton('Launch')
+                lbtn = '{0}_launchbtn'.format(task_type)
+                self.ui['wdgt'][lbtn] = QPushButton('Launch')
+                self.ui['wdgt'][lbtn].setObjectName('Launchbtn')
+                self.ui['wdgt'][lbtn].setEnabled(False)
                 #self.ui['wdgt']['{0}_addscene'.format(task_type)] = QPushButton('Add Scene')
                 self.ui['lyt'][task_type].addWidget(self.ui['wdgt'][task_type])
                 self.ui['lyt'][task_type].addLayout(self.ui['lyt']['{0}_grid'.format(task_type)])
                 #self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt']['{0}_addscene'.format(task_type)],0,1)
-                self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt']['{0}_launchbtn'.format(task_type)],1,1)
+
+                self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt'][lbtn],1,1)
+                self.ui['lyt']['{0}_grid'.format(task_type)].setColumnStretch(0, 1)
 
                 self.ui['wdgt']['{0}_launchbtn'.format(task_type)].clicked.connect(self.launchScenefile)
 
@@ -566,6 +635,7 @@ class LauncherWindow(QMainWindow):
             self.updateTaskList(task_type)
 
         self.taskTabChanged(0)
+        self.ui['wdgt']['task_tabs'].blockSignals(False)
 
     def taskTabChanged(self, i):
 
@@ -575,11 +645,13 @@ class LauncherWindow(QMainWindow):
         if vis_item:
             self.active_path['task'] = vis_item.current_path
             self.active_data['task'] = vis_item.task_type
+            self.ui_state['task_tab'] = vis_item.task_type
+        self.taskListChanged()
         return
 
     def updateTaskList(self, task_type):
         #item_list = gs_core.gs_core.list_shots('jobs',project_name)
-
+        self.ui['wdgt'][task_type].blockSignals(True)
         # get top level list of packages for the given task
         item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, task_type=task_type)
         # load projects from core
@@ -608,9 +680,38 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt'][task_type].loadViewModelFromDict(item_dict)
         self.ui['wdgt'][task_type].current_path = item_tuple[0]
         print ("setting task  tab:{0}".format(task_type))
+        self.ui['wdgt'][task_type].blockSignals(False)
         return
 
     def taskListChanged(self):
+
+        # determine which app opens the selected file and update the launcher button with that icon
+        active_task = self.active_data['task']
+        if active_task != '':
+            btn = self.ui['wdgt']['{0}_launchbtn'.format(active_task)]
+            if self.active_scene_list is not None:
+                item = self.active_scene_list.getSelectedItems()
+            else:
+                item = self.ui['wdgt']['scene_list'].getSelectedItems()
+                self.ui_state['task_item'] = str(item[1].text())
+            if len(item):
+                print "ITEM={0}".format(item)
+                filepath = str(item[1].text())
+                extension = filepath.split('.')[-1]
+                app = self.process_env.get_app_from_ext(extension)
+                print ("App Guess: {0}".format(app))
+                icon = self.getPackageIcon(app)
+                btn.setIcon(icon)
+                btn.setIconSize(QSize(64, 64))
+                if app != '':
+                    btn.setText('Launch {0}'.format(app.title()))
+                    btn.setEnabled(True)
+                else:
+                    btn.setText('Launch')
+                    btn.setEnabled(False)
+            else:
+                btn.setText('Launch')
+                btn.setEnabled(False)
         return
 
     def updateScenesList(self, asset_path):
@@ -682,45 +783,14 @@ class LauncherWindow(QMainWindow):
         app_config = CONFIG+'/app.yml'
         mod_config = CONFIG+'/modules.yml'
 
-        #job_wrkgrp_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","workgroups.yml")
-        #if os.path.isfile(job_wrkgrp_config):
-        #    wrkgrp_config = job_wrkgrp_config
-        #    print ("GS Launcher: loading local project workgroup config:{0}").format(wrkgrp_config)
-        #else:
-        #    wrkgrp_config = CONFIG+'/workgroups.yml'
-        #    #print ("GS Launcher: loading studio workgroup config:{0}").format(wrkgrp_config)
-        #
-        #job_app_config = os.path.join("\\\\scholar","projects",project_name,"03_production",".pipeline","config","app.yml")
-        #if os.path.isfile(job_app_config):
-        #    app_config = job_app_config
-        #    print ("GS Launcher: loading local project app config:{0}").format(app_config)
-        #else:
-        #    app_config = CONFIG+'/app.yml'
-        #    #print ("GS Launcher: loading studio app config:{0}").format(app_config)
-
-        ###load the apps dictionary
-        ##f = open(wrkgrp_config)
-        ##self.w_data = None
-        ##self.w_data = yaml.safe_load(f)
-        ##f.close()
-
         self.w_data = self.getConfigFile(wrkgrp_config)
         proj_workgrp = self.getProjectConfig(project_name, 'workgroups')
         if (os.path.isfile(proj_workgrp)):
             #print ("Found Project Workgroup Config = {0}".format(proj_workgrp))
             self.appendConfigFile(proj_workgrp, 'workgroups')
-        
-        ###load the modules dictionary
-        ##f = open(CONFIG+"/modules.yml")
-        ##MODULES = yaml.safe_load(f)
-        ##f.close()
+
         self.m_data = self.getConfigFile(mod_config)
-        
-        ###load the workgroups dictionary
-        ##f = open(app_config)
-        ##self.a_data = None
-        ##self.a_data = yaml.safe_load(f)
-        ##f.close()
+
         self.a_data = self.getConfigFile(app_config)
         proj_app = self.getProjectConfig(project_name, 'app')
         if (os.path.isfile(proj_app)):
@@ -729,8 +799,6 @@ class LauncherWindow(QMainWindow):
 
     def setProjectCombo(self, project_name):
         try:
-            #print ('Setting to Project: '+project_name)  
-            #print (self.ui['wdgt']['project_combo'].currentText())
             old_p = self.ui['wdgt']['project_combo'].currentText()
     
             index = self.ui['wdgt']['project_combo'].findText(project_name)
@@ -741,9 +809,9 @@ class LauncherWindow(QMainWindow):
             if (old_p == project_name):
                 self.projectComboChange(index)
     
-            #self.load_project_config(project_name)
-            #self.update_disp_groups()
-            #self.update_apps()
+            self.load_project_config(project_name)
+            self.update_disp_groups()
+            self.update_apps()
         except:
             print ('Project: {0} not found'.format(project_name))
 
@@ -774,6 +842,31 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt']['dispgroup_combo'].setCurrentIndex(index)
         except:
             print 'Display Group: {0} not found'.format(display_grp)
+
+    def getPackageIcon(self, package_full):
+
+        pkg_and_mode = package_full.split('-')
+        package = pkg_and_mode[0]
+        # pixmap caching
+
+        if os.path.exists(os.path.join(RES, (package_full + ".png"))):
+            value = os.path.join(RES, (package_full + ".png"))
+        elif os.path.exists(os.path.join(RES, (package + ".png"))):
+            value = os.path.join(RES, (package + ".png"))
+        else:
+            value = os.path.join(RES, ("gs.png"))
+
+        # print 'dev: loading image: {0}'.format(value)
+
+        key = "image:%s" % value
+        pixmap = QPixmap()
+        if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
+
+            pixmap = QPixmap(value)
+            QPixmapCache.insert(key, pixmap)
+
+        return QIcon(pixmap)
+
 
     def updateAppsList(self, workgroup='default', display_grp='Generalist'):
         self.app_layouts.clear();
@@ -927,11 +1020,11 @@ class LauncherWindow(QMainWindow):
         #    print 'sel_item:{0}'.format(i.text())
         if len(items):
             p_name = str(items[0].text())
+            self.ui_state['project_item'] = p_name
             p_path = str(items[1].text())
             if os.path.isdir(p_path):
                 print ('setting project to {0}'.format(p_path))
 
-                # this appears to be a little slow!
                 self.loadProjectConfig(p_path)
                 #self.set_project_combo(p)
                 self.p_data['project_name'] = p_path
@@ -1007,7 +1100,8 @@ class LauncherWindow(QMainWindow):
             # TODO set active_path  asset correctly
             #self.active_path['asset'] =
 
-            self.updateScenesList(a)
+            # TODO disabled for now, should integrate into the task / files list pane
+            #self.updateScenesList(a)
             self.updateTaskTabs(self.active_path['job'],self.active_path['asset'])
         else:
             print ('Selection Empty')
@@ -1205,6 +1299,8 @@ class LauncherWindow(QMainWindow):
             self.settings.setValue('prev_project4', '')
             self.settings.setValue('initials', 'AA')
             self.settings.setValue('role', 'default')
+            self.settings.setValue('asset_tab', 'Shots')
+            self.settings.setValue('task_tab', 'Anim')
         except:
             print "Unable to Initialize Launcher Settings"
 
@@ -1221,10 +1317,11 @@ class LauncherWindow(QMainWindow):
             initials = str(self.ui['wdgt']['initials_le'].text())
             project = str(self.ui['wdgt']['project_combo'].currentText())
             display_grp = str(self.ui['wdgt']['dispgroup_combo'].currentText())
-
-
+            self.settings.setValue('project', self.ui_state['project_item'])
             self.settings.setValue('initials', initials)
             self.settings.setValue('role', display_grp)
+            self.settings.setValue('asset_tab', self.ui_state['asset_tab'])
+            self.settings.setValue('task_tab', self.ui_state['task_tab'])
         except:
             print "Unable to save settings"
 
@@ -1234,6 +1331,9 @@ class LauncherWindow(QMainWindow):
             initials = str(self.settings.value('initials',type=str))
             project = str(self.settings.value('prev_project1',type=str))
             display_grp = str(self.settings.value('role',type=str))
+            self.ui_state['project_item'] = str(self.settings.value('prev_project1', type=str))
+            self.ui_state['asset_tab'] = str(self.settings.value('asset_tab', type=str))
+            self.ui_state['task_tab'] = str(self.settings.value('task_tab', type=str))
             self.setProjectCombo(project)
             self.ui['wdgt']['initials_le'].setText(initials)
             self.setDisplayGroup(display_grp)

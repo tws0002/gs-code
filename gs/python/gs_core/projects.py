@@ -25,6 +25,7 @@ class ProjectController():
     def copyTemplTree(self, src, dst):
         """copies the template dir structure and substitutes any variable in filenames"""
         # TODO ideally this should eventually substitute any other varibales found within the copy tree
+        # TODO it should also return a null result if it failed which should then be handed by the routine which called it
         print "dev: projects.copyTempTree('{0}','{1}')".format(src, dst)
         #try:
         shutil.copytree(os.path.normpath(src), os.path.normpath(dst))
@@ -538,7 +539,7 @@ class ProjectController():
         #result_files = self.multiFastGlob(upl, ['mb', 'ma', 'nk', 'aep'])
         for name in result_files:
             if not os.path.isdir(os.path.join(task_path,name)) and not name.startswith('.') and not name.startswith('_'):
-                if 'muster' not in name:
+                if 'mustache' not in name and 'publish' not in name:
                     rel_path = name[len(task_path)+1:]
                     filename = os.path.basename(rel_path)
                     valid_result.append(rel_path)
