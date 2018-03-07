@@ -103,7 +103,7 @@ def nuke_ui():
                 dest = os.path.split(f)[0].replace("\\", "/").replace(" ", "\ ").replace("//","/")
                 ascpupcmd = ascpupcmd + 'mkdir -p %s;' %(dest)
 
-            ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
+            ascpupflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpupcmd)
             ascpupsubmit = muster.submit(ascpupflags)
 
             if ascpupsubmit:
@@ -125,7 +125,7 @@ def nuke_ui():
                         dest = os.path.split(f)[0].replace("\\", "/").replace(" ", "\ ").replace("//","/")
                         #ascpdowncmd = ascpdowncmd + 'ascp -p -d -v -k 1 --remove-after-transfer -i ~/.ssh/id_rsa -l 1G %s render@nycbossman:%s;' %(src, dest)
                         ascpdowncmd = ascpdowncmd + 'ascpgs %s render@nycbossman:%s;' %(src, dest)
-                    ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
+                    ascpdownflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpdowncmd)
                     ascpdownsubmit = muster.submit(ascpdownflags)
 
                     if ascpdownsubmit:
