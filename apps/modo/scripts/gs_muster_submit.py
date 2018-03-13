@@ -19,6 +19,7 @@ sys.path.append(os.path.join(GSCODEBASE, 'base', 'gs', 'python'))
 import gsstartup as gs
 from gsstartup import muster2 as muster
 
+
 MUSTER_POOLS = []
 
 #FORMATS = ['$Targa', 'BMP', 'COLLADA_141', 'DXF', 'HDR', 'JPG', 'LayeredPSD', 'PNG', 'PNG16', 'PSD', 'PSDScene', 'SGI', 'SVG_SceneSaver', 'TIF', 'TIF16', 'TIF16BIG', 'openexr', 'openexr_32', 'openexr_tiled16', 'openexr_tiled32', 'openexrlayers', 'openexrlayers32']
@@ -99,6 +100,7 @@ def submit():
         musterflags['-parent']  = '33409'
         musterflags['-group']   = gs.get_project_from_path(new_file)
         lx.out(musterflags)
+        lx.out('here')
         musterflags['-pool']    = poolslistmodo[ int(lx.eval('user.value muster.pools ?' ))]
         musterflags['-sf']      = str(lx.eval('user.value muster.start ?'))
         musterflags['-ef']      = str(lx.eval('user.value muster.end ?'))
@@ -125,7 +127,7 @@ def submit():
                 ascpupcmd = ascpupcmd + 'ascpgs render@nycbossman:%s %s;' %(src, dest)
             outputfolder = outputpathselected.replace("\\","/").replace(" ", "\ ").replace("//","/")
             ascpupcmd = ascpupcmd + 'mkdir -p %s;' %(outputfolder)
-            ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
+            ascpupflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpupcmd)
             lx.out(ascpupflags)
             ascpupsubmit = muster.submit(ascpupflags)
 
@@ -146,7 +148,7 @@ def submit():
                     src = '%s*' %(f).replace("\\","/").replace(" ", "\ ").replace("//","/")
                     dest = outputpathselected.replace("\\","/").replace(" ", "\ ").replace("//","/")
                     ascpdowncmd = ascpdowncmd + 'ascp -p -d -v -k 1 --remove-after-transfer -i ~/.ssh/id_rsa -l 1G %s render@nycbossman:%s;' %(src, dest)
-                    ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
+                    ascpdownflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpdowncmd)
                     ascpdownsubmit = muster.submit(ascpdownflags)
 
                     if ascpdownsubmit:

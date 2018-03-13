@@ -246,7 +246,8 @@ class Submitter:
                     src = re.sub('%\d+d','*',f)
                     dest = os.path.split(src)[0]
                     ascpupcmd = ascpupcmd + 'ascpgs render@nycbossman:%s %s;' %(src, dest)
-                ascpupflags['-add'] = '-c \"%s\"' %(ascpupcmd)
+                
+                ascpupflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpupcmd)
                 ascpupsubmit = muster2.submit(ascpupflags)
                 i+=1
 
@@ -306,7 +307,7 @@ class Submitter:
                     src = "%s/*" %(f)
                     dest = f
                     ascpdowncmd = ascpdowncmd + 'ascpgs %s render@nycbossman:%s;' %(src, dest)
-                    ascpdownflags['-add'] = '-c \"%s\"' %(ascpdowncmd)
+                    ascpdownflags['-add'] = '-c \"script -q -c \'%s\' /tmp/last_aspera_xfer.log\"' %(ascpdowncmd)
                     ascpdownsubmit = muster2.submit(ascpdownflags)
 
                     if ascpdownsubmit:
