@@ -401,6 +401,13 @@ class LauncherWindow(QMainWindow):
         #self.update_disp_groups()
         #self.update_apps()
         self.ui['wdgt']['project_combo'].blockSignals(False)
+        if self.ui_state['project_item'] != '':
+            self.setProjectListSelection(self.ui_state['project_item'])
+        if self.ui_state['mode_item'] != '':
+            self.setViewMode(self.ui_state['mode_item'])
+        if self.ui_state['app_group'] != '':
+            self.setDisplayGroup(self.ui_state['app_group'])
+
 
     def getDPI(self):
         return QApplication.desktop().logicalDpiX()
@@ -536,6 +543,8 @@ class LauncherWindow(QMainWindow):
 
         elapsed_time = time.time() - START_TIME
         print("gs_core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
+
+        #self.ui['wdgt']['asset_tabs'].setTab(self.ui_state['asset_tab'])
 
         self.assetTabChanged(0)
         self.ui['wdgt']['asset_tabs'].blockSignals(False)
@@ -741,7 +750,7 @@ class LauncherWindow(QMainWindow):
         if os.path.isfile(proj_config):
             found_config = proj_config
             #print ("GS Launcher: loading local project {1} config:{0}").format(found_config,config_type)
-        return found_config 
+        return found_config
 
     def appendConfigFile(self, filepath, config_type):
         dataMap = self.getConfigFile(filepath)
@@ -833,6 +842,19 @@ class LauncherWindow(QMainWindow):
                 
         else:
             print("Could not Find Workgroups. Please check in config/workgroups.yml")
+    def setViewMode(self, view_mode):
+        print 'Setting to ViewMode: {0}'.format(view_mode)
+        try:
+            index = self.ui['wdgt']['sidebar_list'].findText(view_mode)
+            if index > -1:
+                self.ui['wdgt']['sidebar_list'].setCurrentIndex(index)
+        except:
+            print 'ViewMode: {0} not found'.format(view_mode)
+
+    def setProjectListSelection(self, project_path):
+        print 'Setting to Project: {0}'.format(project_path)
+        self.ui['wdgt']['project_list'].setSelectedItem(project_path.split('/')[-1])
+        #print 'Project: {0} not found'.format(project_path)
 
     def setDisplayGroup(self, display_grp):
         #print 'Setting to Workgroup: {0}'.format(display_grp)
@@ -1020,8 +1042,8 @@ class LauncherWindow(QMainWindow):
         #    print 'sel_item:{0}'.format(i.text())
         if len(items):
             p_name = str(items[0].text())
-            self.ui_state['project_item'] = p_name
             p_path = str(items[1].text())
+            self.ui_state['project_item'] = p_path
             if os.path.isdir(p_path):
                 print ('setting project to {0}'.format(p_path))
 
@@ -1329,17 +1351,19 @@ class LauncherWindow(QMainWindow):
         print ("loading user settings")
         try:
             initials = str(self.settings.value('initials',type=str))
-            project = str(self.settings.value('prev_project1',type=str))
+            project = str(self.settings.value('project',type=str))
             display_grp = str(self.settings.value('role',type=str))
-            self.ui_state['project_item'] = str(self.settings.value('prev_project1', type=str))
+            self.ui_state['project_item'] = str(self.settings.value('project', type=str))
             self.ui_state['asset_tab'] = str(self.settings.value('asset_tab', type=str))
             self.ui_state['task_tab'] = str(self.settings.value('task_tab', type=str))
             self.setProjectCombo(project)
             self.ui['wdgt']['initials_le'].setText(initials)
-            self.setDisplayGroup(display_grp)
+            #self.setDisplayGroup(display_grp)
+
         except:
             "initializing settings"
             self.initSettings()
+        self.updateUI()
 
         print ("checking active directory for initials")
         #try:

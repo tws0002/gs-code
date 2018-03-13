@@ -353,7 +353,19 @@ class LchrTreeList(QWidget):
 
         self.setFilterRegExpStr(regstr)
 
-    def getSelectedItems (self):
+    def setSelectedItem(self, item_name):
+        #self.treeView.setCurrentIndex(index)
+        #items = QModelIndexList()
+        # items = self.sm.match(self.sm.index(0, 0), Qt.DisplayRole, QVariant.fromValue(item_name), 2, Qt.MatchRecursive)
+        print ('this is the next line')
+        items = self.sm.findItems(item_name, Qt.MatchRecursive, 0)
+        #self.sm.select(index)
+        index = self.sm.indexFromItem(items[0])
+        index = self.pm.mapFromSource(index)
+        self.tvw.setCurrentIndex(index)
+
+
+    def getSelectedItems(self):
         items = []
         for index in self.tvw.selectionModel().selectedIndexes():
             # index of selectedModel is for the proxy filter model only, we have to map to the source model to get valid item
