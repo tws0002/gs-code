@@ -83,9 +83,7 @@ class LauncherWindow(QMainWindow):
         #self.load_project_config("")
         self.update_gui = False
         self.dpi = self.getDPI()
-        dpi_w  = 1100 / 96 * self.dpi
-        dpi_h = 600 / 96 * self.dpi
-        self.resize(dpi_w, dpi_h)
+        self.resize(self.dpiSize(1100), self.dpiSize(600))
         self.app_layouts = {}
         self.isLaunching = False
         self.lastLaunch = ''
@@ -184,8 +182,8 @@ class LauncherWindow(QMainWindow):
 
         self.ui['wdgt']['sp1'].setStretchFactor(0, 0)
         self.ui['wdgt']['sp1'].setStretchFactor(1, 1)
-        self.ui['wdgt']['sp1'].setSizes([160, 500])
-        self.ui['wdgt']['sidebar'].setMinimumWidth(350)
+        self.ui['wdgt']['sp1'].setSizes([self.dpiSize(300), self.dpiSize(500)])
+        #self.ui['wdgt']['sidebar'].setMinimumWidth(self.dpiSize(290))
 
         # create sidebar items that show various launcher views
         sidebar_items = ['Apps','Production']
@@ -224,7 +222,7 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['file_pane'] = QWidget()
         self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['asset_pane'])
         self.ui['wdgt']['sp2'].addWidget(self.ui['wdgt']['file_pane'])
-        self.ui['wdgt']['sp2'].setSizes([200,400])
+        self.ui['wdgt']['sp2'].setSizes([self.dpiSize(300),self.dpiSize(400)])
         self.ui['lyt']['tab3_layout'].addWidget(self.ui['wdgt']['sp2'])
 
         # asset_pane layout
@@ -238,7 +236,7 @@ class LauncherWindow(QMainWindow):
         icon = QIcon(pixmap)
         self.asset_cornerbtn = QPushButton()
         self.asset_cornerbtn.setIcon(icon)
-        self.asset_cornerbtn.setIconSize(QSize(16, 16))
+        self.asset_cornerbtn.setIconSize(QSize(self.dpiSize(16), self.dpiSize(16)))
         self.ui['wdgt']['asset_tabs'].setCornerWidget(self.asset_cornerbtn,Qt.TopRightCorner)
 
         self.ui['lyt']['item_layout'].addWidget(self.ui['wdgt']['asset_tabs'])
@@ -255,7 +253,7 @@ class LauncherWindow(QMainWindow):
 
         self.task_cornerbtn = QPushButton()
         self.task_cornerbtn.setIcon(icon)
-        self.task_cornerbtn.setIconSize(QSize(16, 16))
+        self.task_cornerbtn.setIconSize(QSize(self.dpiSize(16), self.dpiSize(16)))
         self.ui['wdgt']['task_tabs'].setCornerWidget(self.task_cornerbtn,Qt.TopRightCorner)
 
         # scene_pane layout sublayout of file_pane
@@ -305,7 +303,7 @@ class LauncherWindow(QMainWindow):
 
         ## SETUP ARTISTS GROUP ##
         self.ui['lyt']['artist_lyt'] = QHBoxLayout()
-        self.ui['lyt']['tab1_layout'].addSpacing(15)
+        self.ui['lyt']['tab1_layout'].addSpacing(self.dpiSize(15))
         self.ui['lyt']['tab1_layout'].addLayout(self.ui['lyt']['artist_lyt'])
 
         # Initials Grp
@@ -317,7 +315,7 @@ class LauncherWindow(QMainWindow):
         regexp = QRegExp('^([A-z]?[A-z])$')
         validator = LRegExpValidator(regexp)
         self.ui['wdgt']['initials_le'].setValidator(validator)
-        self.ui['wdgt']['initials_le'].setFixedWidth(50)
+        self.ui['wdgt']['initials_le'].setFixedWidth(self.dpiSize(50))
         font = self.ui['wdgt']['initials_le'].font()
         font.setPointSize(16)
         font.setStyleStrategy(QFont.PreferAntialias)
@@ -404,6 +402,11 @@ class LauncherWindow(QMainWindow):
 
     def getDPI(self):
         return QApplication.desktop().logicalDpiX()
+
+    def dpiSize(self,pixel_size):
+        if not self.dpi:
+            self.dpi = self.getDPI()
+        return pixel_size / 96 * self.dpi
 
     def loadStyle(self):
         branch = 'base'

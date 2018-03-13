@@ -30,7 +30,7 @@ def autoInitMustacheProject():
         if 'GSINITIALS' in os.environ:
             mustache.M.user = os.environ['GSINITIALS']
         if 'GSPROJECT' in os.environ:
-            mustache.M.projectName =  os.environ['GSPROJECT']
+            mustache.M.projectName =  os.environ['GSPROJECT'].split('/')[4]
             mustache.M.project = '/'.join(['//scholar/projects', mustache.M.projectName, '03_production','01_cg','01_MAYA'])
             mustache.M.assetsDir = '/'.join([mustache.M.project, mustache.M.assetsBase])
             mustache.M.scenesDir = '/'.join([mustache.M.project, mustache.M.shotsBase])
@@ -189,8 +189,10 @@ def init():
     if not cmds.about(batch=True):
         cmds.evalDeferred("gs_autoload(local_only=True)")
         gs_restore_pwd()
-        # auto init disabled in new pipeline
-        # cmds.evalDeferred("initMustache()")
+        # if project is using original pipeline lets init mustache
+        if '01_cg/01_MAYA' in os.environ['GSPROJECT'] or os.path.exists('/'.join([os.environ['GSPROJECT'],'03_production', '01_cg','01_MAYA'])) :
+            print ("Mustache Pipeline Detected. Initializiong mustache")
+            cmds.evalDeferred("initMustache()")
         cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
         cmds.evalDeferred("import mlTools;mlTools.init_mlTools_menu()")
     else:

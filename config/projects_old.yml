@@ -210,7 +210,7 @@ package_templates:
     match_path: '%package_root%/01_cg/02_c4d'
     capture_path: '%package_root%/01_cg/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2015/packages/c4d'
-    scenefile_root: '%package_root%/scenes'
+    scenefile_root: '%match_path%/scenes'
     extension: 'c4d'
   'houdini':
     parent: 'stage'
@@ -250,7 +250,7 @@ package_templates:
   'premiere':
     parent: 'stage'
     match_path: '%package_root%/premiere'
-    capture_path: '%package_root%/<package>'
+    capture_path: '%task_root%/<package>'
     copy_tree: '<server>/projects/_templates/project_template_2015/packages/premiere'
     scenefile_root: '%match_path%'
     extension: "prproj"

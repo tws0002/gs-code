@@ -312,7 +312,7 @@ QTabWidget::pane { /* The tab widget frame */
 }
 
 QTabWidget::tab-bar {
-    margin: 5px 5px 5px 5px;
+    /*margin: 5px 5px 5px 5px;*/
 
 }
 
@@ -326,8 +326,9 @@ QTabBar {
 QTabBar::tab {
     color: #555555;
     outline:none;
-    padding: 10px 10px 10px 10px;
-    min-width: 10ex;
+    border-width: 2px;
+    padding: 10px 15px 10px 15px;
+    /*min-width: 10ex;*/
 }
 
 QTabBar::tab:selected, QTabBar::tab:hover {
