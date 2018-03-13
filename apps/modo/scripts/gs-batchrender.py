@@ -4,43 +4,55 @@ import lx
 # from http://community.thefoundry.co.uk/discussion/topic.aspx?f=33&t=49104
 # EXPECTED ARGUMENTS
 # ||||||||||||||||||
-# 0 scene
-# 1 frame range start
-# 2 frame range end
-# 3 frame step
-# 4 camera
+#7: arguments
+#args[0]=rendergroup
+#args[1]=outputpath
+#args[2]=format
+#args[3]=start
+#args[4]=end
+#args[5]=step
+#args[6]=file
 
-
-# 4 render path
-# 5 render name
-# 6 image type
-# 7 antialiasing samples
-# ||||||||||||||||||
+lx.eval('log.toConsole true')
+lx.eval('log.toConsoleRolling true')
 args = lx.arg().split()
+lx.out('Found {0}: arguments'.format(len(args)))
+indx = 0
+for ea in args:
+    lx.out('args[{0}]="{1}"'.format(indx,ea))
+    indx +=1
 
-if (len(args)<1):
-    print ("No Render Arguments Found")
+if (len(args)<7):
+    lx.out("Could Not Find All 7 Required Render Arguments, rendergroup, outputpath, format, start, end, step, file")
 else:
-
-    lx.eval('log.toConsole true')
-    lx.eval('log.toConsoleRolling true')
-    lx.eval('scene.open {0}'.format(args[0]))
+    #lx.trace( True );
+    lx.eval('scene.open {0}'.format(args[6]))
     lx.eval('select.item Render') # select the render item in order to change its attributes
-    lx.eval('item.channel first {0}'.format(args[1])) # range beginning
-    lx.eval('item.channel last {0}'.format(args[2])) # range end
-    lx.eval('item.channel step {0}'.format(args[3])) # frame steps
-    #lx.eval('item.channel polyRender$aa {0}'.format(args[7])) # setting the number antialiasing passes
-    if (len(args)>4):
-        lx.eval('render.camera {0}'.format(args[4])) # setting the camera to render from
+    lx.eval('item.channel first {0}'.format(args[3])) # range beginning
+    lx.eval('item.channel last {0}'.format(args[4])) # range end
+    lx.eval('item.channel step {0}'.format(args[5])) # frame steps
 
-    #lx.eval('render.animation {0}{1} {2}'.format(args[4],args[5],args[6])) # render the animation
-    lx.eval('render.animation *')
+    rg = args[0]
+    op = args[1]
+    ft = args[2]
+    if not rg: #rendergroup arg
+        if ft:
+            lx.eval( '!render.animation "%s" %s {*}\n' %(op, ft) )
+        else:
+            lx.eval( '!render.animation "%s" {*}\n' %(op) )
+    else:
+        lx.eval( '!render.animation "%s" %s {*} group:%s\n' %(op, ft, rg) )
 
 lx.eval("app.quit") # quit the app
 
 
 
+#lx.eval('item.channel polyRender$aa {0}'.format(args[7])) # setting the number antialiasing passes
+#if (len(args)>4):
+#    lx.eval('render.camera {0}'.format(args[4])) # setting the camera to render from
 
+#lx.eval('render.animation {0}{1} {2}'.format(args[4],args[5],args[6])) # render the animation
+# lx.eval('render.animation *')
 
 
 #def main(output_path=None, format=None, rendergroup=None, start_frame, end_frame, step, filename):

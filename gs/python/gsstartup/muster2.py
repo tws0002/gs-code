@@ -4,6 +4,7 @@ import platform
 import subprocess
 import json
 import time
+import datetime
 import getpass
 import argparse
 try:
@@ -84,11 +85,23 @@ def _build_muster_cmd(flags):
         print 'Could not locate Muster server.'
         exit()
 
+def writelog(lines=[]):
+    filename = os.path.join(os.environ['TEMP'],'gs_muster_submit.log')
+    outF = open(filename, "a")
+    for line in lines:
+        ts = datetime.datetime.now().strftime("%d.%b %Y %H:%M:%S")
+        outF.write(unicode('{0}\t{1}'.format(ts,line)))
+        outF.write(u"\n")
+    outF.close()
+
 def submit(flags):
     cmd = _build_muster_cmd(flags)
     cmd = filter(None,cmd)
+    cmd_str = ' '.join(cmd)
     output = subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0]
+    writelog([' '.join(cmd)])
     m = re.search('ID: (\d+)', output)
+    writelog(['Result: MUSTER ID: {0}'.format(m.group(1))])
     if m:
         return m.group(1)
     else:

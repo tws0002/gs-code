@@ -102,7 +102,7 @@ global proc scholarBlast(int $outputPercent) {
 			break;
 		}
 		
-	string $blastOutput = `playblast -format qt -compression "PNG" -fo -filename ($writeDir+"/"+$fileName) -clearCache 1 -viewer 1 -showOrnaments 1 -fp 4 -percent $outputPercent -widthHeight $xRes $yRes -s $soundFlags`;
+	string $blastOutput = `playblast -format qt -compression "Animation" -fo -filename ($writeDir+"/"+$fileName) -clearCache 1 -viewer 1 -showOrnaments 1 -fp 4 -percent $outputPercent -widthHeight $xRes $yRes -s $soundFlags`;
 
 	// workspace -rt images images;
 	setCurrentFrameVisibility 0;

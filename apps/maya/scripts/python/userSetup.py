@@ -10,7 +10,7 @@ import gs_menu
 try:
     GSCODEBASE = os.environ['GSCODEBASE']
 except:
-    GSCODEBASE = '//scholar/code'
+    GSCODEBASE = '//scholar/pipeline'
 
 def initLogo():
     asciiart = os.path.join(GSCODEBASE,'base','gs', 'python','launcher','res', 'gs2.txt')

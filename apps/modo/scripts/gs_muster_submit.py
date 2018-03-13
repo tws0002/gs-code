@@ -16,8 +16,8 @@ except KeyError:
     GSCODEBASE = '//scholar/code'
 
 sys.path.append(os.path.join(GSCODEBASE, 'base', 'gs', 'python'))
-import gsstartup
-from gsstartup import muster
+import gsstartup as gs
+from gsstartup import muster2 as muster
 
 MUSTER_POOLS = []
 
@@ -75,9 +75,12 @@ def submit():
         new_file = save_render_file(cur_file)
         lx.eval('scene.saveAs "%s"' %(cur_file))
         cur_file_path, cur_file_name = os.path.split(cur_file)
-
         version = os.path.split(lx.eval('query platformservice path.path ? program'))[1]
-        majorver,minorver = version.split('_')
+
+        if '_' in version:
+            majorver,minorver = version.split('_')
+        elif 'v' in version:
+            majorver,minorver = version.split('v')
         
         poolslistmodo = lx.eval('user.def muster.pools listnames ?').split(';')
         rendergroupsmodo = lx.eval('user.def muster.rgrp listnames ?').split(';')
@@ -89,11 +92,13 @@ def submit():
 
         musterflags = {}
         #musterflags['-add']     = '--major %s --render \"-rendergroup \"%s\" -outputpath \"%s\" -format \"%s\"' %(version, rendergroupselected, fulloutputpathselected.replace('\\','/'), outputfileformatselected)
-        musterflags['-add']     = '--major %s --render ' %(version)
+        musterflags['-add']     = '\"--major %s --render\"' %(version)
+        musterflags['-attr']     = ['render_group {0} 1'.format(rendergroupselected),'output_path {0} 1'.format(fulloutputpathselected.replace('\\','/')),'img_format {0} 1'.format(outputfileformatselected)]
         musterflags['-e']       = '1104'
         musterflags['-n']       = cur_file_name
         musterflags['-parent']  = '33409'
         musterflags['-group']   = gs.get_project_from_path(new_file)
+        lx.out(musterflags)
         musterflags['-pool']    = poolslistmodo[ int(lx.eval('user.value muster.pools ?' ))]
         musterflags['-sf']      = str(lx.eval('user.value muster.start ?'))
         musterflags['-ef']      = str(lx.eval('user.value muster.end ?'))
@@ -155,6 +160,8 @@ def submit():
         else:
             rendersubmit = muster.submit(musterflags)
             if rendersubmit:
+                for f in musterflags:
+                    lx.out('muster flag: {0} {1}'.format(f,musterflags[f]))
                 lx.out('Job ID %s successfully submitted to Muster!' %(rendersubmit))
             else:
                 lx.out('There was an error submitting your job to Muster.')
