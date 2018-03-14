@@ -310,6 +310,7 @@ class LchrTreeList(QWidget):
 
         # connect internal signals
         self.le.textChanged.connect(self.filterListEditChanged)
+        self.showHeader(False)
 
     def sourceModel(self):
         return self.sm
@@ -322,6 +323,12 @@ class LchrTreeList(QWidget):
 
     def lineEdit(self):
         return self.le
+
+    def showHeader(self,visible=True):
+        if visible:
+            self.titlebtn1.show()
+        else:
+            self.titlebtn1.hide()
 
     def setTitle(self,title):
         self.title.setText(title)

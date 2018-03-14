@@ -231,13 +231,14 @@ class ProjectController():
                 self.copyTemplTree(src, task)
 
                 for package, scenename in add_scenefiles:
-                    upl_dict['package'] = package
-                    upl_dict['scenename'] = scenename
-                    upl_dict['version'] = 'v000'
+                    new_dict = dict(upl_dict)
+                    new_dict['package'] = package
+                    new_dict['scenename'] = scenename
+                    new_dict['version'] = 'v000'
 
-                    (success, response, result) = self.newScenefile(upl_dict=upl_dict)
+                    (success, response, result) = self.newScenefile(upl_dict=new_dict)
 
-                print upl_dict
+                print new_dict
                 # update the model which is then responsible for sending signals to attached UI elements to update
                 # for now its a manual refresh
                 return True, "Success", task

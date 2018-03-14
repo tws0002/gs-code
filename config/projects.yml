@@ -310,9 +310,9 @@ package_templates:
     extension: 'nk'
   'ae':
     parent: 'task'
-    match_path: '%package_root%/ae'
+    match_path: '%package_root%/aftereffects'
     capture_path: '%package_root%/<package>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/packages/ae'
+    copy_tree: '<server>/projects/_templates/project_template_2018/packages/aftereffects'
     scenefile_root: '%match_path%'
     extension: 'aep'
   'premiere':

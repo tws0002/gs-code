@@ -163,6 +163,7 @@ class LauncherWindow(QMainWindow):
         #self.ui['lbl']['workgroup_label'] = QLabel("Projects")
         self.ui['wdgt']['project_list'] = LchrTreeList()
         self.ui['wdgt']['project_list'].setTitle("Projects")
+        self.ui['wdgt']['project_list'].showHeader(True)
 
         self.ui['lyt']['mode_layout'].addWidget(QLabel("Mode:"))
         #self.ui['lyt']['mode_layout'].addWidget(self.ui['wdgt']['sidebar_list'])
@@ -413,7 +414,7 @@ class LauncherWindow(QMainWindow):
     def dpiSize(self,pixel_size):
         if not self.dpi:
             self.dpi = self.getDPI()
-        return pixel_size / 96 * self.dpi
+        return float(pixel_size) / 96.0 * self.dpi
 
     def loadStyle(self):
         branch = 'base'

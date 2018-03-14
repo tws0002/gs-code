@@ -288,17 +288,17 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             self.ui_state['output_list'].append(('Local Geometry','Alembic ( Static )',self.ui_state['version'])) 
 
         # add playblast
-        if self.ui_state['publish_type'] == 'Animated Cache':
-            render_layers = self.getInSceneRenderLayers()
-            for r, enabled in render_layers:
-                item = QStandardItem(r)
-                item.setCheckable(True)
-                if enabled:
-                    item.setCheckState(Qt.Checked)
-                exp_type = QStandardItem('Playblast ( Start/End )')
-                ver = QStandardItem(self.ui_state['version'])
-                self.asset_model.appendRow([item,exp_type,ver])
-                self.ui_state['output_list'].append((r,'Playblast ( Start/End )',self.ui_state['version'])) 
+        #if self.ui_state['publish_type'] == 'Animated Cache':
+        #    render_layers = self.getInSceneRenderLayers()
+        #    for r, enabled in render_layers:
+        #        item = QStandardItem(r)
+        #        item.setCheckable(True)
+        #        if enabled:
+        #            item.setCheckState(Qt.Checked)
+        #        exp_type = QStandardItem('Playblast ( Start/End )')
+        #        ver = QStandardItem(self.ui_state['version'])
+        #        self.asset_model.appendRow([item,exp_type,ver])
+        #        self.ui_state['output_list'].append((r,'Playblast ( Start/End )',self.ui_state['version'])) 
 
         if self.ui_state['publish_type'] == 'Render' or self.ui_state['publish_type'] == 'LookDev':
             render_layers = self.getInSceneRenderLayers()
@@ -468,6 +468,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         # force SaveAs mode to prevent ctrl-s after publish
         # display sucess dialog
         # version up the scenefile
+        cmds.confirmDialog( title='Confirm', message='Publish Finished', button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
         return
 
     def exportScene(self):
