@@ -437,10 +437,19 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 d['layer'] = 'publish'
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
+                    result = 'Overwrite This Version ({0})'.format(d['version'])
                     out_scene = '/'.join([pub_root,pub_files[0]])
                     if os.path.exists(out_scene):
-                        cmds.confirmDialog( title='Confirm', message='{0} exists Already. Are you sure?'.format(pub_files[0]), button=['Yes, Overwrite {0}'.format(d['version']),'No, Save {0} and Publish'.format(d['version'])], defaultButton='Yes', cancelButton='No', dismissString='No' )
-                    self.saveSceneCopy(out_path=out_scene,create_dir=True)
+                        result = cmds.confirmDialog(
+                            title='Confirm', 
+                            message='{0} exists Already. Are you sure?'.format(pub_files[0]),
+                            button=['Overwrite This Version ({0})'.format(d['version']),'Save New Version and Publish','Cancel'], 
+                            defaultButton='Yes', 
+                            cancelButton='Cancel', 
+                            dismissString='No' )
+                    if result == 'Overwrite This Version ({0})'.format(d['version']):
+                        self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=True)
+                        cmds.confirmDialog( title='Confirm', message='Publish Finished', button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
             elif exp_type == 'Maya':
@@ -468,7 +477,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         # force SaveAs mode to prevent ctrl-s after publish
         # display sucess dialog
         # version up the scenefile
-        cmds.confirmDialog( title='Confirm', message='Publish Finished', button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
+        
         return
 
     def exportScene(self):
@@ -613,10 +622,16 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                     cmds.file(ref, ir=1)     
 
 
-    def removeAllNamespaces(self):
+    def removeAllNamespaces(self, swap_to_underscore=False):
         for ns in cmds.namespaceInfo(lon=1):
             if ns != 'UI' and ns != 'shared':
                 cmds.namespace(f=1, mv=[ns,':'])
+                #TODO 
+                if swap_to_underscore:
+                    # list items in namespace
+                    # add prefix to items in namespace
+                    pass
+                # remove namespace
                 cmds.namespace(f=1, rm=ns)
 
 

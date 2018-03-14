@@ -289,8 +289,17 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.main_lyt.setContentsMargins(0,0,0,0)
         self.setLayout(self.main_lyt)
 
+        self.toolslyt = QHBoxLayout()
+        self.toolslyt.setContentsMargins(0,0,0,0)
+
         self.footerlyt = QHBoxLayout()
         self.footerlyt.setContentsMargins(0,0,0,0)
+
+        self.refresh = QPushButton('Refresh')
+        self.updateallbtn = QPushButton('Update All')
+        self.publishbtn = QPushButton('Publish Anim')
+        self.loadbtn = QPushButton('Load from Pubish')
+
 
         self.removebtn = QPushButton('Remove')
         self.renamebtn = QPushButton('Rename')
@@ -310,6 +319,11 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.tree_list.tvw.setHeaderHidden(False)
         self.tree_list.showFirstColOnly = False
 
+        self.toolslyt.addWidget(self.refresh)
+        self.toolslyt.addWidget(self.updateallbtn)
+        self.toolslyt.addWidget(self.publishbtn)
+        self.toolslyt.addWidget(self.loadbtn)
+
         #####  WIDGET LAYOUT ######
         self.main_lyt.addWidget(self.tree_list)
         self.footerlyt.addWidget(self.removebtn)
@@ -317,7 +331,9 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.footerlyt.addWidget(self.replacebtn)
         self.footerlyt.addWidget(self.reloadbtn)
         self.footerlyt.addWidget(self.unloadbtn)
+        self.main_lyt.addWidget(QLabel("In Scene Assets:"))
         self.main_lyt.addWidget(self.tree_list)
+        self.main_lyt.addLayout(self.toolslyt)
         self.main_lyt.addLayout(self.footerlyt)
 
         #### WIDGET SIGNALS #####

@@ -35,7 +35,7 @@ def init_gs_menu():
 			cmds.menuItem(divider=True)
 			cmds.menuItem(l="Render Submit",c='import gs_submit_muster;reload(gs_submit_muster);gs_submit_muster.main()')
 			cmds.menuItem(divider=True,dl="Asset Tools")
-			#cmds.menuItem(l="Asset Maker",c='import gs_assetmaker;reload(gs_assetmaker);gs_assetmaker.main()')
+			cmds.menuItem(l="Asset Maker",c='import gs_assetmaker;reload(gs_assetmaker);gs_assetmaker.main()')
 			#cmds.menuItem(l="Clean Scene",en=False,c='')
 			#cmds.menuItem(l="Turntable Setup",c='import gs_assetmaker;reload(gs_assetmaker);gs_assetmaker.main()')
 			cmds.menuItem(divider=True,dl="Animation Tools")

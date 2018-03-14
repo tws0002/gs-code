@@ -130,7 +130,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         self.gsCB.setChecked(1)
         optionsGroup.addWidget(self.gsCB)
 
-        self.localAsset = QPushButton("Convert to Asset")
+        self.localAsset = QPushButton("Organize Into Asset")
         self.jobAsset = QPushButton("Convert to Referenced Asset")
 
         vertical.addWidget(self.localAsset)
