@@ -230,7 +230,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
     def updateOutputList(self):
 
         self.asset_model.clear()
-        self.asset_model.setHorizontalHeaderLabels(['Output Item', 'Type', 'Version'])
+        self.asset_model.setHorizontalHeaderLabels(['Output Item', 'Type', 'Publish'])
         self.asset_list.setColumnWidth(0,150)
         self.asset_list.setColumnWidth(1,150)
         self.asset_list.setColumnWidth(2,50)
@@ -239,21 +239,21 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         # add scene copy
         if self.ui_state['publish_type'] != 'Animated Cache' and self.ui_state['publish_type'] != 'Render':
-            item = QStandardItem('Entire Scene')
+            item = QStandardItem('Scene Backup')
             item.setCheckable(True)
             item.setCheckState(Qt.Checked)
             exp_type = QStandardItem('Maya Flattened')
             ver = QStandardItem(self.ui_state['version'])
             self.asset_model.appendRow([item,exp_type,ver])  
-            self.ui_state['output_list'].append(('Entire Scene','Maya Flattened',self.ui_state['version']))              
+            self.ui_state['output_list'].append(('Scene Backup','Maya Flattened',self.ui_state['version']))              
         else:
-            item = QStandardItem('Entire Scene')
+            item = QStandardItem('Scene Backup')
             item.setCheckable(True)
             item.setCheckState(Qt.Checked)
             exp_type = QStandardItem('Maya')
             ver = QStandardItem(self.ui_state['version'])
             self.asset_model.appendRow([item,exp_type,ver])  
-            self.ui_state['output_list'].append(('Entire Scene','Maya',self.ui_state['version']))  
+            self.ui_state['output_list'].append(('Scene Backup','Maya',self.ui_state['version']))  
 
         # add camera
         if self.ui_state['publish_type'] == 'Animated Cache':
@@ -389,6 +389,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         # does the publish version already exists
 
         # is the current version saved? 
+
         # has a clean script been run?
         return
 

@@ -191,9 +191,9 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             asset_data[namespace] = {}
             asset_data[namespace]['name'] = namespace
             asset_data[namespace]['filepath'] = path
-            asset_data[namespace]['3:version'] = f_data['version']
-            asset_data[namespace]['2:type'] = f_data['task']
-            asset_data[namespace]['4:cache'] = f_data['version']
+            asset_data[namespace]['3:Version'] = f_data['version']
+            asset_data[namespace]['2:Type'] = f_data['task']
+            asset_data[namespace]['4:Applied Cache'] = 'None'
             asset_data[namespace]['5:ref_node'] = node
             asset_data[namespace]['status'] = "Active"
             asset_data[namespace]['is_group'] = False
@@ -295,7 +295,7 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.footerlyt = QHBoxLayout()
         self.footerlyt.setContentsMargins(0,0,0,0)
 
-        self.refresh = QPushButton('Refresh')
+        self.refresh = QPushButton('Refresh List')
         self.updateallbtn = QPushButton('Update All')
         self.publishbtn = QPushButton('Publish Anim')
         self.loadbtn = QPushButton('Load from Pubish')
@@ -505,7 +505,6 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
         self.setColumnPersistentEditor(2)
         self.setColumnPersistentEditor(3)        
         
-
     def filterListEditChanged(self):
         regstr = self.le.text()
         if len(regstr) < 2 and len(regstr) > 0:
@@ -600,7 +599,7 @@ class GSAssetLoaderTreeList(MayaQWidgetBaseMixin,QWidget):
                 col += 1
 
         # set persietent editors on certain columns
-        #self.setColumnPersistentEditor(1)
+        self.setColumnPersistentEditor(1)
         #self.setColumnPersistentEditor(2)
         #self.setColumnPersistentEditor(3)
 
@@ -657,7 +656,7 @@ class ComboBoxDelegate(QItemDelegate):
         #model.setData(index, editor.currentIndex())
 
     def updateEditorGeometry(self, editor, option, index):
-        size = QRect(option.rect.x(),option.rect.y()+2,option.rect.width()-4,option.rect.height()-4)
+        size = QRect(option.rect.x(),option.rect.y()+2,option.rect.width()-6,option.rect.height()-4)
         editor.setGeometry(size)
 
     #def setData(self, index, value, role=Qt.DisplayRole):
