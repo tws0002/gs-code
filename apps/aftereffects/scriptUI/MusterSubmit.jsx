@@ -211,6 +211,9 @@ function getAELocation(){
 		case '14.1':
 			pathVer = 'CC 2017';
 			break;
+		case '14.2':
+			pathVer = 'CC 2017';
+			break;
 	}
 
 	aePath = "C:\\Program Files\\Adobe\\Adobe After Effects "+pathVer+"\\Support Files\\aerender.exe";

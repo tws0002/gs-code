@@ -1,0 +1,515 @@
+//////////////////////////
+//
+// llScaleKey
+//
+//////////////////////////
+//
+// Maya script file
+//
+//////////////////////////
+//
+// Author : Lluis Llobera
+//            (lluisllobera@gmail.com)
+//
+// Creation date : 14/IV/2003
+//    UPDATE 1.1 : 18/IV/2003
+//    UPDATE 1.2 : 24/IV/2003
+//    UPDATE 1.3 : 7/VIII/2003
+//    UPDATE 1.5 : 31/III/2005
+//   UPDATE 1.51 : 9/I/2007
+//  UPDATE 1.51b : 10/IV/2008
+//    UPDATE 1.6 : 19/IV/2010
+//   UPDATE 1.61 : 23/IV/2010
+//   UPDATE 1.62 : 20/X/2010
+//  UPDATE 1.63b : 24/VII/2012
+//
+// Main procedure : type "llScaleKey" in the Command Line or Script Editor
+//
+//////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//   DESCRIPTION
+//
+// This script will allow the user to scale keys selected in the Graph Editor, either in Value or Time.
+//
+//
+//   VERSIONS HISTORY
+//
+// UPDATE 1.1
+// Now the user can choose to scale from zero, which is how it was set in version 1.0, or to scale
+// from the minimum/maximum selected value / time.
+//
+// UPDATE 1.2
+// Now there's two little buttons labeled "R" that will reset back to 100.0 the value of either Time
+// or Value.
+//
+// UPDATE 1.3
+// Now there's another radioButton that enables the user to scale keys from the central value of the selection.
+// The window has grown a little bit.
+//
+// UPDATE 1.5
+// The user can specify exact values for the "scale from" points, both in time and value
+//
+// UPDATE 1.51
+// Added popupmenus to have number presets, for faster interaction. Positive values pop up in right-mouse
+// clicking, and negative values pop up on middle-mouse clicking.
+//
+// UPDATE 1.52
+// Changed popup menu items to make the list more manageable ...
+//
+// UPDATE 1.6
+// Added "Curve by curve" checkbox.
+//
+// UPDATE 1.61
+// Fixed a bug in the "Curve by curve" proc
+//
+// UPDATE 1.62
+// Added "First" and "Last" radio buttons.
+//
+// UPDATE 1.63
+// "Curve by curve" on by default. Also, if no curves are selected the script will work on whatever is shown
+//  in the Graph Editor.
+//
+//
+//
+//                Enjoy!!
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////
+//  llKSWCreatePopupMenu        //
+//////////////////////////////////
+//
+// Creates a popupmenu to change the floatField values according to
+// specified presets. There's also an "invert" menuItem that inverts
+// the floatField's current value.
+//
+// <-- llScaleKey
+//
+/////////////////////////////////
+
+global proc llKSWCreatePopupMenu (string $CONTROL)
+  {
+
+  string $VALUES[] = {"150" , "100" , "70" , "50" , "20" , "0" , "-50" , "-100"} ;
+
+  // POSITIVE
+
+  $MENU = `popupMenu` ;
+
+  menuItem -p $MENU -divider 1 ;
+
+  for ($VALUE in $VALUES)
+    if ($VALUE == "-")
+      menuItem -p $MENU -divider 1 ;
+    else
+      menuItem -l $VALUE -c ("floatFieldGrp -e -v1 " + $VALUE + " " + $CONTROL) ;
+
+  menuItem -p $MENU -divider 1 ;
+  
+  menuItem -p $MENU -l "invert" -c ("floatFieldGrp -e -v1 (`floatFieldGrp -q -v1 " + $CONTROL + "` * -1) " + $CONTROL) ;  
+
+
+  } ; // global proc llKSWCreatePopupMenu
+
+
+
+//////////////////////////////////
+//  llScaleKeyValue                     //
+//////////////////////////////////
+//
+// Whenever the "SPECIFY" radio button changes value,
+// this proc updates the "enable" state of the corresponding floatFields
+//
+// <-- llScaleKeyPress
+// <--> llScaleKeyValue
+//
+/////////////////////////////////
+
+global proc llKeyScaleWindowSpecifyChanged ()
+  {
+
+  int $STATE = `radioButton -q -sl llKeySPECIFY` ;
+
+  floatFieldGrp -e -en ($STATE) llKSWSPECIFYVALUE ;
+  floatFieldGrp -e -en ($STATE) llKSWSPECIFYTIME ;
+
+  } ; // global proc llKeyScaleWindowSpecifyChanged
+
+
+//////////////////////////////////
+//  llScaleKeyValueOneByOne     //
+//////////////////////////////////
+//
+// Gets and returns the lowest/greatest selected keyframe value,
+// depending of the value of $FROM
+//
+// <-- llScaleKeyPress
+// <--> llScaleKeyValue
+//
+/////////////////////////////////
+
+global proc float llScaleKeyValueOneByOne (string $FROM , float $SPECIFY , string $TYPE , string $CURVE)
+  {
+
+  // variables
+
+  float $KEYVALUE ; // float to be returned to llScaleKeyPress
+  float $VALUES[] = eval ("keyframe -q -sl -" + $TYPE + "c " + $CURVE) ; // value of the selected keyframes
+
+  // depending of the value of $FROM,
+  // a different value is assigned to $KEYVALUE
+  switch ($FROM)
+    {
+    case "llKeyZERO" : // wanted scale from ZERO
+      $KEYVALUE = 0.0 ;
+      break ;
+
+    case "llKeyMIN" :  // wanted scale from MINIMUM KEY VALUE
+      $KEYVALUE = $VALUES[0] ;
+      for ($ELEMENT in $VALUES)
+        $KEYVALUE = `min $KEYVALUE $ELEMENT` ;
+      break ;
+
+    case "llKeyMAX" :  // wanted scale from MAXIMUM KEY VALUE
+      $KEYVALUE = $VALUES[0] ;
+      for ($ELEMENT in $VALUES)
+        $KEYVALUE = `max $KEYVALUE $ELEMENT` ;
+      break ;
+
+    case "llKeySPECIFY" :  // wanted scale from MAXIMUM KEY VALUE
+      $KEYVALUE = $SPECIFY ;
+      break ;
+
+    case "llKeyCENTER" : // wanted scale from VALUE HALFWAY BETWEEN MAXIMUM AND MINIMUM
+      $KEYVALUE = (`eval ("llScaleKeyValueOneByOne (\"llKeyMIN\" , \"0\" , \"" + $TYPE + "\" , \"" + $CURVE + "\")")` +
+                   `eval ("llScaleKeyValueOneByOne (\"llKeyMAX\" , \"0\" , \"" + $TYPE + "\" , \"" + $CURVE + "\")")` ) / 2 ;
+      break ;
+
+    case "llKeyFIRST" :
+      $KEYVALUE = $VALUES[0] ;
+      break ;
+
+    case "llKeyLAST" :
+      $KEYVALUE = $VALUES[(`size $VALUES` - 1)] ;
+      break ;
+    } ; // switch $FROM
+
+  return $KEYVALUE ;
+
+  } ; // global proc float llScaleKeyValueOneByOne
+
+
+//////////////////////////////////
+//  llScaleKeyValue             //
+//////////////////////////////////
+//
+// Gets and returns the lowest/greatest selected keyframe value,
+// depending of the value of $FROM
+//
+// <-- llScaleKeyPress
+// <--> llScaleKeyValue
+//
+/////////////////////////////////
+
+global proc float llScaleKeyValue (string $FROM , float $SPECIFY , string $TYPE)
+  {
+
+  // variables
+  float $KEYVALUE ; // float to be returned to llScaleKeyPress
+  float $VALUES[] = eval ("keyframe -q -sl -" + $TYPE + "c") ; // value of the selected keyframes
+
+  // depending of the value of $FROM,
+  // a different value is assigned to $KEYVALUE
+  switch ($FROM)
+    {
+    case "llKeyZERO" : // wanted scale from ZERO
+      $KEYVALUE = 0.0 ;
+      break ;
+
+    case "llKeyMIN" :  // wanted scale from MINIMUM KEY VALUE
+      $KEYVALUE = $VALUES[0] ;
+      for ($ELEMENT in $VALUES)
+        $KEYVALUE = `min $KEYVALUE $ELEMENT` ;
+      break ;
+
+    case "llKeyMAX" :  // wanted scale from MAXIMUM KEY VALUE
+      $KEYVALUE = $VALUES[0] ;
+      for ($ELEMENT in $VALUES)
+        $KEYVALUE = `max $KEYVALUE $ELEMENT` ;
+      break ;
+
+    case "llKeySPECIFY" :  // wanted scale from MAXIMUM KEY VALUE
+      $KEYVALUE = $SPECIFY ;
+      break ;
+
+    case "llKeyCENTER" : // wanted scale from VALUE HALFWAY BETWEEN MAXIMUM AND MINIMUM
+      $KEYVALUE = (`eval ("llScaleKeyValue (\"llKeyMIN\" , \"0\" , \"" + $TYPE + "\")")` +
+                   `eval ("llScaleKeyValue (\"llKeyMAX\" , \"0\" , \"" + $TYPE + "\")")` ) / 2 ;
+      break ;
+
+    case "llKeyFIRST" :
+      $KEYVALUE = $VALUES[0] ;
+      break ;
+
+    case "llKeyLAST" :
+      $KEYVALUE = $VALUES[(`size $VALUES` - 1)] ;
+      break ;
+    } ; // switch $FROM
+
+  return $KEYVALUE ;
+
+  } ; // global proc float llScaleKeyValue
+
+
+
+//////////////////////////////////
+//  llScaleKeyPress                    //
+//////////////////////////////////
+//
+// Gets the variables from the window and parses them into
+// the string to be evaluated.
+//
+// <-- llScaleKey
+// --> llScaleKeyValue
+//
+/////////////////////////////////
+
+global proc llScaleKeyPress ()
+  {
+
+  // variables
+  float $VALUE = `floatFieldGrp -q -v1 llKeyScaleWindowScaleValueField` / 100 ;
+  float $TIME = `floatFieldGrp -q -v1 llKeyScaleWindowScaleTimeField` / 100 ;
+  string $FROM = `radioCollection -q -sl llKeyScaleWindowFromCollection` ;
+  float $SPECIFYVALUE = `floatFieldGrp -q -v1 llKSWSPECIFYVALUE` ;
+  float $SPECIFYTIME = `floatFieldGrp -q -v1 llKSWSPECIFYTIME` ;
+  int $ONE_BY_ONE = `checkBox -q -v llKSWONEBYONE` ;
+
+  // key scale
+  if ($ONE_BY_ONE)
+    {
+    string $CURVES[] = `keyframe -q -n -sl` ;
+    if (`size $CURVES` == 0)
+        $CURVES = `selectionConnection -q -obj graphEditor1FromOutliner` ;
+
+    for ($CURVE in $CURVES)
+      {
+      float $TIMESCALE = llScaleKeyValueOneByOne ($FROM , $SPECIFYTIME , "t" , $CURVE) ;
+      float $VALUESCALE = llScaleKeyValueOneByOne ($FROM , $SPECIFYVALUE , "v" , $CURVE) ;
+      int $INDEXES[] = eval ("keyframe -q -iv -sl " + $CURVE) ;
+      string $INDEXES_SELECTED ;
+      $INDEXES_SELECTED = "" ;
+      for ($INDEX in $INDEXES)
+        $INDEXES_SELECTED += (" - index " + $INDEX) ;
+
+      eval ("scaleKey -iub false -ts " + $TIME + " -tp " + $TIMESCALE +
+         " -fs " + $TIME + " -fp " + $VALUESCALE + " -vs " + $VALUE + " -vp " + $VALUESCALE +
+         $INDEXES_SELECTED + " " + $CURVE) ;
+      } ; // for
+    }
+  else
+    {
+    float $TIMESCALE = llScaleKeyValue ($FROM , $SPECIFYTIME , "t") ;
+    float $VALUESCALE = llScaleKeyValue ($FROM , $SPECIFYVALUE , "v") ;
+
+    eval ("scaleKey -iub false -ts " + $TIME + " -tp " + $TIMESCALE +
+       " -fs " + $TIME + " -fp " + $VALUESCALE + " -vs " + $VALUE + " -vp " + $VALUESCALE +
+       " -animation keys") ;
+    } ; // else
+
+  } ; // global proc llScaleKeyPress
+
+
+
+//////////////////////////////////
+//  llScaleKey                  //
+//////////////////////////////////
+//
+// MAIN PROC
+//
+// Draws the window with the scale fields.
+//
+// --> llScaleKeyPress
+//
+/////////////////////////////////
+
+global proc llScaleKey ()
+  {
+
+  string $VERSION = "1.63b" ;
+  int $WIDTH = 197 ;
+  int $HEIGHT = 263 ;
+
+  if (`window -ex llScaleKeyWindow`) deleteUI llScaleKeyWindow ;
+
+  window
+    -t ("llScaleKey v" + $VERSION)
+  llScaleKeyWindow ;
+
+  columnLayout llKeyScaleWindowEstructura ;
+
+  separator -style "none" -h 12 ;
+
+  rowColumnLayout
+    -nc 2
+    -cw 1 145
+    -cw 2 20
+  llKeyScaleWindowEstructuraFields ;
+
+  floatFieldGrp
+    -cw 1 70
+    -cw 2 55
+    -cat 3 "left" 1
+    -l "Value :"
+    -el "%"
+    -v1 100
+  llKeyScaleWindowScaleValueField ;
+
+  llKSWCreatePopupMenu ("llKeyScaleWindowScaleValueField") ;
+
+  button
+    -l "R"
+    -c "floatFieldGrp -e -v1 100.0 llKeyScaleWindowScaleValueField"
+  llKeyScaleWindowResetValueButton ;
+
+  llKSWCreatePopupMenu ("llKeyScaleWindowScaleValueField") ;
+
+  floatFieldGrp
+    -cw 1 70
+    -cw 2 55
+    -cat 3 "left" 1
+    -l "Time :"
+    -el "%"
+    -v1 100
+  llKeyScaleWindowScaleTimeField ;  
+
+  llKSWCreatePopupMenu ("llKeyScaleWindowScaleTimeField") ;
+
+  button
+    -l "R"
+    -c "floatFieldGrp -e -v1 100.0 llKeyScaleWindowScaleTimeField"
+  llKeyScaleWindowResetTimeButton ;
+
+  llKSWCreatePopupMenu ("llKeyScaleWindowScaleTimeField") ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  separator -style "none" -h 10 ;
+
+  columnLayout
+    -cat "left" 15
+  llKeyScaleWindowFromPreLayout ;
+
+  radioCollection
+  llKeyScaleWindowFromCollection ;
+
+  columnLayout
+    -cat "left" 52
+  llKeyScaleWindowFromLayout2 ;
+
+  radioButton -sl -h 20 -l "ZERO" llKeyZERO ;
+
+  setParent .. ;
+
+  rowColumnLayout
+    -nc 2
+    -cat 1 "left" 22
+    -cw 1 80
+    -cat 2 "left" 5
+    -cw 2 55
+  llKeyScaleWindowFromLayout1b ;
+
+  radioButton -h 20 -l "FIRST" -cl llKeyScaleWindowFromCollection llKeyFIRST ;
+  radioButton -l "LAST" -cl llKeyScaleWindowFromCollection llKeyLAST ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  rowColumnLayout
+    -nc 3
+    -cat 1 "left" 12
+    -cw 1 55
+    -cat 2 "left" 8
+    -cw 2 75
+    -cat 3 "left" 8
+    -cw 3 55
+  llKeyScaleWindowFromLayout1 ;
+
+  radioButton -h 25 -l "MIN" -cl llKeyScaleWindowFromCollection llKeyMIN ;
+  radioButton -l "CENTER" -cl llKeyScaleWindowFromCollection llKeyCENTER ;
+  radioButton -l "MAX" -cl llKeyScaleWindowFromCollection llKeyMAX ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  columnLayout
+    -cat "left" 60
+  llKeyScaleWindowFromLayout3 ;
+
+  radioButton
+    -l "SPECIFY"
+    -cc llKeyScaleWindowSpecifyChanged
+    -cl llKeyScaleWindowFromCollection
+  llKeySPECIFY ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  separator -style "none" -h 1 ;
+
+  rowColumnLayout
+    -numberOfColumns 2
+    -cat 1 "left" 20
+    -cat 2 "left" 1 ;
+
+  floatFieldGrp
+    -cw 1 20
+    -cw 2 40
+    -l "V"
+    -v1 1
+    -en 0
+  llKSWSPECIFYVALUE ;
+
+  floatFieldGrp
+    -cw 1 20
+    -cw 2 40
+    -l "T"
+    -en 0
+  llKSWSPECIFYTIME ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  separator -style "none" -h 10 ;
+
+  columnLayout
+    -cat"left" 40 ;
+  
+  checkBox -v 1 -l "Curve by Curve" llKSWONEBYONE ;
+
+  setParent llKeyScaleWindowEstructura ;
+
+  separator -style "none" -h 10 ;
+
+  columnLayout
+    -cat "left" 55
+  llKeyScaleWindowButtonLayout ;
+
+  button
+    -l " GO !"
+    -w 80
+    -c llScaleKeyPress
+  llKeyScaleWindowButton ;
+
+  showWindow llScaleKeyWindow ;
+
+  window -e -wh $WIDTH $HEIGHT -minimizeButton 0 -maximizeButton 0 -s 1 llScaleKeyWindow ;
+
+  } ; // global proc llScaleKey
+
+llScaleKey ;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// EoS llScaleKey
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////

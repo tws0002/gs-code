@@ -314,6 +314,7 @@ class AssetManager:
     def masterAsset(self, asset):
         user = self.M.user
         ke = None
+        release = False
         if asset == '':
             cmds.error('No asset is checked out to master!')
         if self.isClean == False:

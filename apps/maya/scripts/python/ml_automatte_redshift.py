@@ -36,10 +36,14 @@ def generateIDs(item,attr,dict,renderLayer):
 
 
 def setupOverides():
+    currentRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
+    if not "BTY" in currentRenderLayer:
+        cmds.confirmDialog(m="\"BTY\" prefix not found in current renderlayer. Please switch to a BTY* Layer and try again.")
+        return
     #### Select renderLayer with geo, will create Matte layer.
     beautyRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
     currentRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
-    matteLayer=currentRenderLayer.replace("Beauty","Matte")
+    matteLayer=currentRenderLayer.replace("BTY","MATTE")
 
     #create Matte layer
     if not cmds.objExists(matteLayer):
@@ -49,27 +53,9 @@ def setupOverides():
     contents= cmds.editRenderLayerMembers(currentRenderLayer,q=1,fn=1)  
     if contents:
         for obj in contents:
-            try:
-                cmds.editRenderLayerMembers(matteLayer,obj,nr=1) 
-            except:
-                pass
+            cmds.editRenderLayerMembers(matteLayer,obj,nr=1) 
     cmds.editRenderLayerGlobals(currentRenderLayer=matteLayer)
     currentRenderLayer=matteLayer
-
-    #ADD existing visbility overides from object properties
-    #get settings from any existing layer ObjectProperties, to copy to matte settings
-    existingVis=[]
-    layerAdj=cmds.editRenderLayerAdjustment(currentRenderLayer, query=True, layer=True )
-    if layerAdj:
-        for adj in layerAdj:
-            try:
-                node,attr=adj.split('.')
-                if node:
-                    if cmds.nodeType(node)=='RedshiftVisibility':
-                        existingVis.append([adj,cmds.getAttr(adj)])
-            except:
-                pass
-
 
     #TURN OFF LIGHTS, make optimizations
     for light in cmds.ls(type='RedshiftPhysicalLight'):
@@ -104,20 +90,10 @@ def setupOverides():
     #set layer overide renderSettings, turn off GI, resolution, filtering, lights,turn on Deep
     cmds.editRenderLayerAdjustment("redshiftOptions.aovEnableDeepOutput", layer=currentRenderLayer)
     cmds.editRenderLayerAdjustment("redshiftOptions.aovDeepMergeMode", layer=currentRenderLayer)
-    cmds.editRenderLayerAdjustment("redshiftOptions.exrForceMultilayer", layer=currentRenderLayer)
-    cmds.editRenderLayerAdjustment("redshiftOptions.exrMultipart", layer=currentRenderLayer)
     cmds.editRenderLayerAdjustment("defaultRenderGlobals.enableDefaultLight",layer=currentRenderLayer)
-    cmds.editRenderLayerAdjustment("redshiftOptions.unifiedMaxSamples",layer=currentRenderLayer)#force antialiasing edges for mattes
-    cmds.editRenderLayerAdjustment("redshiftOptions.unifiedMinSamples",layer=currentRenderLayer)
     cmds.setAttr("redshiftOptions.aovEnableDeepOutput",1)
     cmds.setAttr("redshiftOptions.aovDeepMergeMode",1)
-    cmds.setAttr("redshiftOptions.exrForceMultilayer",0)
-    cmds.setAttr("redshiftOptions.exrMultipart",0)
-    cmds.setAttr("redshiftOptions.unifiedMaxSamples",32)
-    cmds.setAttr("redshiftOptions.unifiedMinSamples",32)
-
     cmds.setAttr("defaultRenderGlobals.enableDefaultLight",1)
-    cmds
 
     existingAovs=cmds.ls(type='RedshiftAOV')
     if not 'rsAov_ObjectID' in existingAovs:
@@ -125,10 +101,7 @@ def setupOverides():
         cmds.setAttr(aov+".enabled",1)
         cmds.setAttr(aov+".filePrefix","<BeautyPath>/<RenderPass>/<BeautyFile>.<RenderPass>",type="string")
         cmds.setAttr(aov+".exrCompression", 4)
-    try:
-        mel.eval("redshiftUpdateActiveAovList")  
-    except:
-        print 'Aov Window not found'
+    mel.eval("redshiftUpdateActiveAovList")
 
 def setupIDs():
     currentRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
@@ -164,18 +137,15 @@ def writeSceneData():
 def main():
     #get selected renderLayer
     currentRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
-    if not "_Beauty" in currentRenderLayer:
-        cmds.confirmDialog(m="_\"Beauty\" not found in renderlayer")
+    if not "BTY" in currentRenderLayer:
+        cmds.confirmDialog(m="\"BTY\" not found in current renderlayer")
     else:
         setupOverides()
         setupIDs()
-        #writeSceneData()
+        writeSceneData()
 
 '''
-import sys
-sys.path.append('C:/Users/mlavoy/Documents/mlTools/maya/automatte')
-
-import maya_setupMatteLayerRS
-reload(maya_setupMatteLayerRS)
-maya_setupMatteLayerRS.main()
+import ml_automatte_redshift
+reload(ml_automatte_redshift)
+ml_automatte_redshift.main()
 '''

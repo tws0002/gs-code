@@ -12,7 +12,7 @@ elapsed_time = time.time() - START_TIME
 print("Launcher PyQt loaded in {0} sec".format(elapsed_time))
 #import urllib2
 #import subprocess
-#import functools
+import functools
 
 from environment import *
 from gsqt.widgets import *

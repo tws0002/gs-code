@@ -44,7 +44,7 @@ def main():
     if not "_Beauty" in currentRenderLayer:
         cmds.confirmDialog(m="_\"Beauty\" not found in renderlayer")
     else:
-        utilityLayer=currentRenderLayer.replace("Beauty","Utility")
+        utilityLayer=currentRenderLayer.replace("Beauty","PuzzleMatte")
 
         #create Utility layer
         if not cmds.objExists(utilityLayer):
@@ -135,53 +135,61 @@ def main():
             mem=mem.split('|')[1]
             if not mem in layerMembers:
                 layerMembers.append(mem)
-                
-        usedMattes=[]
-        mats=cmds.ls(type='shadingEngine')
-        for mat in mats:
-            if 'matteLayer' in cmds.listAttr(mat):
-                connections=cmds.sets(mat,q=1)
-                if connections:
-                    for con in connections:
-                        par = cmds.ls(con, long=True)[0].split('|')[1]
-                        matLayerName=cmds.getAttr(mat+".matteLayer").split('.')[0]
-                        if par in layerMembers and not matLayerName in usedMattes:
-                            usedMattes.append(matLayerName) 
-
-        #CREATE AOVS IF NOT EXIST
-        existingAovs=cmds.ls(type='RedshiftAOV')
-        #add all aovs
-        for utilAov in utilAovs.keys():
-            if not utilAov in existingAovs:
-                aov=mel.eval("redshiftCreateAov(\""+utilAovs[utilAov]+"\")")
-                if utilAov=='rsAov_WorldPosition_filter':
-                    cmds.setAttr(aov+'.name',"P_filter",type="string")
-                cmds.rename(aov,utilAov)
-        try:
-            mel.eval("redshiftUpdateActiveAovList")  
-        except:
-            print 'Aov Window not found'
-
-
 
         #get list of all aovs, turn off all
         existingAovs=cmds.ls(type='RedshiftAOV')
         for aov in existingAovs:
             cmds.editRenderLayerAdjustment(aov+".enabled", layer=currentRenderLayer)
             cmds.setAttr(aov+".enabled",0) 
-            if aov == 'rsAov_WorldPosition' or aov == 'rsAov_Depth':
-                cmds.setAttr(aov+".filterMode", 3)
-            if aov == 'rsAov_WorldPosition_filter':
-                cmds.setAttr(aov+".filterMode", 0)
-            if aov == 'rsAov_MotionVectors':
-                cmds.setAttr(aov+'.outputRawVectors',1)
-                cmds.setAttr(aov+'.filtering',0)
-        print usedMattes
-        #turn on usedMattes only
-        for aov in usedMattes:
-            cmds.setAttr('rsAov_'+aov+".enabled",1)   
-        cmds.setAttr("rsAov_ObjectID.enabled",1) 
-        #turn on utils only
-        for aov in utilAovs.keys():
-            if aov in existingAovs:
+
+        #get all existing puzzleIDs
+        existingAovs=cmds.ls(type='RedshiftAOV')
+        existingMaterialIDs=[]
+        #add all aovs
+        for aov in existingAovs:
+            if 'Puzzle' in aov:
+                for m in ['redId','greenId','blueId']:
+                    idVal=cmds.getAttr(aov+'.'+m)
+                    if idVal:
+                        existingMaterialIDs.append(idVal)
+
+        #create dict of ids and referenceAssets              
+        objects={}
+        for sh in cmds.ls(type='mesh'):
+            shadingGrps= cmds.listConnections(sh,type='shadingEngine')
+            if shadingGrps:
+                shGrpName=shadingGrps[0]
+                ref=shGrpName.split(':')[0]
+                if 'prop' in ref or 'char' in ref or 'plant' in ref:
+                    id=abs(hash(ref)) % (10 ** 7)
+                    cmds.setAttr(shGrpName+'.rsMaterialId',id)
+                    if not ref in objects.keys():
+                        objects[id]=ref
+                else:
+                    id=abs(hash(shGrpName)) % (10 ** 7)
+                    cmds.setAttr(shGrpName+'.rsMaterialId',id)
+                    if not shGrpName in objects.keys():
+                        objects[id]=shGrpName
+                        
+        count=0
+        for id in objects.keys():
+            if not id in existingMaterialIDs:
+                if count==0:
+                    aov=mel.eval("redshiftCreateAov(\"Puzzle Matte\")")
+                    cmds.setAttr(aov+'.exrCompression',4)
+                    cmds.setAttr(aov+'.redId',id)
+                if count==1:
+                    cmds.setAttr(aov+'.greenId',id)
+                if count==2:
+                    cmds.setAttr(aov+'.blueId',id)
+                count+=1
+                if count==3:
+                    count=0        
+        mel.eval("redshiftUpdateActiveAovList") 
+
+
+        #turn on Puzzle only
+        existingAovs=cmds.ls(type='RedshiftAOV')
+        for aov in existingAovs:
+            if 'Puzzle' in aov:
                 cmds.setAttr(aov+".enabled",1) 

@@ -18,10 +18,14 @@ CARBON_PORT = 2003
 TIMESTAMP = int(time.time())
 
 def send_msg(message):
-    sock = socket.socket()
-    sock.connect((CARBON_SERVER, CARBON_PORT))
-    sock.sendall(message)
-    sock.close()
+    try:
+        sock = socket.socket()
+        sock.connect((CARBON_SERVER, CARBON_PORT))
+        sock.sendall(message)
+        sock.close()
+    except:
+        print "Error connecting to %s" %CARBON_SERVER
+        exit()
 
 def main():
     try:
