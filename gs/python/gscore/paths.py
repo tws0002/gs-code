@@ -263,7 +263,7 @@ class PathParser:
         # if resultn[1] >= len(upl_dict.keys()):
         # and no other <key> template strings are left, then print match found
         if '<' in resultn[0]:
-            print "gs_core.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning partial result".format(resultn)
+            print "gscore.paths.substTemplatePath() Warning, path wasn't fully resolved: {0} returning partial result".format(resultn)
         result = resultn[0]
 
         # if result == '':
@@ -329,7 +329,7 @@ class PathParser:
             result_path = min(m, key=len)
 
         if not os.path.exists(result_path):
-            print ("Warning: gs_core.paths.getPath() path does not exists {0}".format(result_path))
+            print ("Warning: gscore.paths.getPath() path does not exists {0}".format(result_path))
             result_path = ''
         return result_path
 

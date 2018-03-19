@@ -4,7 +4,7 @@ from PyQt4.QtGui import *
 
 from settings import *
 from widgets import *
-import gs_core
+import gscore
 
 import yaml
 

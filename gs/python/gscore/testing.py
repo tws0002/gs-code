@@ -1,10 +1,10 @@
 __author__ = 'aburke'
-''' testing functions to ensure gs_core functionality is working '''
+''' testing functions to ensure gscore functionality is working '''
 import unittest
 import os
 import core_settings
 import paths
-import gs_core
+import gscore
 
 # determines vars based on this files location
 LAUNCHER = os.path.dirname(os.path.realpath(__file__))

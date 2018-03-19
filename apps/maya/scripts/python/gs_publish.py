@@ -20,7 +20,7 @@ omui.MQtUtil.mainWindow()
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
-import gs_core, os, sys
+import gscore, os, sys
 import time, datetime
 from collections import OrderedDict
 import yaml

@@ -7,7 +7,7 @@ from utils import *
 #from widgets import *
 from dialogs import *
 from environment import *
-import launcher, utils, gs_core
+import launcher, utils, gscore
 import functools
 
 import yaml

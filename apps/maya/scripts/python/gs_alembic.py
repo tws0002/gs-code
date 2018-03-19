@@ -37,7 +37,7 @@ except ImportError:
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
-import gs_core
+import gscore
 
 # global pointers to prevent garbage collection until unload
 wind=None

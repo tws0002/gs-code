@@ -18,7 +18,7 @@ except ImportError:
 omui.MQtUtil.mainWindow()    
 
 import os, sys, re
-import gs_core
+import gscore
 import time, datetime
 from collections import OrderedDict
 import yaml
