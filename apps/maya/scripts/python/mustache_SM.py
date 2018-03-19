@@ -848,9 +848,9 @@ class SceneManager:
         tabs = cmds.tabLayout()
         cmds.formLayout(containerForm, e=1, attachForm=[(tabs, 'top', 40), (tabs, 'left', 5)])
         shotListForm = cmds.formLayout(parent=tabs)
-        shotTypeCtrl = cmds.textScrollList(w=180, h=50, ams=0, fn='boldLabelFont', sc=lambda *x: self.popScenesList(shotTypeCtrl, shotListCtrl, sceneListCtrl))
+        shotTypeCtrl = cmds.textScrollList(w=130, h=50, ams=0, fn='boldLabelFont', sc=lambda *x: self.popScenesList(shotTypeCtrl, shotListCtrl, sceneListCtrl))
         shotTypeLabel = cmds.text(l='SHOT TYPE', fn='boldLabelFont', ann='Browse through "animation" or "lighting" shots.')
-        shotListCtrl = cmds.textScrollList(w=130, h=500, ams=0, fn='boldLabelFont', ann='Select a shot from your project to browse scenes, or to clone this shot.', sc=lambda *x: self.popScenesList(shotTypeCtrl, shotListCtrl, sceneListCtrl))
+        shotListCtrl = cmds.textScrollList(w=190, h=500, ams=0, fn='boldLabelFont', ann='Select a shot from your project to browse scenes, or to clone this shot.', sc=lambda *x: self.popScenesList(shotTypeCtrl, shotListCtrl, sceneListCtrl))
         shotListLabel = cmds.text(l='SHOTS LIST', fn='boldLabelFont')
         sceneListCtrl = cmds.textScrollList(w=230, h=500, ams=0, ann='Select a scene to view details or edit.', sc=lambda *x: self.selectScene(shotTypeCtrl, shotListCtrl, sceneListCtrl, screenCtrl, modifiedLabel, checkoutAlert, versionNotes))
         sceneListLabel = cmds.text(l='SCENES LIST', fn='boldLabelFont')
@@ -861,7 +861,7 @@ class SceneManager:
         cmds.formLayout(shotListForm, e=1, attachForm=[(shotTypeCtrl, 'top', 25),
          (shotTypeCtrl, 'left', 5),
          (shotListCtrl, 'top', 25),
-         (shotListCtrl, 'left', 200),
+         (shotListCtrl, 'left', 145),
          (sceneListCtrl, 'top', 25),
          (sceneListCtrl, 'left', 345),
          (shotTypeLabel, 'top', 10),
