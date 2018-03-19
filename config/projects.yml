@@ -348,6 +348,8 @@ scenefile_templates:
         render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.%04d.<ext>'
         publish_path: '%task_root%/<task>/publish/<scenename>/<version>'
         publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>.<ext>'
+        metadata_path: '%task_root%/<task>/.info/<scenename>'
+        metadata_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>.<ext>'
     #'conform':
     #    parent: 'package'
     #    workscene_path: '%scenefile_root%'

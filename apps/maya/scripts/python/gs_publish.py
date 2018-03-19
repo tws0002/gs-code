@@ -21,6 +21,9 @@ mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
 import gs_core, os, sys
+import time, datetime
+from collections import OrderedDict
+import yaml
 
 class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
     
@@ -44,6 +47,11 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             'step':1,
             'publish_type':'',
             'output_list':[],
+        }
+
+        self.publish_data = {
+            'output_data': [],
+            'asset_data': []
         }
 
         self.resize(400, 600)
@@ -405,8 +413,12 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         print 'current_scene={0}'.format(current_scene)
         print self.ui_state['output_list']
+        self.publish_data['asset_data'] = {}
         # for each item in the output list export the appropriate data
         for item, exp_type, ver in self.ui_state['output_list']:
+            self.publish_data['asset_data'][item] = {
+                'cache_path': ''
+            }
             if exp_type == 'Alembic ( Start/End )':
                 print ('exporting animated alembic')
                 d = dict(f_data)
@@ -418,7 +430,13 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
-                    self.exportAlembicCache(out_path=out_scene, asset_list=[item], in_frame=self.ui_state['start'], out_frame=self.ui_state['end'],step=self.ui_state['step'])
+                    self.exportAlembicCache(
+                        out_path=out_scene, 
+                        asset_list=[item], 
+                        in_frame=self.ui_state['start'], 
+                        out_frame=self.ui_state['end'],
+                        step=self.ui_state['step'])
+                    self.publish_data['asset_data'][item]['cache_path'] = out_scene
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
             elif exp_type == 'Alembic ( Static )':
@@ -429,7 +447,13 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
-                    self.exportAlembicCache(out_path=out_scene, asset_list=[d['layer']], in_frame=1, out_frame=1,step=1)
+                    self.exportAlembicCache(
+                        out_path=out_scene, 
+                        asset_list=[d['layer']], 
+                        in_frame=1, 
+                        out_frame=1,
+                        step=1)
+                    self.publish_data['asset_data'][item]['cache_path'] = out_scene
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
             elif exp_type == 'Maya Flattened':
@@ -450,7 +474,6 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                             dismissString='No' )
                     if result == 'Overwrite This Version ({0})'.format(d['version']):
                         self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=True)
-                        cmds.confirmDialog( title='Confirm', message='Publish Finished', button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
             elif exp_type == 'Maya':
@@ -461,17 +484,30 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
                     if os.path.exists(out_scene):
-                        cmds.confirmDialog( title='Confirm', message='{0} exists Already. Are you sure?'.format(pub_files[0]), button=['Yes','No'], defaultButton='Yes', cancelButton='No', dismissString='No' )
+                        cmds.confirmDialog(
+                            title='Confirm', 
+                            message='{0} exists Already. Are you sure?'.format(pub_files[0]), 
+                            button=['Yes','No'], 
+                            defaultButton='Yes', 
+                            cancelButton='No', 
+                            dismissString='No' )
                     self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
-            #elif out_type == 'Maya Export':
-            #    self.exportScene()
-            #elif out_type == 'Maya nCache':
-            #    self.exportScene()
-            
-            # export the publish data
-            #self.exportPublishData(out_path)
+        # write out data file
+        d = dict(f_data)
+        d['layer'] = 'publish'
+        pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+        main_scene = '/'.join([pub_root,pub_files[0]])
+        self.exportPublishData(main_scene, self.ui_state['output_list'])
+
+        cmds.confirmDialog(
+            title='Confirm', 
+            message='Publish Finished', 
+            button=['Ok'], 
+            defaultButton='Ok', 
+            cancelButton='Ok', 
+            dismissString='Ok' )
         return
 
     def doPostPublish(self):
@@ -533,7 +569,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             job_str += (' -root '+obj_str)
             job_str += (' -uvWrite')
             job_str += (' -worldSpace')
-            job_str += (' -stripNamespaces')
+            #job_str += (' -stripNamespaces')
             job_str += (' -writeVisibility')
             job_str += ' -framerange {0} {1}'.format(in_frame,out_frame)
             job_str += (' -dataFormat ogawa')
@@ -559,22 +595,73 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
     def exportPlayblast(self):
         return
 
-    def exportPublishData(self, out_path='', asset_list=[]):
-        asset_info = self.getInSceneAssets()
-        remove_assets = []
-        # remove any asset data that isn't in the asset_list argument
-        for a in asset_info:
-            if any(a in s for s in asset_list):
-                remove_assets.append(str(a))
+    def exportPublishData(self, out_path='', output_list=[]):
+        """ writes out the asset assembly information as a yaml file
 
-        for a in remove_assets:
-            del asset_info[a]
+        """
+        assets = self.getInSceneAssets()
+
+        if not cmds.objExists(self.ui_state['camera'] ):
+            self.ui_state['camera'] = 'persp'
+        #remove_assets = []s
+        # remove any asset data that isn't in the asset_list argument
+        #for a in asset_info:
+        #    if any(a in s for s in asset_list):
+        #        remove_assets.append(str(a))
+        #
+        #for a in remove_assets:
+        #    del asset_info[a]
+        output_data = {}
+        num=1
+        for name, o_type, ver in output_list:
+            output_data['output{0}'.format(num)]={
+                'name': name,
+                'type': o_type,
+                'version': ver,
+                'out_path': self.publish_data['asset_data'][name]['cache_path'],
+            }
+            num += 1
+
+        asset_data = {}
+        for r, ref_path, ref_ns in assets:
+            asset_data[ref_ns]={
+                'filepath': ref_path,
+                'fileindex': r,
+                'namespace': ref_ns,
+                'cache_path': self.publish_data['asset_data'][ref_ns]['cache_path']
+            }
+
+        camera_info = {
+            'camera_name': self.ui_state['camera'],
+            'focal_length': cmds.getAttr('{0}.focalLength'.format(self.ui_state['camera'])),
+            'h_aperture': cmds.getAttr('{0}.horizontalFilmAperture'.format(self.ui_state['camera'])),
+            'v_aperture': cmds.getAttr('{0}.verticalFilmAperture'.format(self.ui_state['camera'])),
+        }
+
+        assembly_info = {
+            'gs_core': 1.0,
+            'gs_mayaTools': 1.0,
+            'source_scene': cmds.file(q=1,sn=1),
+            'publish_date': datetime.datetime.now(),
+            'username': os.environ['USERNAME'],
+            'host_machine': os.environ['COMPUTERNAME'],
+            'version': self.ui_state['version'],
+            'note': '', 
+            'camera_info': camera_info,
+            'start_frame': cmds.playbackOptions(q=1, min=1),
+            'end_frame': cmds.playbackOptions(q=1, max=1),
+            'step': 1,
+            'output_data': output_data,
+            'asset_data': asset_data,
+            'frame_rate': cmds.currentUnit(q=1, time=1)
+        }
 
         if out_path != '':
-            out_filename = os.path.basename(out_path)+'.yml'
-            out_file =os.path.join(out_path,out_filename)
+            split = os.path.split(out_path)
+            out_file ='/'.join([split[0],'{0}.yml'.format(split[-1])])
+
             with open(out_file, 'w') as f:
-                f.write( yaml.safe_dump(asset_info, default_flow_style=False, encoding='utf-8', allow_unicode=False) )
+                f.write( yaml.safe_dump(assembly_info, default_flow_style=False, encoding='utf-8', allow_unicode=False) )
 
     def saveSceneCopy(self, out_path='', create_dir=False, import_refs=True, remove_namespaces=True):
         print ("SAVING SCENE COPY:{0}".format(out_path))
@@ -638,7 +725,6 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
     def doCancel(self):
         self.close()        
-
 
 class GSAbstractItemModel(QStandardItemModel):
     

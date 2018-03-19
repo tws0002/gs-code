@@ -19,6 +19,9 @@ omui.MQtUtil.mainWindow()
 
 import os, sys, re
 import gs_core
+import time, datetime
+from collections import OrderedDict
+import yaml
 
 mayaMainWindowPtr = omui.MQtUtil.mainWindow()
 mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
@@ -41,6 +44,18 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         self.title = "Asset Loader v0.2a"
         self.setWindowTitle(self.title)
 
+        self.ui_state = {
+            'f_data': {},
+            'version': '',
+            'camera': '',
+            'start': 0,
+            'end': 0,
+            'step': 1,
+            'asset_tab': 'asset_3d',
+            'asset_item': '',
+            'task_combo': ''
+        }
+
         # main layout
         self.main_layout = QVBoxLayout(self)
         self.locationlyt = QHBoxLayout()
@@ -59,24 +74,24 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         self.asset_lib_tab = QTabWidget()
         # asset loader
-        self.loader_tree = GSAssetLoaderAssetLib(self)
+        self.asset_lib = GSAssetLoaderAssetLib(self)
         self.lr_del = LargeRowDelegate()
-        self.loader_tree.tree_list.tvw.setItemDelegate(self.lr_del)
+        self.asset_lib.tree_list.tvw.setItemDelegate(self.lr_del)
 
-        self.shots_tree = GSAssetLoaderAssetLib(self)
-        self.shots_tree.tree_list.tvw.setItemDelegate(self.lr_del)        
+        self.shot_lib = GSAssetLoaderAssetLib(self)
+        self.shot_lib.tree_list.tvw.setItemDelegate(self.lr_del)        
 
         self.in_scene_list = GSAssetLoaderInSceneList(self)
         self.in_scene_list.tree_list.tvw.setItemDelegate(self.lr_del)
         self.in_scene_list.tree_list.hidden_headers = ['filepath','is_group','5:ref_node','status', 'group']
         self.editorDelegate = ComboBoxDelegate()
         self.in_scene_list.tree_list.tvw.setItemDelegate(self.editorDelegate)
-        #self.loader_tree.parent_class = self
+        #self.asset_lib.parent_class = self
 
         #### LAYOUT ####
 
-        self.asset_lib_tab.addTab(self.loader_tree,'3D Assets')
-        self.asset_lib_tab.addTab(self.shots_tree,'Shots')
+        self.asset_lib_tab.addTab(self.asset_lib,'3D Assets')
+        self.asset_lib_tab.addTab(self.shot_lib,'Shots')
 
         self.locationlyt.addWidget(self.projectlbl)
 
@@ -86,10 +101,17 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         self.pane_split.addWidget(self.asset_lib_tab)
         self.pane_split.addWidget(self.in_scene_list)
-        self.pane_split.setSizes([100, 400])
+        self.pane_split.setSizes([100, 500])
 
-        self.updateAssetList()
-        self.updateAssetTaskCombo()
+        self.asset_lib.asset_type = 'asset_3d'
+        self.updateAssetList('asset_3d')
+        self.updateAssetTaskCombo('asset_3d')
+        self.shot_lib.asset_type = 'shot'
+        self.updateAssetList('shot')
+        self.updateAssetTaskCombo('shot')
+
+        self.asset_lib_tab.currentChanged.connect(self.assetTabChanged)
+        
         self.updateInSceneAssets()
 
 
@@ -99,8 +121,6 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         
         # get a list of shots for a stage of production
         asset_lib, asset_names = self.proj.getAssetsList(upl_dict=self.p_dict, asset_type=asset_type)   
-
-
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
         for item in sorted(asset_names):
@@ -124,21 +144,39 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         print ("Asset_Type:{0} Asset_Data:({1},{2})".format(asset_type,asset_lib,asset_names))
         # loads the above dictionary into a treeview as standard items
-        self.loader_tree.tree_list.loadViewModelFromDict(item_dict)
-        self.loader_tree.tree_list.current_path = asset_lib
+        if asset_type == 'asset_3d':
+            self.asset_lib.tree_list.loadViewModelFromDict(item_dict)
+            self.asset_lib.tree_list.current_path = asset_lib
+        elif asset_type == 'shot':
+            self.shot_lib.tree_list.loadViewModelFromDict(item_dict)
+            self.shot_lib.tree_list.current_path = asset_lib
 
+    def assetTabChanged(self):
+        vis_item = self.asset_lib_tab.currentWidget()
+        if vis_item:
+            self.ui_state['asset_tab'] = vis_item.asset_type
 
     def updateAssetTaskCombo(self, asset_type='asset_3d'):
         default_tasks = self.proj.getDefaultTasks(asset_type=asset_type)
+        valid_tasks = ['model', 'rig', 'lookdev', 'anim', 'effects', 'layout']
         print default_tasks
         for name in default_tasks:
-            if name != '':
+            if name != '' and name in valid_tasks:
                 item = QStandardItem(name)
-                self.loader_tree.typecombo.model().appendRow(item)
+                if asset_type == 'asset_3d':
+                    self.asset_lib.typecombo.model().appendRow(item)
+                elif asset_type == 'shot':
+                    self.shot_lib.typecombo.model().appendRow(item)
 
-    def createReference(self, asset_type='asset_3d'):
+    def addReference(self, asset_type='asset_3d'):
 
-        sel_item = self.loader_tree.tree_list.getSelectedItems()
+        print 'Current Tab is {0}'.format(self.ui_state['asset_tab'])
+        if self.ui_state['asset_tab'] == 'asset_3d':
+            sel_item = self.asset_lib.tree_list.getSelectedItems()
+            task = str(self.asset_lib.typecombo.currentText())
+        elif self.ui_state['asset_tab'] == 'shot':
+            sel_item = self.shot_lib.tree_list.getSelectedItems()
+            task = str(self.shot_lib.typecombo.currentText())
         
         if len(sel_item):
             a_name = str(sel_item[0].text())
@@ -147,7 +185,7 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             
             #ad = dict(self.p_dict)
             f_data = self.proj.pathParser.parsePath(a_path)
-            f_data['task'] = str(self.loader_tree.typecombo.currentText())
+            f_data['task'] = task
             print ('task={0}'.format(f_data['task']))
             f_data['scenename'] = 'main'
             f_data['package'] = 'maya'
@@ -158,16 +196,82 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             print f_data
             pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
             print ('latest_publish={0} {1}'.format(pub_root,pub_files))
+
             if not os.path.isdir(pub_root):
                 cmds.confirmDialog( title='Publish Not Found:', message='Publish Not Found: {0} {1} Check to make sure it has been published'.format(a_name,f_data['task']), button=['Ok'], defaultButton='Ok', cancelButton='Ok', dismissString='Ok' )
                 #cmds.error('No publish found for Asset: Looking for {0}'.format(pub_root))
                 return
             else:
-                asset_scenefile = '/'.join([pub_root,pub_files[0]])
-                namespace = a_name
-                # TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
-                cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')
+                if self.ui_state['asset_tab'] == 'asset_3d':
+                    asset_scenefile = '/'.join([pub_root,pub_files[0]])
+                    namespace = a_name
+                    # TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
+                    cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')
+                elif self.ui_state['asset_tab'] == 'shot':
+                    assembly_file = '/'.join([pub_root,'{0}.yml'.format(pub_files[0])])
+                    self.buildFromAssemblyFile(assembly_file)
                 self.updateInSceneAssets()
+
+    def buildFromAssemblyFile(self,filepath, substitute=['rig>lookdev','model>lookdev']):
+        try:
+            cmds.loadPlugin( 'AbcExport.mll' )
+            cmds.loadPlugin( 'AbcImport.mll' )
+        except:
+            pass
+        if os.path.exists(filepath):
+            assembly_data = self.getAssemblyData(filepath)
+            if 'output_data' in assembly_data:
+                for o in assembly_data['output_data']:
+                    # TODO check if namespace exists first
+                    out_type = str(assembly_data['output_data'][o]['type'])
+                    out_name = str(assembly_data['output_data'][o]['name'])
+                    out_path = str(assembly_data['output_data'][o]['out_path'])
+                    if out_type.startswith("Alembic"):
+                        if out_name.startswith("Camera:"):
+                            a = assembly_data['output_data'][o]['name'].split(":")[-1]
+                            print "cmds.AbcImport({0}, mode='import', connect='{1}')".format(out_path,a)
+                            cmds.AbcImport(out_path, mode='import')    
+                        else:
+                            a = assembly_data['output_data'][o]['name']
+                            namespace = assembly_data['asset_data'][a]['namespace']
+                            asset_scenefile = assembly_data['asset_data'][a]['filepath']
+                            cache_path = assembly_data['asset_data'][a]['cache_path']
+                            subst_path = asset_scenefile
+                            for ea in substitute:
+                                find_repl = ea.split('>')
+                                subst_path = subst_path.replace(find_repl[0], find_repl[1])
+                            if os.path.exists (subst_path):
+                                asset_scenefile = subst_path
+                            else:
+                                print ("Could not find substuted paths: {0}".format(subst_path))
+                            # TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
+                            cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')   
+                            if os.path.exists(cache_path):
+                                self.attachAlembicCache(namespace, cache_path)
+                            else:
+                                print ("Cache for {0} not found: {1}".format(a,cache_path))
+                # set camera abc up
+                # set frame range
+        else:
+            print ("Could not Locate Assembly File: {0}".format(filepath))
+
+    # AbcImport -mode import -connect "testCharA:g_root|testCharA:g_geo" "C:/projects/ab_testjob/production/shots/s01/005_00/anim/publish/main/v006/s01_005_00_anim_main_v006_testCharA.abc";
+    def attachAlembicCache(self, asset_ns, cache_path):
+
+        cache_nodes = cmds.sets("{0}:s_cache".format(asset_ns),q=1)
+        print "cmds.AbcImport({0}, mode='import', connect='{1}')".format(cache_path, ' '.join(cache_nodes))
+        cmds.AbcImport(cache_path, mode='import', connect=' '.join(cache_nodes))
+
+    def getAssemblyData(self, filepath):
+        f = open(filepath)
+        # use safe_load instead load
+        #dataMap = yaml.safe_load(f)
+        try:
+            dataMap = yaml.load(f, Loader=yaml.CLoader)
+        except AttributeError:
+            dataMap = yaml.load(f, Loader=yaml.Loader)
+        f.close()
+        return dataMap
 
     def getInSceneAssets(self):
         asset_list = []
@@ -207,6 +311,18 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         # TODO this is terrible way to do this
         return [(sel_refs[4], sel_refs[0], sel_refs[5])]
 
+    def getAlembicInScene(self):
+        abc_list = []
+        abc_nodes = cmds.ls(type='AlembicFile',long=1)
+        for abc in abc_nodes:
+            abc_node = abc
+            abc_ns = cmds.ls(abc,sns=1)[-1]
+            abc_path = cmds.getAttr((abc+'.abc_File'))
+            f_data = self.proj.pathParser.parsePath(abc_path)
+            abc_version = f_data['version']
+            abc_list.append((abc_node, abc_ns, abc_path, abc_version))
+        return abc_list
+
     def doRemoveAsset(self):
 
         for ref_n, ref_ns, ref_path in self.getSelectedRefs():
@@ -244,14 +360,14 @@ class GSAssetLoaderAssetLib(MayaQWidgetBaseMixin,QWidget):
         self.headerlyt = QHBoxLayout()
         self.headerlyt.setContentsMargins(0,0,0,0)
         self.footerlyt = QHBoxLayout()
-        self.footerlyt.setContentsMargins(0,0,0,0)
+        self.footerlyt.setContentsMargins(5,5,5,5)
 
         self.title = QLabel('')
         self.tree_list = GSAssetLoaderTreeList()
         self.tree_list.tvw.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.typelbl = QLabel('Type:')
         self.typecombo = QComboBox()
-        self.ref_btn = QPushButton('Reference >>')
+        self.ref_btn = QPushButton('Add To Scene >>')
 
         font = self.typelbl.font()
         font.setPointSize(12)
@@ -272,7 +388,7 @@ class GSAssetLoaderAssetLib(MayaQWidgetBaseMixin,QWidget):
         #####################
         ###### SIGNALS#######
 
-        self.ref_btn.clicked.connect(self.parent().createReference)
+        self.ref_btn.clicked.connect(self.parent().addReference)
         
 
 class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
