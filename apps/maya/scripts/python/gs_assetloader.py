@@ -252,6 +252,8 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
                                 print ("Cache for {0} not found: {1}".format(a,cache_path))
                 # set camera abc up
                 # set frame range
+                cmds.playbackOptions(e=1,min=assembly_data['start_frame'],max=assembly_data['end_frame'])
+                
         else:
             print ("Could not Locate Assembly File: {0}".format(filepath))
 

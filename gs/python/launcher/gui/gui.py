@@ -1371,7 +1371,7 @@ class LauncherWindow(QMainWindow):
 
         print ("checking active directory for initials")
         #try:
-        initials = get_initials()
+        initials = get_initials().upper()
         self.ui['wdgt']['initials_le'].setText(initials)
        #except:
        #    print ("could not connect to active directory")
