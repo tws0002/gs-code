@@ -1721,7 +1721,7 @@ class SceneManager:
                 if filename in os.listdir(searchPath):
                     fileToLoad = os.path.join(searchPath, filename)
                 else:
-                    cmds.error('Could not find scene %s in either animation or lighting folders!') % filename
+                    cmds.error('Could not find scene %s in either animation or lighting folders!' %filename)
             fileToLoad = fileToLoad.replace('\\', '/')
             subp = subprocess.Popen(os.path.join(self.M.mayaDir, 'mayapy.exe') + ' ' + os.path.join(self.M.scriptsDir, '..', 'python', 'm_analyzeScene.py') + ' ' + fileToLoad, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = subp.communicate()

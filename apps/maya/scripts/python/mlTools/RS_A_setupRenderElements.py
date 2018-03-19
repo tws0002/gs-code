@@ -55,7 +55,10 @@ def main():
                 if utilAov=='rsAov_WorldPosition_filter':
                     cmds.setAttr(aov+'.name',"P_filter",type="string")
                 cmds.rename(aov,utilAov)
-        mel.eval("redshiftUpdateActiveAovList")  
+        try:
+            mel.eval("redshiftUpdateActiveAovList")  
+        except:
+            print 'Aov Window not found'
 
         #get list of all aovs, turn off all, force settings
         existingAovs=cmds.ls(type='RedshiftAOV')

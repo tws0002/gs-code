@@ -18,3 +18,6 @@ def init_mlTools_menu():
         cmds.menuItem(l='B_setupUtilityLayer',c='from mlTools import RS_B_setupUtilityLayer;RS_B_setupUtilityLayer.main()')
         cmds.menuItem(l='C_setupMatteLayer',c='from mlTools import RS_C_setupMatteLayer;RS_C_setupMatteLayer.main()')
         cmds.menuItem(l='C_option_setupIDsOnly',c='from mlTools import RS_Coption_setupIDsOnly;RS_Coption_setupIDsOnly.main()')
+        cmds.menuItem(l='C_option_setupLayerOnly',c='from mlTools import RS_Coption_setupLayerOnly;RS_Coption_setupLayerOnly.main()')
+        cmds.menuItem(l='D_option_setupPuzzleMatteLayer',c='from mlTools import RS_Doption_setupMaterialPuzzleMatteLayer;RS_Doption_setupMaterialPuzzleMatteLayer.main()')
+        

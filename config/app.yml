@@ -645,7 +645,7 @@ modo:
         ui:
           linux: /
           mac: /
-          win32: modo.exe
+          win32: modo.exe "-cmd:@//scholar/pipeline/base/apps/modo/scripts/gs_modo_startup.py"
           #win32: 'modo.exe -config:\\scholar\pipeline\base\apps\modo\configs\gs_env.cfg'
         cli:
           linux: /

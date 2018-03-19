@@ -56,21 +56,6 @@ def setupOverides():
     cmds.editRenderLayerGlobals(currentRenderLayer=matteLayer)
     currentRenderLayer=matteLayer
 
-    #ADD existing visbility overides from object properties
-    #get settings from any existing layer ObjectProperties, to copy to matte settings
-    existingVis=[]
-    layerAdj=cmds.editRenderLayerAdjustment(currentRenderLayer, query=True, layer=True )
-    if layerAdj:
-        for adj in layerAdj:
-            try:
-                node,attr=adj.split('.')
-                if node:
-                    if cmds.nodeType(node)=='RedshiftVisibility':
-                        existingVis.append([adj,cmds.getAttr(adj)])
-            except:
-                pass
-
-
     #TURN OFF LIGHTS, make optimizations
     for light in cmds.ls(type='RedshiftPhysicalLight'):
         cmds.editRenderLayerAdjustment(light+'.on', layer=currentRenderLayer)
@@ -126,9 +111,9 @@ def setupOverides():
         cmds.setAttr(aov+".filePrefix","<BeautyPath>/<RenderPass>/<BeautyFile>.<RenderPass>",type="string")
         cmds.setAttr(aov+".exrCompression", 4)
     try:
-        mel.eval("redshiftUpdateActiveAovList")  
+        mel.eval("redshiftUpdateActiveAovList")
     except:
-        print 'Aov Window not found'
+        pass
 
 def setupIDs():
     currentRenderLayer=cmds.editRenderLayerGlobals(q=1, crl=1) 
@@ -168,7 +153,7 @@ def main():
         cmds.confirmDialog(m="_\"Beauty\" not found in renderlayer")
     else:
         setupOverides()
-        setupIDs()
+        #setupIDs()
         #writeSceneData()
 
 '''
