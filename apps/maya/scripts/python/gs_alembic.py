@@ -12,25 +12,32 @@ __email__ = "adam@adamburke.net"
 
 '''pipeline functions for importing/exporting alembic files in maya'''
 
-import sys, math, glob, re
+import sys, math, glob, re, os
 import yaml
 
 # import maya
-import maya.cmds as cmds
-import maya.OpenMayaUI as mui
 from maya.OpenMaya import MVector
-import maya.mel as mel
-from maya.app.general.mayaMixin import MayaQWidgetBaseMixin
+from maya import cmds
+from maya import mel
+from maya import OpenMayaUI as omui 
+from maya.app.general.mayaMixin import MayaQWidgetBaseMixin, MayaQWidgetDockableMixin
 
-# import pyQt
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-import sip
+try:
+  from PySide2.QtCore import * 
+  from PySide2.QtGui import * 
+  from PySide2.QtWidgets import *
+  from PySide2 import __version__
+  from shiboken2 import wrapInstance 
+except ImportError:
+  from PySide.QtCore import * 
+  from PySide.QtGui import * 
+  from PySide import __version__
+  from shiboken import wrapInstance 
 
+mayaMainWindowPtr = omui.MQtUtil.mainWindow()
+mayaMainWindow = wrapInstance(long(mayaMainWindowPtr), QWidget) 
 
-# custom pyQT UI
-from gsqt.widgets import *
-from gsqt.stylesheets import *
+import gscore
 
 # global pointers to prevent garbage collection until unload
 wind=None
@@ -38,8 +45,8 @@ widg=None
 wind_lyt=None
 
 def get_maya_main_window():
-    ptr = mui.MQtUtil.mainWindow()
-    return sip.wrapinstance(long(ptr), QObject)
+    ptr = omui.MQtUtil.mainWindow()
+    return wrapInstance(long(ptr), QObject)
 
 def to_qt_object(maya_name):
     '''
@@ -47,19 +54,19 @@ def to_qt_object(maya_name):
     return the corresponding QWidget or QAction.
     If the object does not exist, returns None
     '''
-    ptr = mui.MQtUtil.findControl(maya_name)
+    ptr = omui.MQtUtil.findControl(maya_name)
     if ptr is None:
-        ptr = mui.MQtUtil.findLayout(maya_name)
+        ptr = omui.MQtUtil.findLayout(maya_name)
     if ptr is None:
-        ptr = mui.MQtUtil.findMenuItem(maya_name)
+        ptr = omui.MQtUtil.findMenuItem(maya_name)
     if ptr is not None:
-        return sip.wrapinstance(long(ptr), QObject)
+        return wrapInstance(long(ptr), QWidget)
 
 def get_maya_window(window='main', title='New PyQT Window'):
 	''' Get the maya main window as a QMainWindow instance'''
 	ptr = None
 	if window == 'main':
-		ptr = mui.MQtUtil.mainWindow()
+		ptr = omui.MQtUtil.mainWindow()
 	else:
 		if cmds.window(window,q=True,exists=True) == False:
 			new_window = cmds.window(window,title=title)
@@ -83,8 +90,6 @@ class StudioAlembicUIWindowImport(MayaQWidgetBaseMixin,QWidget):
 	''' Main importer UI '''
 	def __init__(self, parent=None, *args, **kwargs):
 		super(StudioAlembicUIWindowImport, self).__init__(parent=parent, *args, **kwargs) 
-
-		self.parent = parent
 
 		iconsize = QSize(48,48)
 
@@ -134,7 +139,7 @@ class StudioAlembicUIWindowImport(MayaQWidgetBaseMixin,QWidget):
 			cur_cache = QStandardItem(assets[a]['current_cache'])
 			ver = QStandardItem(assets[a]['latest_cache'])
 			item.setCheckable(True)
-			item.setCheckState(2)
+			item.setCheckState(Qt.Checked)
 			self.asset_model.appendRow(item)
 			self.asset_model.setItem(r,1,cur_cache)
 			self.asset_model.setItem(r,2,ver)
@@ -173,7 +178,7 @@ class StudioAlembicUIWindow(MayaQWidgetBaseMixin,QWidget):
 		super(StudioAlembicUIWindow, self).__init__(parent=parent, *args, **kwargs) 
 
 
-		self.parent = parent
+		#self.parent = parent
 		iconsize = QSize(48,48)
 		vertical = QVBoxLayout()
 
@@ -259,7 +264,7 @@ class StudioAlembicUIWindow(MayaQWidgetBaseMixin,QWidget):
 			print (assets[a]['latest_cache'])
 			ver = QStandardItem(assets[a]['latest_cache'])
 			item.setCheckable(True)
-			item.setCheckState(2)
+			#item.setCheckState(Qt.CheckState)
 			self.asset_model.appendRow(item)
 			self.asset_model.setItem(r,2,ver)
 			r = r + 1
@@ -594,7 +599,7 @@ def loadExporterUI(standalone=False):
 	else:
 		wind = get_maya_window(window='studioAlembicWindow', title='Alembic Export')
 		wind_lyt = QHBoxLayout()
-		widg = StudioAlembicUIWindow(wind)
+		widg = StudioAlembicUIWindow()
 		wind_lyt.setContentsMargins(0,0,0,0)
 		wind_lyt.addWidget(widg)
 		wind.setLayout(wind_lyt)
@@ -609,7 +614,7 @@ def loadImporterUI(standalone=False):
 	else:
 		wind = get_maya_window(window='studioAlembicWindow', title='Alembic Import')
 		wind_lyt = QHBoxLayout()
-		widg = StudioAlembicUIWindowImport(wind)
+		widg = StudioAlembicUIWindowImport()
 		wind_lyt.setContentsMargins(0,0,0,0)
 		wind_lyt.addWidget(widg)
 		wind.setLayout(wind_lyt)

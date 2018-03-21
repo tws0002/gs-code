@@ -6,7 +6,8 @@ START_TIME = time.time()
 
 # determines vars based on this files location
 LAUNCHER = os.path.dirname(os.path.realpath(__file__))
-RES = os.path.join(LAUNCHER, 'res')
+RES = os.path.join(LAUNCHER, 'gui', 'res')
+print ("RES="+RES)
 PYTOOLS = os.path.dirname(LAUNCHER)
 AUTHOR = os.path.dirname(PYTOOLS)
 BRANCH = os.path.dirname(AUTHOR)

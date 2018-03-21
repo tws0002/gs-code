@@ -30,7 +30,7 @@ def autoInitMustacheProject():
         if 'GSINITIALS' in os.environ:
             mustache.M.user = os.environ['GSINITIALS']
         if 'GSPROJECT' in os.environ:
-            mustache.M.projectName =  os.environ['GSPROJECT']
+            mustache.M.projectName =  os.environ['GSPROJECT'].split('/')[4]
             mustache.M.project = '/'.join(['//scholar/projects', mustache.M.projectName, '03_production','01_cg','01_MAYA'])
             mustache.M.assetsDir = '/'.join([mustache.M.project, mustache.M.assetsBase])
             mustache.M.scenesDir = '/'.join([mustache.M.project, mustache.M.shotsBase])
@@ -45,10 +45,12 @@ def gs_restore_pwd():
     m_install = ''
     try:
         m_install = os.environ['ST_MAYA_DIR']
-        os.chdir(m_install)
+        if os.path.isdir(m_install):
+            os.chdir(m_install)
         cmds.evalDeferred("import os;os.chdir('{0}')".format(m_install), lowestPriority=False)
     except:
-        os.chdir(m_install)
+        if os.path.isdir(m_install):
+            os.chdir(m_install)
         cmds.evalDeferred("import os;os.chdir('C:\Windows\System32')", lowestPriority=False)
 
 def gs_pluginLoad(plugin=''):
@@ -187,15 +189,18 @@ def init():
     if not cmds.about(batch=True):
         cmds.evalDeferred("gs_autoload(local_only=True)")
         gs_restore_pwd()
-        cmds.evalDeferred("initMustache()")
+        # if project is using original pipeline lets init mustache
+        if '01_cg/01_MAYA' in os.environ['GSPROJECT'] or os.path.exists('/'.join([os.environ['GSPROJECT'],'03_production', '01_cg','01_MAYA'])) :
+            print ("Mustache Pipeline Detected. Initializiong mustache")
+            cmds.evalDeferred("initMustache()")
         cmds.evalDeferred("import gs_menu;gs_menu.init_gs_menu()")
         cmds.evalDeferred("import mlTools;mlTools.init_mlTools_menu()")
     else:
         # maya doesn't properly add the requires flag to scenefiles for these plugins, so we have to force it to load in batchmode
         cmds.loadPlugin("AbcExport")
         cmds.loadPlugin("AbcImport")
-    
 
+    gs_restore_pwd()
 
 if __name__ == '__main__':
     init()

@@ -30,7 +30,7 @@ global proc shelf_MUSTACHE () {
         -style "iconOnly" 
         -marginWidth 1
         -marginHeight 1
-        -command "mustache.M.setUserUI(True)" 
+        -command "mustache.init();mustache.M.setUserUI(True)" 
         -sourceType "python" 
         -commandRepeatable 1
         -flat 1

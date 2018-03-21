@@ -15,6 +15,7 @@ class StudioEnvironment():
         self.workgroup_data = {}
         self.module_data = {}
         self.app_data = {}
+        self.registered_file_types = {}
         if 'PYTHONPATH' in os.environ:
             self.add('PYTHONPATH',os.environ['PYTHONPATH'])
         return
@@ -28,6 +29,18 @@ class StudioEnvironment():
                         self.add(k, v)
                 else:
                     self.add(k, v)
+        # system path is not getting updated in the os.environ after the script has started
+        # so we must
+        if 'PATH' not in self.vars:
+            self.add('PATH','')
+        split = self.vars['PATH'].split(';')
+        for p in sys.path:
+                if p not in split:
+                    split.append(p)
+
+        self.vars['PATH'] = ';'.join(split)
+
+
 
     def load_app_config_file(self, filepath, app=None, version=None):
         print ("Loading file path {0}".format(filepath))
@@ -108,6 +121,13 @@ class StudioEnvironment():
         #if dataMap[]
         self.parse_subst()
         self.parse_subst()
+
+        # register and store any file types
+        for app in self.app_data:
+            if 'file_types' in self.app_data[app]:
+                exts = self.app_data[app]['file_types'].split(",")
+                for e in exts:
+                    self.registered_file_types[e] = {"app":app}
         return
 
     def load_module_config(self, dataMap, module=None, package=None, version=None, mode=''):
@@ -259,9 +279,26 @@ class StudioEnvironment():
 
     def printout(self):
         print '\n== ENV VARS =='
-        for key, value in self.vars.iteritems():
+        for key, value in sorted(self.vars.iteritems()):
             print (key+'='+value)
         print '== END ENV VARS ==\n'
+
+    def get_app_from_ext(self, extension):
+        ''' search the app.yml to find the extension and return the app it belongs to'''
+        if extension in self.registered_file_types:
+            return self.registered_file_types[extension]['app']
+        else:
+            return ''
+
+    def get_flag(self, app='', flag=''):
+        ''' search the app.yml to find flag definitions'''
+        # register and store any file types
+        result = ''
+        if app in  self.app_data:
+            if 'flags' in self.app_data[app]:
+                if flag in self.app_data[app]['flags']:
+                    result = self.app_data[app]['flags'][flag]
+        return result
 
     def make_user_folders(self):
         # check for any paths that reference the user and create the directory before launching app

@@ -56,7 +56,9 @@ def nuke_ui():
         
         musterflags = {}
         musterflags['-add']     = '--major %s  --job %s -X \"%s\"' %(nuke.NUKE_VERSION_STRING,panel.value('Project'), selected_write_nodes_string)
-        musterflags['-e']       = '1105'
+        musterflags['-e'] = '1105'
+        if 'GSBRANCH' in os.environ:
+            musterflags['-e'] = '1205' if os.environ['GSBRANCH'] == 'dev' else '1105'
         musterflags['-n']       = panel.value('Job Name')
         musterflags['-parent']  = '33409'
         musterflags['-group']    = gsstartup.get_project_from_path(newfile)

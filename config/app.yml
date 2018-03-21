@@ -18,6 +18,7 @@ aftereffects:
   - grade
   - conform
   - mix
+  file_types: 'aep'
   versions:
     'CC 2014':
       name: After Effects CC 2014
@@ -94,17 +95,21 @@ maya:
     MAYA_STTOOLS: '%GSBRANCH%/apps/maya'
     MAYA_STTOOLS_COMMON: '%GSBRANCH%/apps/maya'
     MAYA_MODULE_PATH: '%MAYA_STTOOLS%/modules/%ST_MAYA%'
-    MAYA_PLUG_IN_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
+    MAYA_PLUG_IN_PATH: '%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
     #MAYA_PLUG_IN_PATH: '%MAYA_STTOOLS%/plugins/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/plug-ins'
     MAYA_PRESET_PATH: '%MAYA_STTOOLS%/presets'
-    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
-    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/shelves/%ST_MAYA%'
-    XBMLANGPATH: '%MAYA_STTOOLS%/icons;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/icons'
-    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
+    MAYA_SCRIPT_PATH: '%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/python;%MAYA_STTOOLS%/scripts/mel;%MAYA_STTOOLS%/scripts/mel/Utility;%MAYA_STTOOLS%/scripts/Modeling;%MAYA_STTOOLS%/scripts/mel/Rigging;%MAYA_STTOOLS%/scripts/mel/Modeling;%MAYA_STTOOLS%/scripts/mel/Scholar;%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
+    MAYA_SHELF_PATH: '%MAYA_STTOOLS%/shelves/%ST_MAYA%;%GSPROJECT%/03_production/.pipeline/apps/maya/shelves/%ST_MAYA%'
+    XBMLANGPATH: '%MAYA_STTOOLS%/icons;%GSPROJECT%/03_production/.pipeline/apps/maya/icons'
+    PYTHONPATH: '%GSROOT%/lib/python;%MAYA_STTOOLS%/scripts/python;%GSBRANCH%/gs/python;%GSPROJECT%/03_production/.pipeline/apps/maya/scripts'
     #GS_MAYA_NO_INITIAL_AUTOLOAD: '1'
     MAYA_DISABLE_CLIC_IPM: '1'
     MAYA_DISABLE_CIP: '1'
   show: true
+  file_types: 'mb,ma'
+  flags:
+    file: '-file'
+    project: '-proj'
   versions:
     '2017':
       name: Autodesk Maya
@@ -119,7 +124,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /
@@ -147,7 +152,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /
@@ -170,7 +175,7 @@ maya:
         ui:
           linux: /
           mac: /
-          win32: maya.exe -noAutoloadPlugins -proj "//scholar/projects/%GSPROJECT%/03_production/01_cg/01_MAYA"
+          win32: maya.exe -noAutoloadPlugins
         render:
           linux: /
           mac: /
@@ -244,11 +249,11 @@ nuke:
   shell: true
   env:
     RLM_LICENSE: '4101@laxlic01'
-    NUKE_PATH: '//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup;%GSBRANCH%/apps/nuke/icons'
+    NUKE_PATH: '%GSPROJECT%/03_production/.pipeline/apps/nuke/startup;%GSBRANCH%/apps/nuke/startup;%GSBRANCH%/apps/nuke/icons'
     NUKE_DISK_CACHE: '%SCRATCHDISK%/Temp/Nuke_Cache'
     NUKE_TEMP_DIR: '%SCRATCHDISK%/Temp/Nuke_Cache'
-    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/gizmos'
-    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python;//scholar/projects/%GSPROJECT%/03_production/.pipeline/apps/nuke/scripts/python'
+    ST_NUKE_GIZMOS: '%GSBRANCH%/apps/nuke/gizmos;%GSPROJECT%/03_production/.pipeline/apps/nuke/gizmos'
+    PYTHONPATH: '%GSBRANCH%/apps/nuke/scripts/python;%GSPROJECT%/03_production/.pipeline/apps/nuke/scripts/python'
   show: true
   tasks:
   - comp
@@ -256,6 +261,7 @@ nuke:
   - grade
   - track
   - roto
+  file_types: 'nk,nk~,nk.autosave'
   versions:
     '11.0v1':
       name: Nuke
@@ -363,6 +369,7 @@ premiere:
   - grade
   - conform
   - mix
+  file_types: 'prproj'
   versions:
     'CC 2015.3':
       name: Premiere
@@ -423,6 +430,7 @@ photoshop:
   - shade
   - light
   - comp
+  file_types: 'psd,psb,tif,png,tga'
   versions:
     'CC 2015.5':
       name: Photoshop CC 2015.5
@@ -455,6 +463,7 @@ illustrator:
   tasks:
   - design
   - light
+  file_types: 'ai'
   versions:
     'CC 2015.3':
       name: Illustrator CC 2015.3
@@ -487,6 +496,7 @@ indesign:
   tasks:
   - design
   - light
+  file_types: 'indd'
   versions:
     'CC 2015':
       name: InDesign CC 2015
@@ -550,6 +560,7 @@ zbrush:
   tasks:
   - design
   - model
+  file_types: 'ztl,zbr'
   versions:
     '4R8':
       name: ZBrush 4R8
@@ -585,6 +596,7 @@ cinema4d:
   env:
     C4D_PLUGINS_DIR: '%GSROOT%/base/apps/cinema4d/scripts/python'
     C4D_BROWSERLIBS: '%GSROOT%/bin/external/cinema4d/browserlib/%ST_C4D%'
+  file_types: 'c4d'
   versions:
     'R18':
       name: Cinema 4D
@@ -635,6 +647,7 @@ modo:
   - model
   env:
     RLM_LICENSE: '4101@laxlic01'
+  file_types: 'lxo'
   versions:
     '11.1v1':
       name: Modo
@@ -704,6 +717,33 @@ modo:
         linux: /
         mac: /
         win32: 'C:\Program Files\Foundry\Modo\901_SP2'
+    '10.0v1':
+      name: Modo
+      env:
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/10.0/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/10.0'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: modo.exe
+          #win32: 'modo.exe -config:\\scholar\pipeline\base\apps\modo\configs\gs_env.cfg'
+        cli:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+        render:
+          linux: /
+          mac: /
+          win32: modo_cl.exe
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Foundry\Modo\10.0v1'
+
+
+        NEXUS_ASSET: '%GSROOT%/bin/external/modo/modo_content/901/assets'
+        NEXUS_CONTENT: '%GSROOT%/bin/external/modo/modo_content/901'
 mari:
   show: true
   tasks:
@@ -712,6 +752,7 @@ mari:
   env:
         RLM_LICENSE: '4101@laxlic01'
         MARI_SCRIPT_PATH: '%GSROOT%/base/apps/mari/scripts'
+  file_types: 'mari'
   versions:
     '3.3v1':
       name: Mari
@@ -765,6 +806,7 @@ mudbox:
   tasks:
   - design
   - texture
+  file_types: 'mbx'
   versions:
     '2017':
       name: Mudbox
@@ -808,6 +850,7 @@ mudbox:
   tasks:
   - design
   - texture
+  file_types: 'max,3ds'
   versions:
     '2016':
       name: 3D Studio
@@ -839,7 +882,7 @@ silhouette:
 houdini:
   env:
     PYTHONPATH: '%GSBRANCH%/gs/python;%GSROOT%/lib/python'
-    JOB: "//scholar/projects/%GSPROJECT%/03_production/01_cg/04_houdini"
+    JOB: "%GSWORKSPACE%"
     SESI_LMHOST: "laxlic01"
     HSITE: '%GSBRANCH%\apps\houdini'
   show: true
@@ -847,6 +890,7 @@ houdini:
   - fx
   - light
   - anim
+  file_types: 'hip,hipnc,hiplc'
   versions:
     '16.0.705':
       name: Houdini

@@ -1,0 +1,293 @@
+# project structure template definition
+# version 0.5
+#
+# tells core how to read the project file system. these definitions can be defined
+# studio wide or on a project by project basis
+
+# < > bracketed words define path variables and are captured using regex named capture groups
+# % % bracketed words are interpreted as string substitution variables you can only use within
+#     the same templates scope or parent scode
+# match_path: is used to find path matching for a given task/asset
+# capture_path is used to capture the named groups(vars)
+# pattern: is a pure regex expression for named capture groups (its longer but more precise than the simplified
+#          <> brackets alone)
+
+frame_padding: 5
+frame_delimiter: '.'
+version_prefix: 'v'
+version_incr: 1
+version_padding: 3
+
+# list of defined status values
+status:
+- 'waiting'
+- 'ready to start'
+- 'in progress'
+- 'changes needed'
+- 'complete'
+- 'cbb'
+- 'approved'
+- 'on hold'
+- 'dead'
+# 2015 project file system's abstracted hierarchy
+# whichever template type is last should define the workscene
+# hierarchy_struct: 'project > stage > asset > task > package > scenefile'
+# older style (each package gets its own asset_lib):
+hierarchy_struct: 'project > stage > package > asset > task > scenefile'
+
+# defines global variables used throughout templates. these can be used as %var_name% anywhere in template
+path_vars:
+  project_root: '<server>/<share>/<job>'
+
+# defines project template as well as any additional variables useful to know about for pattern matching
+project_templates:
+    'basic':
+        display_name: 'GS 2015 Project'
+        pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)'
+        match_path: '<server>/projects/<job>'
+        capture_path: '<server>/<share>/<job>'
+        project_path: '%match_path%'
+        copy_tree: '<server>/projects/_templates/project_template_2015/job_basic'
+
+# Production Stage Definition
+# A job may include several phases of production for example: Pitch, Design, Previs, Production
+# these are separate define folder structures and should contain all the assets & scenefiles
+stage_templates:
+    'design':
+        parent: 'project'
+        display_name: 'Design'
+        pattern: '(?P<server>)/(?P<share>projects)/(?P<job>)/(?P<stage>design)'
+        match_path: '<server>/<share>/<job>/design'
+        capture_path: '<server>/<share>/<job>/<stage>'
+        package_root: '<server>/<share>/<job>/02_design'
+        copy_tree: '<server>/<share>/_templates/project_template_2015/stage_design'
+    'production':
+        parent: 'project'
+        display_name: 'Production'
+        match_path: '<server>/<share>/<job>/03_production'
+        capture_path: '<server>/<share>/<job>/<stage>'
+        package_root: '<server>/<share>/<job>/03_production'
+        copy_tree: '<server>/<share>/_templates/project_template_2015/stage_basic'
+        user_scratch:  '<server>/<share>/<job>/03_production' 
+# Asset Definitions: Assets are libraries of objects specific to a project/stage of 
+# Notes:
+# parent: specifies which template is the heierarchical parent -this depends on how you have organized
+#         your folder structure. some structures are shot centric, other package centric and this allows
+#         for both
+# People familiar with shotgun would call assets "Entities"
+
+asset_templates:
+  'shot_2d':
+    parent: 'stage'
+    display_name: 'Comp'
+    display_order: 2
+    lib_path: "<server>/projects/<job>/03_production/02_composite"
+    copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
+    match_path: "<server>/projects/<job>/03_production/02_composite/<asset>"
+    capture_path: "<server>/<share>/<job>/03_<stage>/02_<task>/<asset>"
+    task_root: "%match_path%"
+    default_tasks: 'comp'
+    qualifier_path: '00_nuke' # qualifies if path contains this subfolder
+    ignore_path: '_musterFiles*'
+  'shot_3d':
+    parent: 'package'
+    display_order: 1
+    display_name: 'Shots3D'
+    lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes"
+    copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
+    match_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/02_cg_scenes/<asset>"
+    capture_path: "<server>/<share>/<job>/03_<stage>/01_cg/01_MAYA/scenes/02_cg_scenes/<asset>"
+    task_root: "%match_path%"
+    default_tasks: 'animation,lighting'
+    qualifier_path: 'animation' # qualifies if path contains this subfolder
+    ignore_path: 'mustache_renderScenes*'
+  'asset_3d':
+    parent: 'package'
+    display_order: 3
+    display_name: 'Assets3D'
+    lib_path: "<server>/projects/<job>/03_production/01_cg/01_MAYA/scenes/01_cg_elements/01_models"
+    copy_tree: '<server>/projects/_templates/project_template_2015/asset_basic'
+    match_path: "<server>/projects/<job>/03_<stage>/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
+    capture_path: "<server>/<share>/<job>/03_<stage>/01_cg/01_MAYA/scenes/01_cg_elements/01_models/<asset>"
+    task_root: "%match_path%"
+    default_task: 'model'
+    qualifier_path: '_versions'
+    ignore_path: 'mustache_renderScenes*'
+
+# Defines file locations specific to tasks, %parent_path% is a defined by asset_templates 
+
+# to find the task of a given path we must build our master list of match_paths and capture_paths (for each asset_type append each task)
+task_templates: 
+  'proto_task_basic':
+    # prototypes are allowed to be inherited by other task types, they are not listed when querying task types.
+    parent: 'asset'
+    capture_path: '%task_root%/<task>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/task_basic'
+    package_root: '%match_path%'
+    publish_path: '%task_root%/_publish'
+    scenefile_type: 'scene_basic'
+  'design':
+    inherits: 'proto_task_basic'
+    display_name: 'Design'
+    display_order: 1
+    match_path: '<server>/<share>/<job>/design'
+    capture_path: '<server>/<share>/<job>/<stage>'
+    default_package: 'photoshop'
+    scenefile_type: 'styleframe'
+  'conform':
+    inherits: 'proto_task_basic'
+    parent: 'stage'
+    display_name: 'Conform'
+    display_order: 1
+    match_path: '<server>/<share>/<job>/<stage>/edit/_conform'
+    capture_path: '<server>/<share>/<job>/<stage>/edit/_<task>'
+    default_package: 'premiere'
+    scenefile_type: 'conform'
+  'edit':
+    inherits: 'proto_task_basic'
+    parent: 'stage'
+    display_name: 'Edit'
+    display_order: 6
+    match_path: '%task_root%/comp'
+    default_package: 'premiere'
+    scenefile_type: 'conform'
+  '_versions':
+    inherits: 'proto_task_basic'
+    parent: 'asset:asset_3d'
+    display_name: 'Model'
+    display_order: 1
+    match_path: '%task_root%/_versions'
+    default_package: 'maya'
+    #work_file: "<asset>_<version>_<intials>.<ext>"
+  'animation':
+    inherits: 'proto_task_basic'
+    parent: 'asset:shot_3d'
+    display_name: 'Animation'
+    display_order: 1
+    match_path: '%task_root%/animation'
+    default_package: 'maya'
+  'lighting':
+    inherits: 'proto_task_basic'
+    parent: 'asset:shot_3d'
+    display_name: 'Lighting'
+    display_order: 3
+    match_path: '%task_root%/lighting'
+    default_package: 'maya'
+  '00_nuke':
+    inherits: 'proto_task_basic'
+    parent: 'asset:shot_2d'
+    display_name: 'Nuke'
+    display_order: 4
+    match_path: '%task_root%'
+    scenefile_root: '%match_path%/00_nuke'
+    default_package: 'nuke'
+  '00_ae':
+    inherits: 'proto_task_basic'
+    parent: 'asset:shot_2d'
+    display_name: 'AE'
+    display_order: 4
+    match_path: '%task_root%'
+    scenefile_root: '%match_path%/00_ae'
+    default_package: 'ae'
+
+# Defines available software packages. When creating a new scene, these template folder struct will get
+# copied to the specified path
+package_templates:
+  'none':
+    parent: 'stage'
+    match_path: '%package_root%'
+    capture_path: '%package_root%'
+    scenefile_root: '%match_path%'
+  'maya':
+    parent: 'stage'
+    match_path: '%package_root%/01_cg/01_MAYA'
+    capture_path: '%package_root%/01_cg/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/maya'
+    scenefile_root: '%match_path%/scenes'
+    extension: 'mb'
+  'c4d':
+    parent: 'stage'
+    match_path: '%package_root%/01_cg/02_c4d'
+    capture_path: '%package_root%/01_cg/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/c4d'
+    scenefile_root: '%match_path%/scenes'
+    extension: 'c4d'
+  'houdini':
+    parent: 'stage'
+    match_path: '%package_root%/01_cg/04_houdini'
+    capture_path: '%package_root%/01_cg/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/houdini'
+    scenefile_root: '%match_path%'
+    extension: 'hip'
+  'modo':
+    parent: 'stage'
+    match_path: '%package_root%/01_cg/10_modo'
+    capture_path: '%package_root%/01_cg/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/modo'
+    scenefile_root: '%match_path%'
+    extension: 'lwo'
+  'zbrush':
+    parent: 'stage'
+    match_path: '%package_root%/01_cg/08_zbrush'
+    capture_path: '%package_root%/01_cg/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/zbrush'
+    scenefile_root: '%match_path%'
+    exensions: 'ztl'
+  'nuke':
+    parent: 'asset:shot_2d'
+    match_path: '%task_root%/00_nuke'
+    capture_path: '%task_root%/00_<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/nuke'
+    scenefile_root: '%match_path%'
+    extension: 'nk'
+  'ae':
+    parent: 'asset:shot_2d'
+    match_path: '%task_root%/01_ae'
+    capture_path: '%task_root%/00_<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/ae'
+    scenefile_root: '%match_path%'
+    extension: 'aep'
+  'premiere':
+    parent: 'stage'
+    match_path: '%package_root%/premiere'
+    capture_path: '%task_root%/<package>'
+    copy_tree: '<server>/projects/_templates/project_template_2015/packages/premiere'
+    scenefile_root: '%match_path%'
+    extension: "prproj"
+
+# defines the naming convention of a specific scenefile. Each software package template has
+scenefile_templates:
+    'scene_basic':
+        parent: 'task'
+        copy_path: '<server>/projects/_templates/project_template_2015/scenefiles/<scenetype>.<ext>'
+        workscene_path: '%scenefile_root%'
+        workscene_file: '<asset>_<camv>_<animv>_<lighv>_<intials>.<ext>'
+        render_path: '%package_root%/images/<filename>/<layer>'
+        render_file: '<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+        publish_path: '%task_root%/mustache_renderScenes/'
+        publish_file: '<asset>_<camv>_<animv>_<lighv>_<intials>_T_<timecode>.<ext>'
+    'asset_basic':
+        parent: 'task'
+        copy_path: '<server>/projects/_templates/project_template_2015/scenefiles/<scenetype>.<ext>'
+        workscene_path: '%scenefile_root%'
+        workscene_file: '<asset>_<version>_<intials>.<ext>'
+        render_path: '%package_root%/images/<filename>/<layer>'
+        render_file: '<asset>_<version>_<intials>_<layer>.%04d.<ext>'
+        publish_path: '%task_root%'
+        publish_file: '<asset>.<ext>'
+    'comp':
+        parent: 'task'
+        workscene_path: '%scenefile_root%'
+        workscene_file: '<asset>_<task>_<version>.<ext>'
+        render_path: '%project_path%/04_renders/<package>/<filename>'
+        render_file: '<asset>_<task>_<version>.%04d.<ext>'
+        publish_path: '%workscene_file%'
+        publish_file: '%workscene_file%'
+    #'styleframe':
+    #    parent: 'task'
+    #    workscene_path: '%scenefile_root%'
+    #    workscene_file: '<job>_<scenename>_<version>_<initials>.<ext>'
+    #    render_path: '%task_root%/render/<scenename>/<layer>/<version>'
+    #    render_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_<layer>_<pass>.%04d.<ext>'
+    #    publish_path: '%task_root%/publish/<version>'
+    #    publish_file: '<asset_grp>_<asset>_<task>_<scenename>_<version>_publish.<ext>'
