@@ -98,7 +98,7 @@ class LauncherWindow(QMainWindow):
         self.settings = QSettings('gs', 'launcher')
 
 
-        self.controller = gs_core.CoreController()
+        self.controller = gscore.CoreController()
 
         # OLD load Style Sheet for overall UI appearance
         # sStyleSheet = StyleSheet().styleSheet(1)
@@ -467,7 +467,7 @@ class LauncherWindow(QMainWindow):
         # clear the item model and init a new one
         self.ui['mdl']['project_mdl'].clear()
         # new way (temp disabled) # job_list = self.controller.get_projects_list('job_share')  #
-        job_list = gs_core.list_jobs('jobs')
+        job_list = gscore.list_jobs('jobs')
         if job_list:
             for j in sorted(job_list,key=lambda v: v.upper()):
                 item = QStandardItem(j)
@@ -533,6 +533,7 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt'][asset_type].tvw.setIndentation(15)
                 self.ui['wdgt'][asset_type].tvw.setRootIsDecorated(True)
                 self.ui['wdgt'][asset_type].selectionChanged.connect(self.assetListChange)
+                self.ui['wdgt'][asset_type].clicked.connect(self.assetListClicked)
                 self.ui['wdgt'][asset_type].setFilterParents(True)
                 self.ui['wdgt'][asset_type].asset_type = asset_type
                 print "setting current path to {0}".format(dname)
@@ -546,7 +547,7 @@ class LauncherWindow(QMainWindow):
             self.updateAssetList(project_path, asset_type)
 
         elapsed_time = time.time() - START_TIME
-        print("gs_core.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
+        print("gscore.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
 
         #self.ui['wdgt']['asset_tabs'].setTab(self.ui_state['asset_tab'])
 
@@ -644,7 +645,7 @@ class LauncherWindow(QMainWindow):
 
             self.ui['wdgt']['task_tabs'].addTab(self.ui['wdgt']['{0}_wdgt'.format(task_type)],task_type.title())
 
-            self.active_path['task'] = task_type
+            self. active_path['task'] = task_type
             self.updateTaskList(task_type)
 
         self.taskTabChanged(0)
@@ -663,7 +664,7 @@ class LauncherWindow(QMainWindow):
         return
 
     def updateTaskList(self, task_type):
-        #item_list = gs_core.gs_core.list_shots('jobs',project_name)
+        #item_list = gscore.gscore.list_shots('jobs',project_name)
         self.ui['wdgt'][task_type].blockSignals(True)
         # get top level list of packages for the given task
         item_tuple = self.controller.proj_controller.getTaskScenesList(upl_dict=self.active_data, task_type=task_type)
@@ -1128,12 +1129,15 @@ class LauncherWindow(QMainWindow):
 
             # TODO disabled for now, should integrate into the task / files list pane
             #self.updateScenesList(a)
-            self.updateTaskTabs(self.active_path['job'],self.active_path['asset'])
+            #self.updateTaskTabs(self.active_path['job'],self.active_path['asset'])
         else:
             print ('Selection Empty')
             self.active_path['asset'] = ''
             self.active_data['asset'] = ''
             self.active_data['asset_grp'] = ''
+
+    def assetListClicked(self, index):
+        self.updateTaskTabs(self.active_path['job'], self.active_path['asset'])
 
 
     def displayGroupComboChange(self, i):

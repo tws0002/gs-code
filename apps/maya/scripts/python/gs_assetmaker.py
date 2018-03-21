@@ -170,6 +170,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         cmds.namespace(set=":")
 
         sl = cmds.ls(sl=True,l=True)
+
         #self.addItemToObjList(item='Geometry',parent='')
         self.data_model = {}
         #self.addChildren('',sl)
@@ -182,14 +183,13 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         #self.addItemToObjList(item='Shaders',parent='')
         print(self.data_model)
         self.updateViewModelFromDict(self.data_model)
-
-        bbox = cmds.exactWorldBoundingBox(sl,ii=True)
-        center = [(bbox[3] - bbox[0]) * .5+bbox[0], bbox[1], (bbox[5] - bbox[2])*.5+bbox[2]]
         if cmds.objExists("AssetMaker_asset_xform"):
             cmds.delete("AssetMaker_asset_xform")
         new_loc = cmds.spaceLocator(n="AssetMaker_asset_xform")
-
-        cmds.move(center[0], center[1], center[2], new_loc[0])
+        if len(sl):
+            bbox = cmds.exactWorldBoundingBox(sl,ii=True)
+            center = [(bbox[3] - bbox[0]) * .5+bbox[0], bbox[1], (bbox[5] - bbox[2])*.5+bbox[2]]
+            cmds.move(center[0], center[1], center[2], new_loc[0])
 
     def clearCreateAsset(self):
         self.data_model = {}
@@ -231,7 +231,8 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             sel_list.extend(rn)
 
         temp_grp = cmds.createNode('transform',n="{0}:g_offset".format(ns))
-        cmds.parent(sel_list,temp_grp)
+        if len(sel_list):
+            cmds.parent(sel_list,temp_grp)
 
         if cmds.objExists("AssetMaker_asset_xform"):
             asset_t = cmds.getAttr("AssetMaker_asset_xform.translate")[0]
@@ -602,6 +603,8 @@ def exportAsset(filePath, keepHistory=True, keepShaders=True):
 def createAssetBase(namespace=":"):
     cns = cmds.namespaceInfo( currentNamespace=True )
     valid_ns = ""
+    if namespace == "":
+        namespace = ":"
     if cns != namespace:
         if cmds.namespace(exists=namespace):
             cmds.warning("{0} namespace already exists. Please choose another".format(namespace))

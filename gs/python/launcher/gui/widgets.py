@@ -256,6 +256,7 @@ class LchrTreeList(QWidget):
 
     # remapped signals
     selectionChanged = None
+    clicked = None
 
     def __init__(self, parent=None):
         super(LchrTreeList, self).__init__(parent)
@@ -307,6 +308,8 @@ class LchrTreeList(QWidget):
 
         # map signal functions
         self.selectionChanged = self.tvw.selectionModel().selectionChanged
+
+        self.clicked = self.tvw.clicked
 
         # connect internal signals
         self.le.textChanged.connect(self.filterListEditChanged)

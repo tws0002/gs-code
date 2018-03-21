@@ -30,7 +30,7 @@ class ProjectController():
         #try:
         shutil.copytree(os.path.normpath(src), os.path.normpath(dst))
         #except WindowsError:
-        #    print 'gs_core.projects.copyTempTree() failed {0} to {1}'.format(src,dst)
+        #    print 'gscore.projects.copyTempTree() failed {0} to {1}'.format(src,dst)
         #    raise StandardError
 
         #substitute path names with variables
@@ -147,7 +147,7 @@ class ProjectController():
                     #src = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='copy_tree', exists=False)
                     #dest = self.pathParser.substTemplatePath(upl_dict, template_type='task', template_name=task, template_var='match_path', exists=False)
                     #if dest != "":
-                    #    print 'gs_core.projects.newAsset(): Creating Task:{0} {1} from {2}'.format(task,dest,src)
+                    #    print 'gscore.projects.newAsset(): Creating Task:{0} {1} from {2}'.format(task,dest,src)
                     #    self.copyTemplTree(src, dest)
                     #else:
                     #    return False, "Task:{0} Not Defined".format(task), ""
@@ -737,7 +737,7 @@ class ProjectController():
     #        if upl != '':
     #            upl_dict = self.pathParser.parsePath(upl)
     #        else:
-    #            raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.getTaskScenesList()')
+    #            raise ValueError('no upl_path or upl_dict was specified in call to gscore.project.getTaskScenesList()')
 
     #    scene_root, scene_files = self.getScenefileList(upl_dict=upl_dict, scene_type=scene_type, latest_version=True)
 
@@ -753,7 +753,7 @@ class ProjectController():
     #        if upl != '':
     #            upl_dict = self.pathParser.parsePath(upl)
     #        else:
-    #            raise ValueError('no upl_path or upl_dict was specified in call to gs_core.project.getTaskScenesList()')
+    #            raise ValueError('no upl_path or upl_dict was specified in call to gscore.project.getTaskScenesList()')
     #            latest = self.getLatestSceneVersion(upl_dict=upl_dict, scene_type=scene_type, latest_version=True)
 
     def multiGlob(self, path, filter_list):

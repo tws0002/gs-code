@@ -30,7 +30,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(GSPublishSceneWindow, self).__init__(parent=parent, *args, **kwargs) 
 
-        self.proj = gs_core.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
+        self.proj = gscore.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
         self.p_dict = self.proj.pathParser.parsePath('{0}/production'.format(os.environ['GSPROJECT']))
 
         self.title = "Publish Scene v0.2a"
@@ -139,22 +139,22 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         self.cancelbtn = QPushButton("Cancel")
 
         #### LAYOUT #####
-        self.gridlyt.addWidget(self.projectlbl,0,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.project,0,2)
-        self.gridlyt.addWidget(self.stagelbl,1,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.stage,1,2)
-        self.gridlyt.addWidget(self.assetliblbl,2,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.assetlib,2,2)
-        self.gridlyt.addWidget(self.assetgrplbl,3,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.assetgrp,3,2)
-        self.gridlyt.addWidget(self.assetnamelbl,4,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.assetname,4,2)
-        self.gridlyt.addWidget(self.tasklbl,5,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.taskname,5,2)
-        self.gridlyt.addWidget(self.scenenamelbl,6,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.scenename,6,2)
-        self.gridlyt.addWidget(self.versionlbl,7,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.version,7,2)
+        #self.gridlyt.addWidget(self.projectlbl,0,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.project,0,2)
+        #self.gridlyt.addWidget(self.stagelbl,1,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.stage,1,2)
+        #self.gridlyt.addWidget(self.assetliblbl,2,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.assetlib,2,2)
+        #self.gridlyt.addWidget(self.assetgrplbl,3,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.assetgrp,3,2)
+        #self.gridlyt.addWidget(self.assetnamelbl,4,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.assetname,4,2)
+        #self.gridlyt.addWidget(self.tasklbl,5,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.taskname,5,2)
+        #self.gridlyt.addWidget(self.scenenamelbl,6,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.scenename,6,2)
+        #self.gridlyt.addWidget(self.versionlbl,7,1,Qt.AlignRight)
+        #self.gridlyt.addWidget(self.version,7,2)
         self.gridlyt.addWidget(self.cameralbl,8,1,Qt.AlignRight)
         self.gridlyt.addWidget(self.camera,8,2)
         self.gridlyt.addWidget(self.rangelbl,9,1,Qt.AlignRight)
@@ -184,7 +184,6 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         current_scene = str(cmds.file(q=1,sn=1))
         f_data = self.proj.pathParser.parsePath(current_scene)
-
 
         self.ui_state['f_data'] = dict(f_data)
         self.ui_state['version'] = str(f_data['version'])
@@ -225,6 +224,10 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             self.setPublishType('Render')
         elif f_data['task'] == 'comp':
             self.setPublishType('Render')
+
+        # update frame range
+        self.rangeLE1.setValue(cmds.playbackOptions(q=1,min=1))
+        self.rangeLE2.setValue(cmds.playbackOptions(q=1,max=1))
 
         self.updateOutputList()
 
@@ -277,6 +280,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         if self.ui_state['publish_type'] == 'Animated Cache':
             assets = self.getInSceneAssets()
             for r, ref_path, ref_ns in assets:
+                #if 'model' not in ref_path:
                 item = QStandardItem(ref_ns)
                 item.setCheckable(True)
                 item.setCheckState(Qt.Checked)
@@ -552,45 +556,54 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 cache_set = '{0}:s_cache'.format(a)
             if cmds.objExists(cache_set):
                 obj_list = cmds.sets(str(cache_set),q=1)
-            if len(obj_list) < 1:
-                obj_list = cmds.ls('')
+            if obj_list != None:
+                if len(obj_list) < 1:
+                    obj_list = cmds.ls('')
+                    print ("could not find any cachable sets to export alembic. skipping asset:{0}".format(a))
+                    return
+                obj_str= ','.join(obj_list)
+                out_filename = os.path.basename(out_path)+'_'+a+'.abc'
+                asset_out_path = os.path.join(out_path,out_filename)
+                #try: 
+                #    os.makedirs(os.path.join(out_path))
+                #except OSError:
+                #    if not os.path.isdir(os.path.join(out_path)):
+                #        raise
+
+                # skip model abc cache exports, only do rigs
+                if 'model' not in out_path: 
+                    job_str = (' -file '+out_path)
+                    job_str += (' -root '+obj_str)
+                    job_str += (' -uvWrite')
+                    job_str += (' -worldSpace')
+                    #job_str += (' -stripNamespaces')
+                    job_str += (' -writeVisibility')
+                    job_str += ' -framerange {0} {1}'.format(in_frame,out_frame)
+                    job_str += (' -dataFormat ogawa')
+                    job_strings.append(job_str)
+                    
+                    # exocortex method
+                    #job_str = ('filename='+asset_out_path+';')
+                    #job_str += ('objects='+obj_str+';')
+                    #job_str += ('uvs=0;')
+                    #job_str += ('globalspace=1;')
+                    #job_str += ('withouthierarchy=1;')
+                    #job_str += ('in='+in_frame+';')
+                    #job_str += ('out='+out_frame+';')
+                    #job_str += ('step='+step+';')
+                    #job_str += ('ogawa=1')
+                    #job_strings.append(job_str)
+                    #cmds.ExocortexAlembic_export(j=job_strings)
+
+                    #AbcExport -j "-frameRange 1 50 -uvWrite -worldSpace -dataFormat ogawa -root |testCharA1:_UNKNOWN_REF_NODE_fosterParent1|testCharA1:dad_model_grp -file C:/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/cache/alembic/test.abc";
+                    #print 'cmds.AbcExport(j="{0}")'.format(job_str)
+                    #cmds.AbcExport(j=job_strings)
+            else:
                 print ("could not find any cachable sets to export alembic. skipping asset:{0}".format(a))
                 return
-            obj_str= ','.join(obj_list)
-            out_filename = os.path.basename(out_path)+'_'+a+'.abc'
-            asset_out_path = os.path.join(out_path,out_filename)
-            #try: 
-            #    os.makedirs(os.path.join(out_path))
-            #except OSError:
-            #    if not os.path.isdir(os.path.join(out_path)):
-            #        raise
-
-            job_str = (' -file '+out_path)
-            job_str += (' -root '+obj_str)
-            job_str += (' -uvWrite')
-            job_str += (' -worldSpace')
-            #job_str += (' -stripNamespaces')
-            job_str += (' -writeVisibility')
-            job_str += ' -framerange {0} {1}'.format(in_frame,out_frame)
-            job_str += (' -dataFormat ogawa')
-            job_strings.append(job_str)
-   
-            # exocortex method
-            #job_str = ('filename='+asset_out_path+';')
-            #job_str += ('objects='+obj_str+';')
-            #job_str += ('uvs=0;')
-            #job_str += ('globalspace=1;')
-            #job_str += ('withouthierarchy=1;')
-            #job_str += ('in='+in_frame+';')
-            #job_str += ('out='+out_frame+';')
-            #job_str += ('step='+step+';')
-            #job_str += ('ogawa=1')
-            #job_strings.append(job_str)
-        #cmds.ExocortexAlembic_export(j=job_strings)
-
-        #AbcExport -j "-frameRange 1 50 -uvWrite -worldSpace -dataFormat ogawa -root |testCharA1:_UNKNOWN_REF_NODE_fosterParent1|testCharA1:dad_model_grp -file C:/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/cache/alembic/test.abc";
-        print 'cmds.AbcExport(j="{0}")'.format(job_str)
+        print 'cmds.AbcExport(j="{0}")'.format(job_strings)
         cmds.AbcExport(j=job_strings)
+
         
     def exportPlayblast(self):
         return
@@ -623,12 +636,16 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
             num += 1
 
         asset_data = {}
+        cache_path = ''
+
         for r, ref_path, ref_ns in assets:
+            if ref_ns in self.publish_data['asset_data']:
+                cache_path = self.publish_data['asset_data'][ref_ns]['cache_path']
             asset_data[ref_ns]={
                 'filepath': ref_path,
                 'fileindex': r,
                 'namespace': ref_ns,
-                'cache_path': self.publish_data['asset_data'][ref_ns]['cache_path']
+                'cache_path': cache_path
             }
 
         camera_info = {
@@ -639,7 +656,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         }
 
         assembly_info = {
-            'gs_core': 1.0,
+            'gscore': 1.0,
             'gs_mayaTools': 1.0,
             'source_scene': cmds.file(q=1,sn=1),
             'publish_date': datetime.datetime.now(),

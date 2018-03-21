@@ -34,7 +34,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
     def __init__(self, parent=None, *args, **kwargs):
         super(GSQuickSaveWindow, self).__init__(parent=parent, *args, **kwargs) 
 
-        self.proj = gs_core.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
+        self.proj = gscore.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
         self.p_dict = self.proj.pathParser.parsePath('{0}/production'.format(os.environ['GSPROJECT']))
 
         self.title = "Quick Save v0.2a"
@@ -188,7 +188,7 @@ class GSQuickSaveWindow(MayaQWidgetBaseMixin,QWidget):
             }
 
         assembly_info = {
-            'gs_core': 1.0,
+            'gscore': 1.0,
             'gs_mayaTools': 1.0,
             'source_scene': cmds.file(q=1,sn=1),
             'publish_date': datetime.datetime.now(),

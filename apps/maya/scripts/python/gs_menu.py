@@ -23,6 +23,8 @@ def init_gs_menu():
 			cmds.menuItem(l="Asset Manager",c='mustache.M.AM.assetManagerUI()',i='mustache_AM.bmp')
 			cmds.menuItem(l="Scene Manager",c='mustache.M.SM.sceneManagerUI()',i='mustache_SM.bmp')
 			cmds.menuItem(l="Asset Library",c='mustache.M.DB.libraryUI()',i='mustache_DB.bmp')
+			cmds.menuItem(divider=True)
+			cmds.menuItem(l="Render Submit",c='mustache.M.MSUB.submitUI()', i='mustache_MSUB.bmp')
 
 		else:	
 			# NEW CORE PIPELINE
@@ -49,7 +51,7 @@ def init_gs_menu():
 			cmds.menuItem(l="LookBook", en=False, c='import gs_lookbook;reload(gs_lookbook);gs_lookbook.main()')
 			cmds.menuItem(l="Render Setup", en=False, c='import gs_alembic;reload(gs_alembic);gs_alembic.loadImporterUI()')
 			cmds.menuItem(divider=True)
-			cmds.menuItem(l="Render Submit",c='mustache.M.MSUB.submitUI()', i='mustache_MSUB.bmp')
+			cmds.menuItem(l="Render Submit",c='gs_submit_muster.submitUI()')
 		cmds.menuItem(divider=True)
 		cmds.menuItem(l='Load VRay',c='cmds.loadPlugin("vrayformaya")')
 		cmds.menuItem(l='Load Redshift',c='cmds.loadPlugin("redshift4maya")')

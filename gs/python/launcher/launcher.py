@@ -124,8 +124,8 @@ def launch_app(app, version='', mode='ui', wrkgrp_config='', workgroup='default'
     # if filepath is specified and project is not,
     if filepath != '':
         # get the project for the given path by calling core.pathsParser
-        import gs_core
-        controller = gs_core.CoreController()
+        import gscore
+        controller = gscore.CoreController()
         filepath_unix = filepath.replace('\\','/')
         if workspace == '':
             project = controller.proj_controller.pathParser.getProject(filepath_unix)

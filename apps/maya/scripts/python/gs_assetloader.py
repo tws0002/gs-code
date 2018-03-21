@@ -38,7 +38,7 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
 
         # setup the core handler
         # initialize the project controller. specify a project.yml file to load as the template file
-        self.proj = gs_core.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
+        self.proj = gscore.projects.ProjectController('{0}/projects.yml'.format(os.environ['GSCONFIG']))
         self.p_dict = self.proj.pathParser.parsePath('{0}/production'.format(os.environ['GSPROJECT']))
 
         self.title = "Asset Loader v0.2a"
@@ -185,6 +185,10 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
             
             #ad = dict(self.p_dict)
             f_data = self.proj.pathParser.parsePath(a_path)
+            #if 'task' not in f_data:
+            #    print ("Could not determine shot location {0}".format(f_data))
+            #    return
+
             f_data['task'] = task
             print ('task={0}'.format(f_data['task']))
             f_data['scenename'] = 'main'
@@ -237,19 +241,39 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
                             asset_scenefile = assembly_data['asset_data'][a]['filepath']
                             cache_path = assembly_data['asset_data'][a]['cache_path']
                             subst_path = asset_scenefile
-                            for ea in substitute:
-                                find_repl = ea.split('>')
-                                subst_path = subst_path.replace(find_repl[0], find_repl[1])
-                            if os.path.exists (subst_path):
-                                asset_scenefile = subst_path
-                            else:
-                                print ("Could not find substuted paths: {0}".format(subst_path))
-                            # TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
+
+                            # load shot location info
+                            f_data = self.proj.pathParser.parsePath(asset_scenefile)
+                            print ("LOADING ASSET: FDATA:{0}".format(f_data))
+                            apply_cache = False
+                            if f_data['task'] == 'rig':
+                                f_data['task'] = 'lookdev'
+                                f_data['layer'] = 'publish'
+                                f_data['ext'] = 'mb'
+                                pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+                                print ('latest_publish={0} {1}'.format(pub_root,pub_files))
+                                if len(pub_files) > 0:
+                                    asset_scenefile = '/'.join([pub_root,pub_files[0]])
+                                else:
+                                    print ("No lookdev publish found for asset {0}".format(a))
+                                apply_cache = True
+
+                            #for ea in substitute:
+                            #    find_repl = ea.split('>')
+                            #    subst_path = subst_path.replace(find_repl[0], find_repl[1])
+                            #if os.path.exists (subst_path):
+                            #    asset_scenefile = subst_path
+                            #else:
+                            #    print ("Could not find substuted paths: {0}".format(subst_path))
+                            ## TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
                             cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')   
-                            if os.path.exists(cache_path):
-                                self.attachAlembicCache(namespace, cache_path)
+                            if apply_cache:
+                                if os.path.exists(cache_path):
+                                    self.attachAlembicCache(namespace, cache_path)
+                                else:
+                                    print ("Cache for {0} not found: {1}".format(a,cache_path))
                             else:
-                                print ("Cache for {0} not found: {1}".format(a,cache_path))
+                                print ("Cache skipped for model asset: {0}".format(a))
                 # set camera abc up
                 # set frame range
                 cmds.playbackOptions(e=1,min=assembly_data['start_frame'],max=assembly_data['end_frame'])
@@ -326,13 +350,20 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         return abc_list
 
     def doRemoveAsset(self):
-
-        for ref_n, ref_ns, ref_path in self.getSelectedRefs():
-            fp = cmds.referenceQuery(ref_n, filename=1)
-            cmds.file(fp, rr=1)
-            if cmds.namespace(exists=ref_ns):
-                cmds.namespace(rm=ref_ns)
-            print 'Removed Reference: {0}'.format(ref_n)
+        result = cmds.confirmDialog( 
+            title='Confirm Asset Remove:', 
+            message='This action is not undoable. Please Confirm you want to remove', 
+            button=['Remove Asset', 'Cancel'], 
+            defaultButton='Remove Asset', 
+            cancelButton='Cancel', 
+            dismissString='Cancel' )
+        if result == 'Remove Asset':
+            for ref_n, ref_ns, ref_path in self.getSelectedRefs():
+                fp = cmds.referenceQuery(ref_n, filename=1)
+                cmds.file(fp, rr=1)
+                if cmds.namespace(exists=ref_ns):
+                    cmds.namespace(rm=ref_ns, dnc=True)
+                print 'Removed Reference: {0}'.format(ref_n)
             self.updateInSceneAssets()
         return
 
@@ -414,7 +445,7 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.footerlyt.setContentsMargins(0,0,0,0)
 
         self.refresh = QPushButton('Refresh List')
-        self.updateallbtn = QPushButton('Update All')
+        self.updateallbtn = QPushButton('Check for Updates')
         self.publishbtn = QPushButton('Publish Anim')
         self.loadbtn = QPushButton('Load from Pubish')
 
@@ -459,6 +490,7 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.renamebtn.clicked.connect(self.parent().doRenameAsset)
         self.reloadbtn.clicked.connect(self.parent().doReloadAsset)
         self.unloadbtn.clicked.connect(self.parent().doUnloadAsset)
+        self.refresh.clicked.connect(self.parent().updateInSceneAssets)
 
 
 class CustomSortFilterProxyModel(QSortFilterProxyModel):

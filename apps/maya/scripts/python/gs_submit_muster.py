@@ -723,7 +723,7 @@ class Submitter:
         #if not self.M.SM.checkedShot:
         #    cmds.error('You need to have a valid scene open and checked out in order to render.')
         windowName = 'mustache_submitUI'
-        windowTitle = '}MUSTACHE{ - SUBMIT RENDER'
+        windowTitle = 'Pipeline Submitter - Mustache based'
         if cmds.window(windowName, q=1, exists=1):
             cmds.deleteUI(windowName)
         window = cmds.window(windowName, title=windowTitle, w=600, h=900)
