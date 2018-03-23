@@ -367,7 +367,7 @@ class LauncherWindow(QMainWindow):
             self.ui['wdgt']['buttons_grid'].connect(self.ui['wdgt']['buttons_grid'], SIGNAL("customContextMenuRequested(QPoint)" ), self.listItemMenuClicked)
 
         # connect up signals
-        self.ui['wdgt']['sidebar_list'].itemClicked.connect(self.stackChange)
+        self.ui['wdgt']['sidebar_list'].selectionModel().currentChanged.connect(self.stackChange)
         self.ui['wdgt']['project_combo'].currentIndexChanged.connect(self.projectComboChange)
         self.ui['wdgt']['dispgroup_combo'].currentIndexChanged.connect(self.displayGroupComboChange)
         self.ui['wdgt']['buttons_grid'].itemDoubleClicked.connect(self.launchApp)
@@ -525,6 +525,7 @@ class LauncherWindow(QMainWindow):
         # for each asset template type, create a tab widget for it
         asset_type_list = self.controller.proj_controller.getAssetTypeList()
         # update each asset type
+        index= 0
         START_TIME = time.time()
         for asset_type, dname in asset_type_list:
             # create the widget if it doesn't exist
@@ -536,6 +537,7 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt'][asset_type].clicked.connect(self.assetListClicked)
                 self.ui['wdgt'][asset_type].setFilterParents(True)
                 self.ui['wdgt'][asset_type].asset_type = asset_type
+                self.ui['wdgt'][asset_type].tab_index = index
                 print "setting current path to {0}".format(dname)
                 # TODO current_path should store the asest lib path by calling pathParser
                 self.ui['wdgt'][asset_type].current_path = ''
@@ -545,11 +547,12 @@ class LauncherWindow(QMainWindow):
 
             self.ui['wdgt']['asset_tabs'].addTab(self.ui['wdgt'][asset_type],dname)
             self.updateAssetList(project_path, asset_type)
+            index += 1
 
         elapsed_time = time.time() - START_TIME
         print("gscore.projects.getAssetsList() ran in {0} sec".format(elapsed_time))
-
-        #self.ui['wdgt']['asset_tabs'].setTab(self.ui_state['asset_tab'])
+        if 'asset_tab_index' in self.ui_state:
+            self.ui['wdgt']['asset_tabs'].setCurrentIndex(self.ui_state['asset_tab_index'])
 
         self.assetTabChanged(0)
         self.ui['wdgt']['asset_tabs'].blockSignals(False)
@@ -561,6 +564,11 @@ class LauncherWindow(QMainWindow):
             self.active_path['asset_type'] = vis_item.current_path
             self.active_data['asset_type'] = vis_item.asset_type
             self.ui_state['asset_tab'] = vis_item.asset_type
+            self.ui_state['asset_tab_index'] = vis_item.tab_index
+
+            # clear any selection
+            vis_item.clearSelectedItems()
+            self.clearTaskTabs()
         return
 
     def updateAssetList(self, project_path, asset_type):
@@ -596,6 +604,11 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt'][asset_type].loadViewModelFromDict(item_dict)
         self.ui['wdgt'][asset_type].current_path = asset_lib
         self.ui['wdgt'][asset_type].blockSignals(False)
+
+    def clearTaskTabs(self):
+        self.ui['wdgt']['task_tabs'].blockSignals(True)
+        self.ui['wdgt']['task_tabs'].clear()
+        self.ui['wdgt']['task_tabs'].blockSignals(False)
 
     def updateTaskTabs(self, project_path, asset_path):
         '''
@@ -647,6 +660,12 @@ class LauncherWindow(QMainWindow):
 
             self. active_path['task'] = task_type
             self.updateTaskList(task_type)
+
+        #if 'task_tab' in self.ui_state:
+        #    stack = self.ui['wdgt']['task_tabs'].findChild(QWidget)
+        #    item = stack.findChild(QWidget,self.ui_state['task_tab'])
+        #    print ("Setting Task Tab to {0} Widget:{1}".format(self.ui_state['task_tab'],item))
+        #    self.ui['wdgt']['task_tabs'].setCurrentWidget(item)
 
         self.taskTabChanged(0)
         self.ui['wdgt']['task_tabs'].blockSignals(False)
@@ -847,14 +866,15 @@ class LauncherWindow(QMainWindow):
                 
         else:
             print("Could not Find Workgroups. Please check in config/workgroups.yml")
+
     def setViewMode(self, view_mode):
         print 'Setting to ViewMode: {0}'.format(view_mode)
-        try:
-            index = self.ui['wdgt']['sidebar_list'].findText(view_mode)
-            if index > -1:
-                self.ui['wdgt']['sidebar_list'].setCurrentIndex(index)
-        except:
-            print 'ViewMode: {0} not found'.format(view_mode)
+        #try:
+        items = self.ui['wdgt']['sidebar_list'].findItems(view_mode, Qt.MatchExactly)
+        if len(items) > 0:
+            self.ui['wdgt']['sidebar_list'].setCurrentItem(items[0])
+        #except:
+        #    print 'ViewMode: {0} not found'.format(view_mode)
 
     def setProjectListSelection(self, project_path):
         print 'Setting to Project: {0}'.format(project_path)
@@ -1151,8 +1171,10 @@ class LauncherWindow(QMainWindow):
 
     def stackChange(self):
         sender = self.sender()
-        page = str(sender.currentItem().text())
+        page = str(sender.parent().currentItem().text())
         self.ui['wdgt']['stack_widget'].setCurrentIndex(self.ui['lyt']['stack_layouts'][page].page_index)
+        print ("Setting View Mode to {0}".format(page))
+        self.ui_state['mode_item'] = page
 
     def toggleLaunchStatus(self, widget, text):
         widget.setText(text)
@@ -1329,6 +1351,7 @@ class LauncherWindow(QMainWindow):
             self.settings.setValue('prev_project4', '')
             self.settings.setValue('initials', 'AA')
             self.settings.setValue('role', 'default')
+            self.settings.setValue('mode_item', 'Apps')
             self.settings.setValue('asset_tab', 'Shots')
             self.settings.setValue('task_tab', 'Anim')
         except:
@@ -1352,6 +1375,7 @@ class LauncherWindow(QMainWindow):
             self.settings.setValue('role', display_grp)
             self.settings.setValue('asset_tab', self.ui_state['asset_tab'])
             self.settings.setValue('task_tab', self.ui_state['task_tab'])
+            self.settings.setValue('mode_item', self.ui_state['mode_item'])
         except:
             print "Unable to save settings"
 
@@ -1364,6 +1388,7 @@ class LauncherWindow(QMainWindow):
             self.ui_state['project_item'] = str(self.settings.value('project', type=str))
             self.ui_state['asset_tab'] = str(self.settings.value('asset_tab', type=str))
             self.ui_state['task_tab'] = str(self.settings.value('task_tab', type=str))
+            self.ui_state['mode_item'] = str(self.settings.value('mode_item', type=str))
             self.setProjectCombo(project)
             self.ui['wdgt']['initials_le'].setText(initials)
             #self.setDisplayGroup(display_grp)

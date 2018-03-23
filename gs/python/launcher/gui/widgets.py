@@ -384,6 +384,9 @@ class LchrTreeList(QWidget):
             items.append(item)
         return items
 
+    def clearSelectedItems(self):
+        self.tvw.selectionModel().clearSelection()
+
     def expandItem(self, qStandardItem):
         try:
             index = self.sm.indexFromItem(qStandardItem)

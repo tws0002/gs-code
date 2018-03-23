@@ -319,7 +319,7 @@ QTabWidget::tab-bar {
 /* Style the tab using the tab sub-control. Note that
     it reads QTabBar _not_ QTabWidget */
 QTabBar {
-    font: 8pt;
+    font: 10pt;
     text-transform: uppercase;
 
 }
@@ -327,7 +327,9 @@ QTabBar::tab {
     color: #555555;
     outline:none;
     border-width: 2px;
-    padding: 10px 15px 10px 15px;
+    border-style: solid;
+    border-color: transparent;
+    padding: 15px 15px 15px 15px;
     /*min-width: 10ex;*/
 }
 
@@ -343,6 +345,7 @@ QTabBar::tab:selected {
     border-style: solid;
     border-bottom-color: #252525;
 }
+
 QTabBar::tab:hover {
     color: #ababab;
     border-bottom-width: 2px;
