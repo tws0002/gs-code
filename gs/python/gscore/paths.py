@@ -104,7 +104,7 @@ class PathParser:
             self.templates[key] = {}
             if key.endswith('_templates'):
                 for template, data in dataMap[key].iteritems():
-                    print ("adding {0} to self.templates[{1}]".format(template, key))
+                    #print ("adding {0} to self.templates[{1}]".format(template, key))
                     self.templates[key][template] = dict(dataMap[key][template])
                     if 'inherits' in data:
                         # make a copy
