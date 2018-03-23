@@ -36,6 +36,7 @@ default:
         ##jfDielectric: '1.0.5' # unknown cost
         ##ornatrix: '1.1.3.9340'
         ##slib: '2.02' # unknown cost
+        houdiniengine: '16.0.705'
     houdini:
       title: 'Houdini'
       app: 'houdini'
@@ -89,6 +90,7 @@ default:
         j_ops: '2.3'
         opticalflares: '1.0.85'
         keentools: '1.2.0'
+        #mltools: '0.1.0'
     aftereffects:
       title: 'AE 2017'
       app: 'aftereffects'
