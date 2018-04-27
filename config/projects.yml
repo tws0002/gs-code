@@ -88,18 +88,18 @@ stage_templates:
 #         for both
 # People familiar with shotgun would call assets "Entities"
 asset_templates:
-  'asset_2d':
-    parent: 'stage'
-    display_name: 'Assets2D'
-    display_order: 1
-    lib_path: '<server>/projects/<job>/production/assets/2d'
-    match_path: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
-    capture_path: '<server>/projects/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
-    task_root: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
-    copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
-    default_tasks: ''
-    qualifier_path: '.info' # qualified assets must contain this subfolder/file
-    ignore_path: ''
+  #'asset_2d':
+  #  parent: 'stage'
+  #  display_name: 'Assets2D'
+  #  display_order: 1
+  #  lib_path: '<server>/projects/<job>/production/assets/2d'
+  #  match_path: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
+  #  capture_path: '<server>/projects/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
+  #  task_root: '<server>/<share>/<job>/<stage>/assets/2d/<asset_grp>/<asset>'
+  #  copy_tree: '<server>/projects/_templates/project_template_2018/asset_basic'
+  #  default_tasks: ''
+  #  qualifier_path: '.info' # qualified assets must contain this subfolder/file
+  #  ignore_path: ''
   'shot':
     parent: 'stage'
     display_name: 'Shots'
@@ -115,7 +115,7 @@ asset_templates:
     ignore_path: '' 
   'asset_3d':
     parent: 'stage'
-    display_name: 'Assets3D'
+    display_name: 'Assets'
     display_order: 2
     match_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
     capture_path: '<server>/<share>/<job>/<stage>/assets/3d/<asset_grp>/<asset>'
