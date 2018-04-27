@@ -493,9 +493,9 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['project_list'].blockSignals(True)
         item_list = self.controller.getProjectsList(self.active_data['file_share'])
         # setup app context menu
-        if isAdmin():
-            self.ui['wdgt']['project_list'].setContextMenuPolicy(Qt.CustomContextMenu)
-            self.ui['wdgt']['project_list'].connect(self.ui['wdgt']['project_list'], SIGNAL("customContextMenuRequested(QPoint)" ), self.projectListContextMenuClicked)
+        #f isAdmin():
+        self.ui['wdgt']['project_list'].setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui['wdgt']['project_list'].connect(self.ui['wdgt']['project_list'], SIGNAL("customContextMenuRequested(QPoint)" ), self.projectListContextMenuClicked)
 
         # load projects from core
         item_dict = {}
@@ -577,6 +577,10 @@ class LauncherWindow(QMainWindow):
         # get top level assets
         asset_lib, asset_names = self.controller.proj_controller.getAssetsList(upl_dict=self.active_data, asset_type=asset_type)
         # load projects from core
+
+        self.ui['wdgt'][asset_type].setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui['wdgt'][asset_type].connect(self.ui['wdgt'][asset_type], SIGNAL("customContextMenuRequested(QPoint)" ), self.assetListContextMenuClicked)
+
 
         item_dict = {}
         #item_dict[asset_type] = {'name':asset_type,'children':{}}
@@ -1200,6 +1204,19 @@ class LauncherWindow(QMainWindow):
         parentPosition = self.sender().mapToGlobal(QPoint(0, 0))
         self.proj_menu.move(parentPosition + QPos)
         self.proj_menu.show()
+
+    def assetListContextMenuClicked(self, QPos):
+        self.asset_menu = QMenu()
+
+        menu_item = {}
+        menu_item['rename'] = self.asset_menu.addAction("Rename Asset")
+        menu_item['clone'] = self.asset_menu.addAction("Duplicate Asset")
+        self.asset_menu.addSeparator()
+        menu_item['explore'] = self.asset_menu.addAction("Open in Explorer")
+
+        parentPosition = self.sender().mapToGlobal(QPoint(0, 0))
+        self.asset_menu.move(parentPosition + QPos)
+        self.asset_menu.show()
 
     def projectListMenuItemClicked(self, cmd='', package='', version=''):
         currentItemName = str(self.ui['wdgt']['buttons_grid'].currentItem().text())

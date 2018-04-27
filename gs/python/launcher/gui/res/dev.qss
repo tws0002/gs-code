@@ -329,7 +329,7 @@ QTabBar::tab {
     border-width: 2px;
     border-style: solid;
     border-color: transparent;
-    padding: 15px 15px 15px 15px;
+    padding: 1em 1em 1em 1em;
     /*min-width: 10ex;*/
 }
 

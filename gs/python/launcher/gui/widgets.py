@@ -370,9 +370,10 @@ class LchrTreeList(QWidget):
         print ('this is the next line')
         items = self.sm.findItems(item_name, Qt.MatchRecursive, 0)
         #self.sm.select(index)
-        index = self.sm.indexFromItem(items[0])
-        index = self.pm.mapFromSource(index)
-        self.tvw.setCurrentIndex(index)
+        if len(items):
+            index = self.sm.indexFromItem(items[0])
+            index = self.pm.mapFromSource(index)
+            self.tvw.setCurrentIndex(index)
 
 
     def getSelectedItems(self):
