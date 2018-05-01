@@ -5,7 +5,7 @@ from PyQt4.QtGui import *
 from settings import *
 from widgets import *
 import gscore
-
+import stylesheets
 import yaml
 
 
@@ -47,13 +47,16 @@ class LauncherDialog(QDialog):
             pass
 
         if branch == 'dev':
-            ssh_file = '/'.join([os.path.dirname(__file__),'res','dev.qss'])
+            css_file = '/'.join([os.path.dirname(__file__).replace('\\','/'),'res','dev.qss'])
         else:
-            ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+            css_file = '/'.join([os.path.dirname(__file__).replace('\\','/'),'res','style.qss'])
 
-        fh = open(ssh_file,"r")
-        qstr = QString(fh.read())
-        self.setStyleSheet(qstr)
+        #fh = open(css_file,"r")
+        #qstr = QString(fh.read())
+        #self.setStyleSheet(qstr)
+
+        self.qss_w = stylesheets.StylesheetWatcher()
+        self.qss_w.watch(self,css_file)
 
 class LauncherMessage(LauncherDialog):
 
@@ -93,27 +96,34 @@ class LauncherCreateJob(LauncherDialog):
         self.setWindowTitle("Create New Project")
 
         self.gridlyt = QGridLayout()
-        self.client_namelbl = QLabel("Client:")
+
+        self.proj_sharelbl = QLabel("Location")
+        self.proj_share = QComboBox()
+        self.updateFileShares()
+
+        self.client_namelbl = QLabel("Client")
         self.client_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z]([A-Za-z]+)*$')
         validator = LRegExpValidator(regexp)
         self.client_name.setValidator(validator)
-        self.client_name.setPlaceholderText('client name')
+        self.client_name.setPlaceholderText('client name (abbreviate if long)')
 
-        self.proj_namelbl = QLabel("Project:")
+        self.proj_namelbl = QLabel("Project")
         self.proj_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z](?:_?[A-Za-z]+)*$')
         validator = LRegExpValidator(regexp)
         self.proj_name.setValidator(validator)
-        self.proj_name.setPlaceholderText('untitled')
+        self.proj_name.setPlaceholderText('untitled (name of campaign)')
 
-        self.proj_sharelbl = QLabel("Location:")
-        self.proj_share = QComboBox()
-        self.updateFileShares()
+        self.proj_templatelbl = QLabel("Template")
+        self.proj_template = QComboBox()
+        self.updateTemplates()
 
-        self.prod_cb = QCheckBox('Create Production Folder')
+        self.des_cb = QCheckBox('Create Design Stage Folder')
+        self.des_cb.setChecked(1)
+        self.prod_cb = QCheckBox('Create Production Stage Folder')
         self.prod_cb.setChecked(1)
-        self.previs_cb = QCheckBox('Create Previs Folder')
+        self.previs_cb = QCheckBox('Create Previs Stage Folder')
         self.previs_cb.setChecked(0)
         self.footer = QHBoxLayout()
         self.okbtn = QPushButton('Create')
@@ -122,17 +132,17 @@ class LauncherCreateJob(LauncherDialog):
         # ui control layout
         self.layout = QVBoxLayout(self)
 
-
-        self.gridlyt.addWidget(self.proj_sharelbl,0,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.proj_share,0,2)
-        self.gridlyt.addWidget(self.client_namelbl,1,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.client_name,1,2)
-        self.gridlyt.addWidget(self.proj_namelbl,2,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.proj_name,2,2)
-        self.gridlyt.addWidget(self.prod_cb, 3, 2)
-        self.gridlyt.addWidget(self.previs_cb, 4, 2)
-
-
+        self.gridlyt.addWidget(self.proj_templatelbl,0,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.proj_template,0,2)
+        self.gridlyt.addWidget(self.proj_sharelbl,1,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.proj_share,1,2)
+        self.gridlyt.addWidget(self.client_namelbl,2,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.client_name,2,2)
+        self.gridlyt.addWidget(self.proj_namelbl,3,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.proj_name,3,2)
+        self.gridlyt.addWidget(self.des_cb, 4, 2)
+        self.gridlyt.addWidget(self.prod_cb, 5, 2)
+        self.gridlyt.addWidget(self.previs_cb, 6, 2)
 
         self.layout.addLayout(self.gridlyt)
         self.layout.addLayout(self.footer)
@@ -143,6 +153,14 @@ class LauncherCreateJob(LauncherDialog):
 
         self.cancelbtn.clicked.connect(self.doCancel)
         self.okbtn.clicked.connect(self.doCreate)
+
+    def updateTemplates(self):
+        # clear the item model and init a new one
+        self.proj_template.model().clear()
+        file_share_list = ['2018 Project Structure']
+        for j in sorted(file_share_list,key=lambda v: v.upper()):
+            item = QStandardItem(j)
+            self.proj_template.model().appendRow(item)
 
     def updateFileShares(self):
         # clear the item model and init a new one
@@ -226,17 +244,18 @@ class LauncherCreateAsset(LauncherDialog):
 
         self.setWindowTitle("Create New Shot/Asset")
 
-        self.asset_typelbl = QLabel("Location:")
+        self.asset_typelbl = QLabel("Location")
         self.asset_type_cb = QComboBox()
 
-        self.asset_grplbl = QLabel("Group:")
+        self.asset_grplbl = QLabel("Group")
         self.asset_grp = QComboBox()
         self.asset_grp.setEditable(True)
+        self.asset_grp.completer().setCompletionMode(QCompleter.PopupCompletion)
         regexp = QRegExp('^[A-Za-z0-9]([A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
         self.asset_grp.setValidator(validator)
 
-        self.asset_namelbl = QLabel("Name:")
+        self.asset_namelbl = QLabel("Name")
         self.asset_name = QLineEdit()
         regexp = QRegExp('^[A-Za-z0-9](?:_?[A-Za-z0-9]+)*$')
         validator = LRegExpValidator(regexp)
@@ -246,7 +265,7 @@ class LauncherCreateAsset(LauncherDialog):
         self.deftasks_cb = QCheckBox('Create Default Tasks')
         self.deftasks_cb.setChecked(1)
 
-        self.taskpresetlbl = QLabel("Task Presets:")
+        self.taskpresetlbl = QLabel("Task Presets")
         self.taskpresets = QComboBox()
 
         self.task_list = QTreeView()
@@ -521,10 +540,10 @@ class LauncherCreateScene(LauncherDialog):
 
         self.gridlyt.addWidget(self.task_typelbl,0,1,Qt.AlignRight)
         self.gridlyt.addWidget(self.task_type_dl,0,2)
-        self.gridlyt.addWidget(self.scene_namelbl,1,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.scene_name,1,2)
-        self.gridlyt.addWidget(self.package_typelbl,2,1,Qt.AlignRight)
-        self.gridlyt.addWidget(self.package_type_dl,2,2)
+        self.gridlyt.addWidget(self.package_typelbl,1,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.package_type_dl,1,2)
+        self.gridlyt.addWidget(self.scene_namelbl,2,1,Qt.AlignRight)
+        self.gridlyt.addWidget(self.scene_name,2,2)
 
         self.layout.addLayout(self.gridlyt)
         self.layout.addLayout(self.footer)

@@ -34,6 +34,7 @@ def init_gs_menu():
 			cmds.menuItem(divider=True)
 			#cmds.menuItem(l="Scene Loader",en=False,c='import gs_sceneloader;reload(gs_sceneloader);gs_sceneloader.main()')
 			cmds.menuItem(l="Asset Manager",c='import gs_assetloader;reload(gs_assetloader);gs_assetloader.main()')
+			cmds.menuItem(l="Loader",c='import gs_loader;reload(gs_loader);gs_loader.main()')
 			cmds.menuItem(divider=True)
 			cmds.menuItem(l="Render Submit",c='import gs_submit_muster;reload(gs_submit_muster);gs_submit_muster.main()')
 			cmds.menuItem(divider=True,dl="Asset Tools")

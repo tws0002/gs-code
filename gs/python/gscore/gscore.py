@@ -7,10 +7,6 @@ from core_settings import *
 import projects
 
 
-
-# from subprocess import Popen, PIPE, STDOUT
-
-
 # this serves as the brain of the project system. You can ask it about a file
 # and it will be able to know what it is 
 
@@ -54,11 +50,6 @@ class CoreController():
         # load the Project Controller that interacts with project data
         self.proj_controller = projects.ProjectController(self.config_path)
 
-
-
-        # load up project shares on server
-
-        # load up list of jobs found in project shares
 
     def getFileShares(self, share_type):
         share_paths = []

@@ -4,7 +4,7 @@ import platform
 import subprocess
 import json
 import time
-import datetime
+    
 import getpass
 import argparse
 try:

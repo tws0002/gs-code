@@ -9,6 +9,7 @@ from dialogs import *
 from environment import *
 import launcher, utils, gscore
 import functools
+import stylesheets
 
 import yaml
 
@@ -229,6 +230,7 @@ class LauncherWindow(QMainWindow):
         # asset_pane layout
         self.ui['lyt']['item_layout'] = QVBoxLayout(self.ui['wdgt']['asset_pane'])
         self.ui['wdgt']['asset_tabs'] = QTabWidget()
+        self.ui['wdgt']['asset_tabs'].setAutoFillBackground(True)
         key = "image:{0}".format(os.path.join(RES, "tool_add.png"))
         pixmap = QPixmap()
         if not QPixmapCache.find(key, pixmap):  # loads pixmap from cache if its not already loaded
@@ -283,7 +285,7 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['project_grp'].setObjectName('lblGroup')
         self.ui['lyt']['tab1_layout'].addWidget(self.ui['wdgt']['project_grp'])
         self.ui['lyt']['project_lyt'] = QHBoxLayout(self.ui['wdgt']['project_grp'])
-        self.ui['lbl']['project'] = QLabel('Project  |')
+        self.ui['lbl']['project'] = QLabel('Project')
         self.ui['wdgt']['project_combo'] = QComboBox()
         # self.ui['wdgt']['project_combo'].setEditable(True)
         ignoreValid = LIgnoreValidator()
@@ -311,7 +313,7 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['initials_grp'] = QGroupBox()
         self.ui['wdgt']['initials_grp'].setObjectName('lblGroup')
         self.ui['lyt']['initials_lyt'] = QHBoxLayout(self.ui['wdgt']['initials_grp'])
-        self.ui['lbl']['initials'] = QLabel('Initials   |')
+        self.ui['lbl']['initials'] = QLabel('Initials')
         self.ui['wdgt']['initials_le'] = QLineEdit('ZZ')
         regexp = QRegExp('^([A-z]?[A-z])$')
         validator = LRegExpValidator(regexp)
@@ -329,12 +331,12 @@ class LauncherWindow(QMainWindow):
         self.ui['wdgt']['dispgroup_grp'] = QGroupBox()
         self.ui['wdgt']['dispgroup_grp'].setObjectName('lblGroup')     
         self.ui['lyt']['dispgroup_lyt'] = QHBoxLayout(self.ui['wdgt']['dispgroup_grp'])   
-        self.ui['lbl']['task'] = QLabel('Group  |')
+        self.ui['lbl']['task'] = QLabel('App Group')
         self.ui['wdgt']['dispgroup_combo'] = QComboBox()
-        font = self.ui['wdgt']['dispgroup_combo'].font()
-        font.setPointSize(20)
-        font.setStyleStrategy(QFont.PreferAntialias)
-        self.ui['wdgt']['dispgroup_combo'].setFont(font)
+        #font = self.ui['wdgt']['dispgroup_combo'].font()
+        #font.setPointSize(20)
+        #font.setStyleStrategy(QFont.PreferAntialias)
+        #self.ui['wdgt']['dispgroup_combo'].setFont(font)
         self.ui['mdl']['display_groups_mdl'] = self.ui['wdgt']['dispgroup_combo'].model()
         self.ui['lyt']['dispgroup_lyt'].addWidget(self.ui['lbl']['task'])
         self.ui['lyt']['dispgroup_lyt'].addWidget(self.ui['wdgt']['dispgroup_combo'])
@@ -426,13 +428,17 @@ class LauncherWindow(QMainWindow):
 
         if branch == 'dev':
             print ("Launching DEV UI")
-            ssh_file = '/'.join([os.path.dirname(__file__),'res','dev.qss'])
+            css_file = '/'.join([os.path.dirname(__file__).replace('\\','/'),'res','dev.qss'])
         else:
-            ssh_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
+            css_file = '/'.join([os.path.dirname(__file__),'res','style.qss'])
 
-        fh = open(ssh_file,"r")
-        qstr = QString(fh.read())
-        self.setStyleSheet(qstr)
+        #fh = open(css_file,"r")
+        #qstr = QString(fh.read())
+        #self.setStyleSheet(qstr)
+
+        self.qss_w = stylesheets.StylesheetWatcher()
+        self.qss_w.watch(self,css_file)
+
 
     def showCreateJob(self):
         rslt = LauncherCreateJob.doIt(self)
@@ -646,17 +652,25 @@ class LauncherWindow(QMainWindow):
                 self.ui['wdgt']['{0}_wdgt'.format(task_type)].task_type = task_type
                 self.ui['lyt'][task_type] = QVBoxLayout(self.ui['wdgt']['{0}_wdgt'.format(task_type)])
                 self.ui['lyt']['{0}_grid'.format(task_type)] = QGridLayout()
+                addbtn = '{0}_addbtn'.format(task_type)
+                self.ui['wdgt'][addbtn] = QPushButton('Add Scene')
                 lbtn = '{0}_launchbtn'.format(task_type)
-                self.ui['wdgt'][lbtn] = QPushButton('Launch')
+                self.ui['wdgt'][lbtn] = QToolButton()
+                self.ui['wdgt'][lbtn].setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+                self.ui['wdgt'][lbtn].setText("Launch")
                 self.ui['wdgt'][lbtn].setObjectName('Launchbtn')
+                self.ui['wdgt'][lbtn].setMinimumWidth(self.dpiSize(170))
+                font = self.ui['wdgt'][lbtn].font()
+                font.setPointSize(50)
+                self.ui['wdgt'][lbtn].setFont(font)
                 self.ui['wdgt'][lbtn].setEnabled(False)
                 #self.ui['wdgt']['{0}_addscene'.format(task_type)] = QPushButton('Add Scene')
                 self.ui['lyt'][task_type].addWidget(self.ui['wdgt'][task_type])
                 self.ui['lyt'][task_type].addLayout(self.ui['lyt']['{0}_grid'.format(task_type)])
                 #self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt']['{0}_addscene'.format(task_type)],0,1)
-
-                self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt'][lbtn],1,1)
-                self.ui['lyt']['{0}_grid'.format(task_type)].setColumnStretch(0, 1)
+                #self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt'][addbtn], 1, 0)
+                self.ui['lyt']['{0}_grid'.format(task_type)].addWidget(self.ui['wdgt'][lbtn],1,2)
+                self.ui['lyt']['{0}_grid'.format(task_type)].setColumnStretch(1, 1)
 
                 self.ui['wdgt']['{0}_launchbtn'.format(task_type)].clicked.connect(self.launchScenefile)
 
@@ -739,14 +753,19 @@ class LauncherWindow(QMainWindow):
                 print ("App Guess: {0}".format(app))
                 icon = self.getPackageIcon(app)
                 btn.setIcon(icon)
-                btn.setIconSize(QSize(64, 64))
+                btn.setIconSize(QSize(self.dpiSize(48), self.dpiSize(48)))
                 if app != '':
-                    btn.setText('Launch {0}'.format(app.title()))
+                    if 'title' in self.w_data['default']['packages'][app]:
+                        title = self.w_data['default']['packages'][app]['title']
+                    btn.setText('Launch \n{0}'.format(title))
                     btn.setEnabled(True)
                 else:
                     btn.setText('Launch')
                     btn.setEnabled(False)
             else:
+                icon = self.getPackageIcon('gs')
+                btn.setIcon(icon)
+                btn.setIconSize(QSize(self.dpiSize(48), self.dpiSize(48)))
                 btn.setText('Launch')
                 btn.setEnabled(False)
         return
@@ -862,10 +881,10 @@ class LauncherWindow(QMainWindow):
         if workgroup_list:
             for j in sorted(workgroup_list[workgroup]['display_groups'],key=lambda v: v.upper()):
                 item = QStandardItem(j)
-                font = item.font()
-                font.setPointSize(20)
-                font.setStyleStrategy(QFont.PreferAntialias);
-                item.setFont(font)
+                #font = item.font()
+                #font.setPointSize(20)
+                #font.setStyleStrategy(QFont.PreferAntialias);
+                #item.setFont(font)
                 self.ui['mdl']['display_groups_mdl'].appendRow(item)
                 
         else:
