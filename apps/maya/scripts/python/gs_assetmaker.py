@@ -82,7 +82,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
 
         self.setWindowTitle('GS AssetMaker v0.3a')
 
-        self.startAsset = QPushButton("Start New Asset")
+        self.startAsset = QPushButton("Setup New Asset")
         vertical.addWidget(self.startAsset)
 
         pathEditGroup = QBoxLayout(QBoxLayout.LeftToRight)
@@ -129,6 +129,15 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         self.gsCB = QCheckBox('Include Shaders')
         self.gsCB.setChecked(1)
         optionsGroup.addWidget(self.gsCB)
+
+        self.acCB = QCheckBox('Add To Cache Set')
+        self.acCB.setChecked(1)
+        optionsGroup.addWidget(self.acCB)
+
+        self.ctrlCB = QCheckBox('Create Master/Offset Controls')
+        self.ctrlCB.setChecked(1)
+        optionsGroup.addWidget(self.ctrlCB)
+
 
         self.localAsset = QPushButton("Organize Into Asset")
         self.jobAsset = QPushButton("Convert to Referenced Asset")
@@ -219,6 +228,13 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
         print("Creating Asset")
         cmds.undoInfo(openChunk=True,chunkName="GSAssetMakerPrepAsset")
         ns = str(self.nameLE.text())
+        sep = ":"
+        nons_sep = "_"
+        # if there is no namespace then also make the seperator empty string
+        if ns == "":
+            sep = ""
+            nons_sep = ""
+
         createAssetBase(str(self.nameLE.text()))
 
         # for geometry in list
@@ -230,7 +246,7 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             rn = self.add_namespace_to_children(ns,[onm])
             sel_list.extend(rn)
 
-        temp_grp = cmds.createNode('transform',n="{0}:g_offset".format(ns))
+        temp_grp = cmds.createNode('transform',n="{0}{1}g_offset".format(ns,sep))
         if len(sel_list):
             cmds.parent(sel_list,temp_grp)
 
@@ -241,11 +257,11 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
             cmds.move(asset_t[0]*-1, asset_t[1]*-1, asset_t[2]*-1, temp_grp)
             cmds.rotate(asset_r[0]*-1, asset_r[1]*-1, asset_r[2]*-1, temp_grp)
             cmds.scale(1/asset_s[0], 1/asset_s[1], 1/asset_s[2], temp_grp)
-            nl = cmds.rename("AssetMaker_asset_xform","{0}_placement".format(ns))
-            cmds.parent(temp_grp,"{0}:g_geo".format(ns))
+            nl = cmds.rename("AssetMaker_asset_xform","{0}{1}placement".format(ns,nons_sep))
+            cmds.parent(temp_grp,"{0}{1}g_geo".format(ns,sep))
             cmds.parent("{0}:root".format(ns),nl)
         else:
-            cmds.parent(temp_grp,"{0}:g_geo".format(ns))
+            cmds.parent(temp_grp,"{0}{1}g_geo".format(ns,sep))
 
         cmds.undoInfo(closeChunk=True)
 
@@ -392,7 +408,11 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
                 no_ns = sn.split(":")[-1]
                 nn = '{0}:{1}'.format(namespace,str(no_ns))
                 print "Renaming {0} to {1}".format(str(c),nn)
-                new_name = cmds.rename(str(c),nn)
+                try:
+                    new_name = cmds.rename(str(c),nn)
+                except:
+                    cmds.warning("Could not rename {0} to {1}. skipping".format(c,nn))
+                    new_name  = c
                 ren_list.append(new_name)
                 new_dagName = cmds.ls(new_name,l=True)
                 print ("new_dagName = {0}".format(new_dagName))
@@ -409,7 +429,10 @@ class GSAssetMakerWindow(MayaQWidgetBaseMixin,QWidget):
                 no_ns = n.split(":")[-1]
                 nn = '{0}:{1}'.format(namespace,str(no_ns))
                 print ('renaming shader {0} to {1}'.format(str(n),nn))
-                cmds.rename(n,nn)
+                try:
+                    cmds.rename(n,nn)
+                except:
+                    cmds.warning("Could not add namespace {1} to {0}".format(n,nn))
 
     def get_shading_nodes(self, obj_list, force_dupe=False):
         print ("shading object list")

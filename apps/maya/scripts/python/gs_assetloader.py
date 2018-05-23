@@ -86,7 +86,6 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         self.in_scene_list.tree_list.hidden_headers = ['filepath','is_group','5:ref_node','status', 'group']
         self.editorDelegate = ComboBoxDelegate()
         self.in_scene_list.tree_list.tvw.setItemDelegate(self.editorDelegate)
-        #self.asset_lib.parent_class = self
 
         #### LAYOUT ####
 
@@ -216,6 +215,43 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
                     self.buildFromAssemblyFile(assembly_file)
                 self.updateInSceneAssets()
 
+    def doCheckforUpdates(self):
+        assets = self.getInSceneAssets()
+        asset_data = {}
+        found_update = False
+        for node, path, namespace in assets:
+            print('Asset name is '+namespace)
+            f_data = self.proj.pathParser.parsePath(path)
+            current_version = f_data['version']
+            print current_version
+            print ('current_publish={0}'.format(path))
+            pub_root, pub_files = self.proj.getScenefileList(upl_dict=f_data, scene_type='publish', latest_version=True)
+            print ('latest_publish={0} {1}'.format(pub_root,pub_files))
+            lf_data = self.proj.pathParser.parsePath('/'.join([pub_root,pub_files[-1]]))
+            if 'version' in lf_data:
+                fv_int = int(re.search(r'[0-9]+', current_version).group(0))
+                lfv_int = int(re.search(r'[0-9]+', lf_data['version']).group(0))
+                if lfv_int > fv_int:
+                    found_update = True
+                    # needs updating  
+                    result = cmds.confirmDialog(
+                        title='Asset Update Available', 
+                        message='A version {0} of asset {1} is available. Would you like to update?'.format(lf_data['version'],namespace), 
+                        button=['Yes','No'], 
+                        defaultButton='Yes', 
+                        cancelButton='No', 
+                        dismissString='No' )
+                    if result == "Yes":
+                        cmds.file('/'.join([pub_root,pub_files[-1]]),loadReference=node)
+        if found_update == True:
+            self.updateInSceneAssets()
+        else:
+            result = cmds.confirmDialog(
+                title='Asset Update Check', 
+                message='All Assets are already up to date'.format(lf_data['version'],namespace), 
+                button=['Ok'], 
+                defaultButton='Ok')
+
     def buildFromAssemblyFile(self,filepath, substitute=['rig>lookdev','model>lookdev']):
         try:
             cmds.loadPlugin( 'AbcExport.mll' )
@@ -225,7 +261,10 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         if os.path.exists(filepath):
             assembly_data = self.getAssemblyData(filepath)
             if 'output_data' in assembly_data:
+                progress = 0
+                cmds.progressWindow(title='Building Scene from Assembly', progress=progress, status='Loading: 0%')
                 for o in assembly_data['output_data']:
+                    
                     # TODO check if namespace exists first
                     out_type = str(assembly_data['output_data'][o]['type'])
                     out_name = str(assembly_data['output_data'][o]['name'])
@@ -266,18 +305,25 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
                             #else:
                             #    print ("Could not find substuted paths: {0}".format(subst_path))
                             ## TODO if a_name exists and ends with a number, lets add an underscore num (iPhone8_1) instead of just incrementing the 8
-                            cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')   
+                            cmds.progressWindow( edit=True, progress=progress, status=('Loading {0}: '.format(namespace) + `progress` + '%' ) )
+                            if cmds.namespace(exists=namespace):
+                                pass
+                            else:
+                                cmds.file(asset_scenefile,r=True, typ='mayaBinary',ignoreVersion=True, gl=True, namespace=namespace,options='v=0;')   
                             if apply_cache:
                                 if os.path.exists(cache_path):
                                     self.attachAlembicCache(namespace, cache_path)
+                                    cmds.progressWindow( edit=True, progress=progress, status=('Applying Cache {0}: '.format(namespace) + `progress` + '%' ) )
                                 else:
                                     print ("Cache for {0} not found: {1}".format(a,cache_path))
                             else:
                                 print ("Cache skipped for model asset: {0}".format(a))
+                    progress += int(100.0 / float(len(assembly_data['output_data'])))
                 # set camera abc up
                 # set frame range
                 cmds.playbackOptions(e=1,min=assembly_data['start_frame'],max=assembly_data['end_frame'])
                 
+                cmds.progressWindow(endProgress=1)
         else:
             print ("Could not Locate Assembly File: {0}".format(filepath))
 
@@ -287,6 +333,12 @@ class GSAssetLoaderWindow(MayaQWidgetBaseMixin,QWidget):
         cache_nodes = cmds.sets("{0}:s_cache".format(asset_ns),q=1)
         print "cmds.AbcImport({0}, mode='import', connect='{1}')".format(cache_path, ' '.join(cache_nodes))
         cmds.AbcImport(cache_path, mode='import', connect=' '.join(cache_nodes))
+
+    def clearAlembicCache(self):
+        return
+
+    def getAppliedAlembicCache(self, asset_ns):
+        return
 
     def getAssemblyData(self, filepath):
         f = open(filepath)
@@ -486,6 +538,7 @@ class GSAssetLoaderInSceneList(MayaQWidgetBaseMixin,QWidget):
         self.main_lyt.addLayout(self.footerlyt)
 
         #### WIDGET SIGNALS #####
+        self.updateallbtn.clicked.connect(self.parent().doCheckforUpdates)
         self.removebtn.clicked.connect(self.parent().doRemoveAsset)
         self.renamebtn.clicked.connect(self.parent().doRenameAsset)
         self.reloadbtn.clicked.connect(self.parent().doReloadAsset)

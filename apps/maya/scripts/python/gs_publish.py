@@ -250,21 +250,21 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         # add scene copy
         if self.ui_state['publish_type'] != 'Animated Cache' and self.ui_state['publish_type'] != 'Render':
-            item = QStandardItem('Scene Backup')
+            item = QStandardItem('Published Scenefile')
             item.setCheckable(True)
             item.setCheckState(Qt.Checked)
             exp_type = QStandardItem('Maya Flattened')
             ver = QStandardItem(self.ui_state['version'])
             self.asset_model.appendRow([item,exp_type,ver])  
-            self.ui_state['output_list'].append(('Scene Backup','Maya Flattened',self.ui_state['version']))              
+            self.ui_state['output_list'].append(('Published Scenefile','Maya Flattened',self.ui_state['version']))              
         else:
-            item = QStandardItem('Scene Backup')
+            item = QStandardItem('Published Scenefile')
             item.setCheckable(True)
             item.setCheckState(Qt.Checked)
             exp_type = QStandardItem('Maya')
             ver = QStandardItem(self.ui_state['version'])
             self.asset_model.appendRow([item,exp_type,ver])  
-            self.ui_state['output_list'].append(('Scene Backup','Maya',self.ui_state['version']))  
+            self.ui_state['output_list'].append(('Published Scenefile','Maya',self.ui_state['version']))  
 
         # add camera
         if self.ui_state['publish_type'] == 'Animated Cache':
@@ -393,17 +393,65 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
     
     # project, asset_lib, asset, task, package, scenename, version
     def doPublishScene(self):
-        self.doPreflightCheck()
-        self.publishScene()
-        self.doPostPublish()
+        status = self.doPreflightCheck()
+        if status: 
+            self.publishScene()
+            self.doPostPublish()
 
     def doPreflightCheck(self):
         # does the publish version already exists
-
+        # gather information about export
+        current_scene = str(cmds.file(q=1,sn=1))
+        f_data = self.proj.pathParser.parsePath(current_scene)
+        d = dict(f_data)
+        d['layer'] = 'publish'
+        pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+        if len(pub_files) > 0:
+            out_scene = '/'.join([pub_root,pub_files[0]])
+            if os.path.exists(out_scene):
+                result = cmds.confirmDialog(
+                    title='Publish Already Exists', 
+                    message='Publish {0} already exists. It is recommended you version up and publish'.format(f_data['version']),
+                    button=['Overwrite This Version ({0})'.format(d['version']),'Save New Version and Publish','Cancel'], 
+                    defaultButton='Save New Version and Publish', 
+                    cancelButton='Cancel', 
+                    dismissString='Cancel' )
+                if result == 'Overwrite This Version ({0})'.format(d['version']):
+                    self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
+                    return True
+                elif result == 'Save New Version and Publish':
+                    return False
+                else:
+                    return False
+            else:
+                self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
+                return True
         # is the current version saved? 
 
         # has a clean script been run?
-        return
+        print ("Could not finde a publish scene {0} {1}".format(pub_root, pub_files))
+        return False
+
+    def removeDontPublish(self):
+        no_set = cmds.ls('dont_publish',type='objectSet')
+        no_set_members = cmds.sets(no_set,q=True)
+        removed_items = []
+        if no_set_members:
+            for member in no_set_members:
+                try:
+                    cmds.delete(member)
+                    removed_items.append(member)
+                except:
+                    cmds.warning("Could Not Remove {0} Skipping".format(member))
+        if no_set:
+            for setname in no_set:
+                try:
+                    cmds.delete(setname)
+                    removed_items.append(member)
+                except:
+                    cmds.warning("Could Not Remove {0} Skipping".format(member))
+            return removed_items
+
 
     def publishScene(self):
         print 'starting publish'
@@ -418,12 +466,35 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         print 'current_scene={0}'.format(current_scene)
         print self.ui_state['output_list']
         self.publish_data['asset_data'] = {}
-        # for each item in the output list export the appropriate data
+
+        # remove any temporary references, namespaces, and members of 'dont_publish' set
+        removed_items = []
+        removed_items.append(self.removeDontPublish())
+
+        # make scenefile require saveAs if elements have been removed
+        if len(removed_items):
+            cmds.file(rts=False) 
+        
+        # alembic data is gathered into a list of export jobs and exectued seperatly. this is done first since it has no impact on scene state
+
+        alembic_export_job_list = []
         for item, exp_type, ver in self.ui_state['output_list']:
             self.publish_data['asset_data'][item] = {
                 'cache_path': ''
             }
-            if exp_type == 'Alembic ( Start/End )':
+            if exp_type == 'Maya':
+                print ('exporting maya scene')
+                d = dict(f_data)
+                d['layer'] = 'publish'
+                pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
+                if len(pub_files) > 0:
+                    out_scene = '/'.join([pub_root,pub_files[0]])
+                    if os.path.exists(out_scene):
+                        cmds.warning("Overwriting Existing Publish: {0}".format(out_scene))
+                    self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
+                else:
+                    print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
+            elif exp_type == 'Alembic ( Start/End )':
                 print ('exporting animated alembic')
                 d = dict(f_data)
                 d['layer'] = item
@@ -434,12 +505,13 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
-                    self.exportAlembicCache(
-                        out_path=out_scene, 
-                        asset_list=[item], 
-                        in_frame=self.ui_state['start'], 
-                        out_frame=self.ui_state['end'],
-                        step=self.ui_state['step'])
+                    alembic_export_job_list.append((out_scene,[item],self.ui_state['start'],self.ui_state['end'],self.ui_state['step']))
+                    #self.exportAlembicCache(
+                    #    out_path=out_scene, 
+                    #    asset_list=[item], 
+                    #    in_frame=self.ui_state['start'], 
+                    #    out_frame=self.ui_state['end'],
+                    #    step=self.ui_state['step'])
                     self.publish_data['asset_data'][item]['cache_path'] = out_scene
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
@@ -451,16 +523,23 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                 pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
                 if len(pub_files) > 0:
                     out_scene = '/'.join([pub_root,pub_files[0]])
-                    self.exportAlembicCache(
-                        out_path=out_scene, 
-                        asset_list=[d['layer']], 
-                        in_frame=1, 
-                        out_frame=1,
-                        step=1)
+                    alembic_export_job_list.append((out_scene,[d['layer']],1,1,1))
+                    #self.exportAlembicCache(
+                    #    out_path=out_scene, 
+                    #    asset_list=[d['layer']], 
+                    #    in_frame=1, 
+                    #    out_frame=1,
+                    #    step=1)
                     self.publish_data['asset_data'][item]['cache_path'] = out_scene
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
-            elif exp_type == 'Maya Flattened':
+
+        self.exportAlembicCache(job_list=alembic_export_job_list)
+
+
+        # for all other output items in the output list export the appropriate data. 
+        for item, exp_type, ver in self.ui_state['output_list']:
+            if exp_type == 'Maya Flattened':
                 print ('exporting maya scene')
                 d = dict(f_data)
                 d['layer'] = 'publish'
@@ -469,35 +548,12 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
                     result = 'Overwrite This Version ({0})'.format(d['version'])
                     out_scene = '/'.join([pub_root,pub_files[0]])
                     if os.path.exists(out_scene):
-                        result = cmds.confirmDialog(
-                            title='Confirm', 
-                            message='{0} exists Already. Are you sure?'.format(pub_files[0]),
-                            button=['Overwrite This Version ({0})'.format(d['version']),'Save New Version and Publish','Cancel'], 
-                            defaultButton='Yes', 
-                            cancelButton='Cancel', 
-                            dismissString='No' )
-                    if result == 'Overwrite This Version ({0})'.format(d['version']):
-                        self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=True)
+                        cmds.warning("Overwriting Existing Flattened Publish: {0}".format(out_scene))
+                    self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=True)
                 else:
                     print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
-            elif exp_type == 'Maya':
-                print ('exporting maya scene')
-                d = dict(f_data)
-                d['layer'] = 'publish'
-                pub_root, pub_files = self.proj.getScenefileList(upl_dict=d, scene_type='publish')
-                if len(pub_files) > 0:
-                    out_scene = '/'.join([pub_root,pub_files[0]])
-                    if os.path.exists(out_scene):
-                        cmds.confirmDialog(
-                            title='Confirm', 
-                            message='{0} exists Already. Are you sure?'.format(pub_files[0]), 
-                            button=['Yes','No'], 
-                            defaultButton='Yes', 
-                            cancelButton='No', 
-                            dismissString='No' )
-                    self.saveSceneCopy(out_path=out_scene,create_dir=True,import_refs=False,remove_namespaces=False)
-                else:
-                    print ("{0}: Could not determine publish path: {1} {2}".format(exp_type,pub_root, pub_files))
+
+
         # write out data file
         d = dict(f_data)
         d['layer'] = 'publish'
@@ -535,7 +591,7 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         return output_path
 
 
-    def exportAlembicCache(self, out_path='', asset_list=[], in_frame=1, out_frame=100, step=1):
+    def exportAlembicCache(self, job_list=[], out_path='', asset_list=[], in_frame=1, out_frame=1, step=1):
         """ exports the alembic cache to a preconfigured location """
         job_strings = []
         obj_list = []
@@ -546,62 +602,68 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
         except:
             pass
 
-        for a in asset_list:
-            cache_set = ''
-            if a == 'publish':
-                cache_set = 's_cache'
-            elif a.startswith('Camera'):
-                obj_list = [a.split(":")[-1]]
-            else:
-                cache_set = '{0}:s_cache'.format(a)
-            if cmds.objExists(cache_set):
-                obj_list = cmds.sets(str(cache_set),q=1)
-            if obj_list != None:
-                if len(obj_list) < 1:
-                    obj_list = cmds.ls('')
-                    print ("could not find any cachable sets to export alembic. skipping asset:{0}".format(a))
-                    return
-                obj_str= ','.join(obj_list)
-                out_filename = os.path.basename(out_path)+'_'+a+'.abc'
-                asset_out_path = os.path.join(out_path,out_filename)
-                #try: 
-                #    os.makedirs(os.path.join(out_path))
-                #except OSError:
-                #    if not os.path.isdir(os.path.join(out_path)):
-                #        raise
+        # if job_list is not specified then it packs the other arguments into a single job tuple
+        if len(job_list) == 0:
+            job_list.append((out_path,asset_list,in_frame,out_frame,step))
 
-                # skip model abc cache exports, only do rigs
-                if 'model' not in out_path: 
-                    job_str = (' -file '+out_path)
-                    job_str += (' -root '+obj_str)
-                    job_str += (' -uvWrite')
-                    job_str += (' -worldSpace')
-                    #job_str += (' -stripNamespaces')
-                    job_str += (' -writeVisibility')
-                    job_str += ' -framerange {0} {1}'.format(in_frame,out_frame)
-                    job_str += (' -dataFormat ogawa')
-                    job_strings.append(job_str)
-                    
-                    # exocortex method
-                    #job_str = ('filename='+asset_out_path+';')
-                    #job_str += ('objects='+obj_str+';')
-                    #job_str += ('uvs=0;')
-                    #job_str += ('globalspace=1;')
-                    #job_str += ('withouthierarchy=1;')
-                    #job_str += ('in='+in_frame+';')
-                    #job_str += ('out='+out_frame+';')
-                    #job_str += ('step='+step+';')
-                    #job_str += ('ogawa=1')
-                    #job_strings.append(job_str)
-                    #cmds.ExocortexAlembic_export(j=job_strings)
+        for j_out_path, j_asset_list, j_in_frame, j_out_frame, j_step in job_list:
+            print ("ALEMBIC JOB: {0} {1} {2} {3} {4}".format(j_out_path, j_asset_list, j_in_frame, j_out_frame, j_step))
+            for a in j_asset_list:
+                cache_set = ''
+                if a == 'publish':
+                    cache_set = 's_cache'
+                elif a.startswith('Camera'):
+                    obj_list = [a.split(":")[-1]]
+                else:
+                    cache_set = '{0}:s_cache'.format(a)
+                if cmds.objExists(cache_set):
+                    obj_list = cmds.sets(str(cache_set),q=1)
+                if obj_list != None:
+                    if len(obj_list) < 1:
+                        obj_list = cmds.ls('')
+                        cmds.warning("Skipping asset:{0}could not find any cachable sets to export alembic".format(a))
+                        break
+                    obj_str= ','.join(obj_list)
+                    out_filename = os.path.basename(j_out_path)+'_'+a+'.abc'
+                    asset_out_path = os.path.join(j_out_path,out_filename)
+                    #try: 
+                    #    os.makedirs(os.path.join(j_out_path))
+                    #except OSError:
+                    #    if not os.path.isdir(os.path.join(j_out_path)):
+                    #        raise
 
-                    #AbcExport -j "-frameRange 1 50 -uvWrite -worldSpace -dataFormat ogawa -root |testCharA1:_UNKNOWN_REF_NODE_fosterParent1|testCharA1:dad_model_grp -file C:/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/cache/alembic/test.abc";
-                    #print 'cmds.AbcExport(j="{0}")'.format(job_str)
-                    #cmds.AbcExport(j=job_strings)
-            else:
-                print ("could not find any cachable sets to export alembic. skipping asset:{0}".format(a))
-                return
-        print 'cmds.AbcExport(j="{0}")'.format(job_strings)
+                    # skip model abc cache exports, only do rigs
+                    if 'model' not in j_out_path: 
+                        job_str = (' -file '+j_out_path)
+                        job_str += (' -root '+obj_str)
+                        job_str += (' -uvWrite')
+                        job_str += (' -worldSpace')
+                        #job_str += (' -stripNamespaces')
+                        job_str += (' -writeVisibility')
+                        job_str += ' -framerange {0} {1}'.format(j_in_frame,j_out_frame)
+                        job_str += (' -dataFormat ogawa')
+                        job_strings.append(job_str)
+                        
+                        # exocortex method
+                        #job_str = ('filename='+asset_out_path+';')
+                        #job_str += ('objects='+obj_str+';')
+                        #job_str += ('uvs=0;')
+                        #job_str += ('globalspace=1;')
+                        #job_str += ('withouthierarchy=1;')
+                        #job_str += ('in='+j_in_frame+';')
+                        #job_str += ('out='+j_out_frame+';')
+                        #job_str += ('j_step='+j_step+';')
+                        #job_str += ('ogawa=1')
+                        #job_strings.append(job_str)
+                        #cmds.ExocortexAlembic_export(j=job_strings)
+
+                        #AbcExport -j "-frameRange 1 50 -uvWrite -worldSpace -dataFormat ogawa -root |testCharA1:_UNKNOWN_REF_NODE_fosterParent1|testCharA1:dad_model_grp -file C:/projects/ab_testjob/production/shots/s01/005_00/anim/work/maya/cache/alembic/test.abc";
+                        #print 'cmds.AbcExport(j="{0}")'.format(job_str)
+                        #cmds.AbcExport(j=job_strings)
+                else:
+                    cmds.warning("Skipping asset:{0}could not find any cachable sets to export alembic".format(a))
+                    break
+        print 'cmds.AbcExport(j={0})'.format(job_strings)
         cmds.AbcExport(j=job_strings)
 
         
@@ -696,7 +758,9 @@ class GSPublishSceneWindow(MayaQWidgetBaseMixin,QWidget):
 
         cmds.file(save=True, force=True, options="v=0", typ="mayaBinary")
 
-        if not import_refs:
+        if import_refs:
+            cmds.file(rts=True)
+        else:
             cmds.file(rename=current_scene)
 
 

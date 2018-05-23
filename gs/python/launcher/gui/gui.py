@@ -527,6 +527,10 @@ class LauncherWindow(QMainWindow):
         # clear any current tabs
         self.ui['wdgt']['asset_tabs'].clear()
 
+        # load the tabs but without data
+        # find the last active tab and load that data
+        # activate the last active tab and make it visible
+
         self.ui['wdgt']['asset_tabs'].currentChanged.connect(self.assetTabChanged)
         # for each asset template type, create a tab widget for it
         asset_type_list = self.controller.proj_controller.getAssetTypeList()
