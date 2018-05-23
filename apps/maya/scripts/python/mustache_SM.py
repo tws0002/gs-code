@@ -481,56 +481,65 @@ class SceneManager:
             if confirm == 'no':
                 return
         cmds.editRenderLayerGlobals(crl='defaultRenderLayer')
-        screenWindowName = 'screenWindow'
-        if cmds.window(screenWindowName, q=1, exists=1):
-            cmds.deleteUI(screenWindowName)
-        screenWindow = cmds.window(screenWindowName, w=960, h=540)
-        playout = cmds.paneLayout()
-        mpanel = cmds.modelPanel(l='TEMP_SCREENSHOT')
-        cmds.showWindow(screenWindowName)
-        getPanelName = cmds.getPanel(wl='TEMP_SCREENSHOT')
-        cmds.setFocus(getPanelName)
-        defaultCams = ['perspShape',
-         'topShape',
-         'frontShape',
-         'sideShape']
-        renderCams = []
-        renderCams = [ f for f in cmds.ls(type='camera') if cmds.getAttr(f + '.renderable') == 1 and f not in defaultCams ]
-        newCam = []
-        newCam.append('0')
-        newCam.append('0')
-        usingBuiltInCam = 0
-        if len(renderCams) > 0:
-            newCam[1] = renderCams.pop()
-            newCam[0] = cmds.listRelatives(newCam[1], p=1)[0]
-            usingBuiltInCam = 1
-        else:
-            newCam = cmds.camera()
-            cmds.setAttr(newCam[0] + '.rotateX', -35)
-            cmds.setAttr(newCam[0] + '.rotateY', 45)
-            cmds.viewFit(newCam[1], all=1)
-            cmds.viewClipPlane(newCam[1], acp=1)
-        cmds.modelPanel(mpanel, e=1, cam=newCam[1])
-        modelEd = cmds.modelPanel(mpanel, q=1, me=1)
-        cmds.modelEditor(modelEd, e=1, da='smoothShaded')
-        screenPath = os.path.join(self.M.scenesDir, shot, shotType, '_pipeline', newFileName + '.iff')
-        ct = cmds.currentTime(q=1)
-        cmds.playblast(st=ct, et=ct, w=640, h=400, fmt='image', cf=screenPath)
-        cmds.modelEditor(modelEd, e=1, dtx=0)
-        try:
-            cmds.deleteUI(mpanel)
-        except:
-            pass
 
-        cmds.deleteUI(screenWindow)
-        if usingBuiltInCam == 0:
-            cmds.delete(newCam)
-        convertProc = subprocess.Popen(self.M.binDir + 'imf_copy.exe ' + screenPath + ' ' + screenPath[:-4] + '.jpg', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = convertProc.communicate()
-        print '\nIMGCONVERT STDOUT: '
-        print stdout
-        print '\nIMGCONVERT STDERR: '
-        print stderr
+        screenPath = os.path.join(self.M.scenesDir, shot, shotType, '_pipeline', newFileName + '.iff')
+        j_path = str(self.M.project)
+        if not j_path.startswith("//scholar/projects/honda_sensing"):
+            # start thumnail process
+            screenWindowName = 'screenWindow'
+            if cmds.window(screenWindowName, q=1, exists=1):
+                cmds.deleteUI(screenWindowName)
+            screenWindow = cmds.window(screenWindowName, w=960, h=540)
+            playout = cmds.paneLayout()
+            mpanel = cmds.modelPanel(l='TEMP_SCREENSHOT')
+            cmds.showWindow(screenWindowName)
+            getPanelName = cmds.getPanel(wl='TEMP_SCREENSHOT')
+            cmds.setFocus(getPanelName)
+            defaultCams = ['perspShape',
+             'topShape',
+             'frontShape',
+             'sideShape']
+            renderCams = []
+            renderCams = [ f for f in cmds.ls(type='camera') if cmds.getAttr(f + '.renderable') == 1 and f not in defaultCams ]
+            newCam = []
+            newCam.append('0')
+            newCam.append('0')
+            usingBuiltInCam = 0
+            if len(renderCams) > 0:
+                newCam[1] = renderCams.pop()
+                newCam[0] = cmds.listRelatives(newCam[1], p=1)[0]
+                usingBuiltInCam = 1
+            else:
+                newCam = cmds.camera()
+                cmds.setAttr(newCam[0] + '.rotateX', -35)
+                cmds.setAttr(newCam[0] + '.rotateY', 45)
+                cmds.viewFit(newCam[1], all=1)
+                cmds.viewClipPlane(newCam[1], acp=1)
+            cmds.modelPanel(mpanel, e=1, cam=newCam[1])
+            modelEd = cmds.modelPanel(mpanel, q=1, me=1)
+            cmds.modelEditor(modelEd, e=1, da='smoothShaded')
+            
+            ct = cmds.currentTime(q=1)
+            cmds.playblast(st=ct, et=ct, w=640, h=400, fmt='image', cf=screenPath)
+            cmds.modelEditor(modelEd, e=1, dtx=0)
+            try:
+                cmds.deleteUI(mpanel)
+            except:
+                pass
+
+            cmds.deleteUI(screenWindow)
+            if usingBuiltInCam == 0:
+                cmds.delete(newCam)
+            convertProc = subprocess.Popen(self.M.binDir + 'imf_copy.exe ' + screenPath + ' ' + screenPath[:-4] + '.jpg', stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = convertProc.communicate()
+            print '\nIMGCONVERT STDOUT: '
+            print stdout
+            print '\nIMGCONVERT STDERR: '
+            print stderr
+
+            # end thumnail process
+
+
         notesFile = open(screenPath[:-4] + '.txt', 'w')
         pickle.dump(notes, notesFile)
         notesFile.close()

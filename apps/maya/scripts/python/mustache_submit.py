@@ -44,6 +44,7 @@ class Submitter:
 
         self.M = ''
         self.imagesFolder = 'images'
+        self.original_scene = cmds.file(q=1,sn=1)
 
 
         # if not the base branch, the local branch cache prob isn't getting updated so we'll copy it from base branch
@@ -167,7 +168,13 @@ class Submitter:
         #abcFiles = glob.glob(os.path.splitext(fullPath)[0]+'__*.abc')
         #for a in abcFiles:
         #    files_final.append(a)
-#
+
+        # get automatte json data
+        
+        json_file = "/".join([os.path.split(self.original_scene)[0], '_pipeline', 'sceneData.json'])
+        print ("JSON FILE FOUND: {0}".format(json_file))
+        if os.path.exists(json_file):
+            files_final.append(json_file)
 
         return list(set(files_final))
 
@@ -189,13 +196,14 @@ class Submitter:
         files = self.getImageOutputPath()
         return files.replace('\\','/')
 
-    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, deep2matte = False, rsGpus = 0, *args):
+    def musterSubmitJob(self, file, name, project, pool, priority, depend, start, end, step, packet, x, y, flags, notes, emails = 0, framecheck = 0, minsize = '0', framePadding = '4', suffix = '', layers = '', exr2tiff = False, deep2matte = False, *args):
         nameNoStamp = name
         mtid = self.get_gs_musterId('maya');
         if '_T_' in name:
             nameNoStamp = '_T_'.join(name.split('_T_')[:-1]) + suffix
 
         post_chunk_actions = ['C:\Windows\System32\cmd.exe /C C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/gs/python/sensu/post_chunk_action.py"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'])]
+        post_chunk_actions = []
         if deep2matte:
             post_chunk_actions.append('C:\Python27\python.exe %s/gs/python/launcher/launcher.py --package pythonshell --render "%s/apps/maya/scripts/python/deep2Matte/post_chunk_actionRS.py %%ATTR(start_frame) %%ATTR(end_frame) %s %s"' %(os.environ['GSBRANCH'], os.environ['GSBRANCH'], self.getImageOutputPath().replace('\\','/'), os.path.dirname(cmds.file(q=1,sn=1)).replace('mustache_renderScenes','lighting')+'/_pipeline/sceneData.json'))
         
@@ -219,11 +227,20 @@ class Submitter:
         musterflags['-f']               = file
         musterflags['-ecerrtype']       = '1'
         musterflags['-logerrtype']      = '1'
-        musterflags['-eca']             = '&&'.join(post_chunk_actions)
+        if post_chunk_actions:
+            musterflags['-eca']             = '&&'.join(post_chunk_actions)
                                                     
         if depend: musterflags['-wait'] = depend
         if notes: musterflags['-info']  = notes
-            
+        
+        if re.search('^GPU', pool):
+            if re.search('^GPU\-2PROCS', pool):
+                rsGpus = 2
+            elif re.search('^GPU\-ALLPROCS', pool):
+                rsGpus = 4
+            else:
+                rsGpus = 1
+
         if gsstartup.properties['location'] == 'NYC' and pool != 'WKSTN-NY':
             ascpupsubmit=''
             upfile = file.replace(" ", "\ ").replace("//","/")
@@ -718,7 +735,7 @@ class Submitter:
         self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, framePreviewCtrl, imageTypeCtrl, *args)
 
 
-    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, deep2matte = False, rsGpus = 0, *args):
+    def userSubmit(self, pool, priority, start, end, step, packet, x, y, flags, notes, emails, framecheck, minsize, renderCam, imgPlanes, suffix, endSuffix, renderLayers, prepassBeautyLayer = '', depend = 0, framePadding = 4, imageType = 'exr', memLimit = '5000', displaceLimit = '4', exr2tiff = False, deep2matte = False, *args):
         origFile = cmds.file(q=1, sn=1)
         self.sceneRenderPrep(renderCam, renderLayers, imgPlanes, imageType, framePadding, memLimit, displaceLimit)
         prepassID = '0'
@@ -732,7 +749,7 @@ class Submitter:
             if not prepassID:
                 cmds.error('Error submitting prepass!')
         finalScene = self.save_render_file(suffix, endSuffix)
-        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, deep2matte, rsGpus)
+        finalScene = self.musterSubmitJob(finalScene, cmds.file(q=1, sn=1, shn=1), self.M.project, pool, priority, prepassID, start, end, step, packet, x, y, flags, notes, emails, framecheck, str(minsize), str(framePadding), suffix, renderLayers, exr2tiff, deep2matte)
         if finalScene == False:
             cmds.confirmDialog(title='Error submitting render!', message='Muster has found an ERROR. Check the script editor.', button="Please Resubmit")
         else:
@@ -747,7 +764,7 @@ class Submitter:
         windowTitle = '}MUSTACHE{ - SUBMIT RENDER'
         if cmds.window(windowName, q=1, exists=1):
             cmds.deleteUI(windowName)
-        window = cmds.window(windowName, title=windowTitle, w=600, h=900)
+        window = cmds.window(windowName, title=windowTitle, w=600, h=850)
         wrapperForm = cmds.formLayout(parent=window)
         mayaGlobalSettings = cmds.formLayout(parent=wrapperForm)
         lm1 = 5
@@ -968,33 +985,8 @@ class Submitter:
          (displaceLimitCtrl, 'top', tm3 + lineHeight),
          (displaceLimitCtrl, 'left', lm2)])
         #####################################
-        rsSettingsLayout = cmds.formLayout(parent=wrapperForm)
-        cmds.formLayout(wrapperForm, e=1, attachForm=[(rsSettingsLayout, 'top', 570)])
-        rsSettingsLabel = cmds.text(l='REDSHIFT SPECIFIC SETTINGS', fn='boldLabelFont', parent=rsSettingsLayout)
-        rsGpuLabel = cmds.text(l='GPUs per Frame:', parent=rsSettingsLayout)
-        rsGpuRadioColCtrl = cmds.radioCollection(parent=rsSettingsLayout)
-        rs1GpuCtrl = cmds.radioButton(l='1 GPU', en=0, cl=rsGpuRadioColCtrl, sl=1, ann='Use 1 GPU per frame. (Recommended)')
-        rs2GpuCtrl = cmds.radioButton(l='2 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 2 GPUs per frame.')
-        rs4GpuCtrl = cmds.radioButton(l='4 GPUs', en=0, cl=rsGpuRadioColCtrl, ann='Use 4 GPUs per frame.')
-        #if cmds.getAttr('defaultRenderGlobals.currentRenderer') == 'redshift':
-        #    cmds.radioButton(rs1GpuCtrl, e=1, en=1)
-        #    cmds.radioButton(rs2GpuCtrl, e=1, en=1)
-        #    cmds.radioButton(rs4GpuCtrl, e=1, en=1)
-        gpuButtonSpacing = 60
-        cmds.formLayout(rsSettingsLayout, e=1, attachForm=[(rsSettingsLabel, 'top', tm1),
-         (rsSettingsLabel, 'left', lm1),
-         (rsGpuLabel, 'top', tm2),
-         (rsGpuLabel, 'left', lm1),
-         (rs1GpuCtrl, 'top', tm2),
-         (rs1GpuCtrl, 'left', lm2),
-         (rs2GpuCtrl, 'top', tm2),
-         (rs2GpuCtrl, 'left', lm2 + gpuButtonSpacing),
-         (rs4GpuCtrl, 'top', tm2),
-         (rs4GpuCtrl, 'left', lm2 + gpuButtonSpacing * 2)])
-        rsButtonDict = {cmds.radioButton(rs1GpuCtrl, q=1, fpn=1).split('|')[-1]: 1, cmds.radioButton(rs2GpuCtrl, q=1, fpn=1).split('|')[-1]: 2, cmds.radioButton(rs4GpuCtrl, q=1, fpn=1).split('|')[-1]: 4}
-        #####################################
         musterSettingsLayout = cmds.formLayout(parent=wrapperForm)
-        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 640)])
+        cmds.formLayout(wrapperForm, e=1, attachForm=[(musterSettingsLayout, 'top', 570)])
         musterSettingsLabel = cmds.text(l='MUSTER SETTINGS', fn='boldLabelFont', parent=musterSettingsLayout)
         priorityLabel = cmds.text(l='Priority:', parent=musterSettingsLayout, ann='Priority of the job. 100 is highest. Folder priority will determine the overall priority against other projects.')
         packetLabel = cmds.text(l='Packet size:', parent=musterSettingsLayout, ann="Number of frames to submit at a time. The more memory-intensive the scene, the smaller the size you should use. If you're not sure, use 1.")
@@ -1053,8 +1045,7 @@ class Submitter:
                 memLimit = cmds.textField(memLimitCtrl, q=1, tx=1),
                 displaceLimit = cmds.textField(displaceLimitCtrl, q=1, tx=1),
                 exr2tiff = cmds.checkBox(exr2tiffCtrl, q=1, v=1),
-                deep2matte = cmds.checkBox(deep2matteCtrl, q=1, v=1),
-                rsGpus = rsButtonDict[cmds.radioCollection(rsGpuRadioColCtrl, q=1, sl=1)]
+                deep2matte = cmds.checkBox(deep2matteCtrl, q=1, v=1)
                 )
             )
         resetBtn = cmds.button(l='Reset to default', w=150, h=60, parent=musterSettingsLayout, c=lambda x: self.submitUI())
@@ -1094,6 +1085,7 @@ class Submitter:
         self.parseRenderSuffix(sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
         self.parseImagePrefix(renderPrefixCtrl,sceneSuffixCtrl, frameSuffixCtrl, paddingCtrl, frameExample, imageTypeCtrl)
         mustacheDir = '//scholar/code/maya/icons/mustaches'
+        self.original_scene = cmds.file(q=1,sn=1)
         if os.path.exists(mustacheDir):
             mustaches = [ f for f in os.listdir(mustacheDir) if os.path.splitext(f)[-1] == '.jpg' ]
             rand = random.randint(0, len(mustaches) - 1)
@@ -1130,7 +1122,10 @@ class Submitter:
         for sh in cmds.ls(g=1):
             shadingGrps= cmds.listConnections(sh,type='shadingEngine')
             if shadingGrps:
-                shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
+                found_shdr = cmds.ls(cmds.listConnections(shadingGrps),materials=1)
+                shader = None
+                if len(found_shdr):
+                    shader = found_shdr[0]
                 asset=sh.split(':')[0]
                 id= abs(hash(sh)) % (10 ** 7)
                 if not asset in sceneData['asset'].keys():

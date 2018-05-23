@@ -64,14 +64,23 @@ def _build_muster_cmd(flags):
 
             if flags.get('-gpupool'):
                 gpupool = flags.pop('-gpupool')
-                pools_members = get_pools_members()
-                new_pool_string = ','.join(pools_members[gpupool])
+                if os.path.getmtime(MUSTERJSON) > time.time() - 60*5:    
+                    with open(MUSTERJSON, 'r') as f:
+                        muster_json = json.load(f)
+                        pool_members = muster_json['pool_members']
+                else:
+                    pool_members = get_pools_members()
+                new_pool_string = ','.join(pool_members[gpupool])
                 flags['-pool'] = new_pool_string
 
             for k,v in flags.items():
                 if isinstance(v, list):
                     for i in v:
-                        if i: cmd += [k,i]
+                        if i:
+                            if k == '-attr': 
+                                cmd += [k]+i.split(' ')
+                            else: 
+                                cmd += [k,i]
                 else:
                     if v: cmd += [k,v]
             
@@ -97,13 +106,14 @@ def writelog(lines=[]):
 def submit(flags):
     cmd = _build_muster_cmd(flags)
     cmd = filter(None,cmd)
-    cmd_str = ' '.join(cmd)
+    
     output = subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0]
-    writelog([' '.join(cmd)])
+    writelog([subprocess.list2cmdline(cmd)])
     m = re.search('ID: (\d+)', output)
-    writelog(['Result: MUSTER ID: {0}'.format(m.group(1))])
     if m:
+        writelog(['Result: MUSTER ID: {0}'.format(m.group(1))])
         return m.group(1)
+        
     else:
         return False
 
@@ -310,6 +320,7 @@ def main():
         print get_pools()
     else:
         MUSTERDICT['pools'] = get_pools()
+        MUSTERDICT['pool_members'] = get_pools_members()
         with open(MUSTERJSON, 'w') as f:
             json.dump(MUSTERDICT, f)
 

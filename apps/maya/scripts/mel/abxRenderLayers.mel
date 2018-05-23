@@ -42,18 +42,22 @@
 
 global proc abxRenderLayers() {
 
-
 	string $renderLayerMenuPath = "";
 	string $mayaVersion  = `about -v`;
-	if (`gmatch $mayaVersion "2010*"`)
+	if (`gmatch $mayaVersion "2010*"`){
 		$renderLayerMenuPath = "MayaWindow|mayaMainWindowForm|formLayout3|formLayout11|formLayout32|formLayout33|ChannelsLayersPaneLayout|formLayout37|DisplayLayerUITabLayout|RenderLayerTab|menu7";
-	else
+	}
+	else if (`gmatch $mayaVersion "2015*"` || `gmatch $mayaVersion "2016*"`){
 		$renderLayerMenuPath = "MayaWindow|MainChannelsLayersLayout|ChannelsLayersPaneLayout|LayerEditorForm|DisplayLayerUITabLayout|RenderLayerTab|menu8";
+	}
+	else {
+		$renderLayerMenuPath = "ChannelBoxLayerEditor|MainChannelsLayersLayout|ChannelsLayersPaneLayout|LayerEditorForm|DisplayLayerUITabLayout|RenderLayerTab|menu8";
+	}
 		
 	layerEditorBuildRenderLayerMenu $renderLayerMenuPath RenderLayerTab;
 
 }
-
+//ChannelBoxLayerEditor|MainChannelsLayersLayout|ChannelsLayersPaneLayout|LayerEditorForm|DisplayLayerUITabLayout|RenderLayerTab|menu8;
 
 global proc float fpsNumeric () {
 

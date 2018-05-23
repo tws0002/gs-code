@@ -29,7 +29,7 @@ default:
         #phoenixfd: '3.03.00' # 1.0 sec startup cost, no actual plugin load
         ## barely used ##
         ##animschoolpicker: '1.4.11' # no support for 2017
-        ##arnold: '2.1.0.3' # unknown cost
+        arnold: '2.1.0.3' # unknown cost
         ##crate: '1.1.148' # unknown cost
         ##zync: '1.2.5' # unknown cost
         ##elementacular: '1.5.0' # unknown cost

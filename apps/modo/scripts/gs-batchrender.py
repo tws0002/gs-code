@@ -26,8 +26,12 @@ if (len(args)<7):
     lx.out("Could Not Find All 7 Required Render Arguments, rendergroup, outputpath, format, start, end, step, file")
 else:
     #lx.trace( True );
+    lx.out('scene.open {0}'.format(args[6]))
     lx.eval('scene.open {0}'.format(args[6]))
+
+    lx.out('select.item Render')
     lx.eval('select.item Render') # select the render item in order to change its attributes
+    #lx.eval('select.itemType polyRender')
     lx.eval('item.channel first {0}'.format(args[3])) # range beginning
     lx.eval('item.channel last {0}'.format(args[4])) # range end
     lx.eval('item.channel step {0}'.format(args[5])) # frame steps
@@ -37,11 +41,14 @@ else:
     ft = args[2]
     if not rg: #rendergroup arg
         if ft:
-            lx.eval( '!render.animation "%s" %s {*}\n' %(op, ft) )
+            lx.out( '!render.animation "%s" %s {*}' %(op, ft) )
+            lx.eval( '!render.animation "%s" %s {*}' %(op, ft) )
         else:
-            lx.eval( '!render.animation "%s" {*}\n' %(op) )
+            lx.out( '!render.animation "%s" {*}' %(op) )
+            lx.eval( '!render.animation "%s" {*}' %(op) )
     else:
-        lx.eval( '!render.animation "%s" %s {*} group:%s\n' %(op, ft, rg) )
+        lx.out( '!render.animation "%s" %s {*} group:%s' %(op, ft, rg) )
+        lx.eval( '!render.animation "%s" %s {*} group:%s' %(op, ft, rg) )
 
 lx.eval("app.quit") # quit the app
 

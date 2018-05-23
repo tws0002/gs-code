@@ -115,9 +115,7 @@ def setupOverides():
     cmds.setAttr("redshiftOptions.exrMultipart",0)
     cmds.setAttr("redshiftOptions.unifiedMaxSamples",32)
     cmds.setAttr("redshiftOptions.unifiedMinSamples",32)
-
     cmds.setAttr("defaultRenderGlobals.enableDefaultLight",1)
-    cmds
 
     existingAovs=cmds.ls(type='RedshiftAOV')
     if not 'rsAov_ObjectID' in existingAovs:
@@ -136,10 +134,13 @@ def setupIDs():
     objIDs={}
     sceneData={'asset':{},'material':{},'object':{}}
     for sh in cmds.ls(g=1):
-        shadingGrps= cmds.listConnections(sh,type='shadingEngine')
-        if shadingGrps:
-            shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
-            objIDs,id=generateIDs(sh,'rsObjectId',objIDs,currentRenderLayer)
+        try:
+            shadingGrps= cmds.listConnections(sh,type='shadingEngine')
+            if shadingGrps:
+                shader = cmds.ls(cmds.listConnections(shadingGrps),materials=1)[0]
+                objIDs,id=generateIDs(sh,'rsObjectId',objIDs,currentRenderLayer)
+        except:
+            print sh,' error'
 
 
 def writeSceneData():

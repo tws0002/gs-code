@@ -586,6 +586,27 @@ cinema4d:
     C4D_PLUGINS_DIR: '%GSROOT%/base/apps/cinema4d/scripts/python'
     C4D_BROWSERLIBS: '%GSROOT%/bin/external/cinema4d/browserlib/%ST_C4D%'
   versions:
+    'R19':
+      name: Cinema 4D
+      env:
+        ST_C4D: 'R18'
+      modes:
+        ui:
+          linux: /
+          mac: /
+          win32: 'CINEMA 4D.exe'
+        cli:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
+        render:
+          linux: /
+          mac: /
+          win32: 'Commandline.exe'
+      path:
+        linux: /
+        mac: /
+        win32: 'C:\Program Files\Maxon\Cinema4D\R19.053'
     'R18':
       name: Cinema 4D
       env:
